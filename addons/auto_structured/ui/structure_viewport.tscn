@@ -1,0 +1,52 @@
+[gd_scene load_steps=5 format=3 uid="uid://bjo2lbgm65hug"]
+
+[ext_resource type="Script" uid="uid://c5a4li530gq31" path="res://addons/auto_structured/ui/structure_viewport.gd" id="1_y2fyh"]
+[ext_resource type="PackedScene" uid="uid://dh58uwmfq6ceu" path="res://addons/auto_structured/ui/panels/module_library.tscn" id="2_gntdh"]
+[ext_resource type="PackedScene" uid="uid://c42yn8m3jhp6p" path="res://addons/auto_structured/ui/panels/preview_panel.tscn" id="3_2gguc"]
+[ext_resource type="PackedScene" uid="uid://b2e8dr8sqw65c" path="res://addons/auto_structured/ui/panels/details_panel.tscn" id="4_55lkt"]
+
+[node name="StructureViewport" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_y2fyh")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="HSplitContainer" type="HSplitContainer" parent="ScrollContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="ScrollContainer/HBoxContainer/HSplitContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HSplitContainer" type="HSplitContainer" parent="ScrollContainer/HBoxContainer/HSplitContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ModuleLibrary" parent="ScrollContainer/HBoxContainer/HSplitContainer/HBoxContainer/HSplitContainer" instance=ExtResource("2_gntdh")]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DetailsPanel" parent="ScrollContainer/HBoxContainer/HSplitContainer/HBoxContainer/HSplitContainer" instance=ExtResource("4_55lkt")]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PreviewPanel" parent="ScrollContainer/HBoxContainer/HSplitContainer" instance=ExtResource("3_2gguc")]
+layout_mode = 2
+size_flags_horizontal = 3

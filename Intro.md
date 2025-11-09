@@ -33,14 +33,14 @@ It’s designed to integrate nicely with an **asset placer plugin**: this tool c
 
 ## Core Concepts
 
-### 1. Structure Viewport
+### 1. Structure Panel
 
-Rather than cluttering your scene hierarchy with generator nodes, the plugin introduces a dedicated **Structure viewport** (accessible from the editor toolbar or bottom panel).
+Rather than cluttering your scene hierarchy with generator nodes, the plugin introduces a dedicated **Structure panel** in the bottom panel area of the Godot editor.
 
-This viewport provides:
+This panel provides:
 
-- **Live preview** of the generated structure with intuitive camera controls
-  - Orbit, pan, and zoom navigation
+- **Live preview** of the generated structure with a simplified 2D top-down or grid-based view
+  - Zoom and pan controls for navigation
   - "Frame structure" button to focus on the current model
   - Grid visualization and bounds display
 - **Parameter controls** for dimensions, constraints, and seed
@@ -49,9 +49,9 @@ This viewport provides:
 - **Built-in presets** like "Simple House" or "Basic Tower" to get started quickly
 - **Non-destructive workflow** - structure definitions (saved as **Structure Definition** resources) are separate from exported scene instances
 
-This approach matches Godot's design philosophy (similar to TileSet, Material, or AnimationTree editors) and keeps generation clean and separate from your main scene work.
+This approach keeps the editor interface clean and integrated, matching Godot's design philosophy (similar to other bottom panels like the Output or Debugger panels) and keeps generation separate from your main scene work.
 
-**Note for beginners:** Unlike some plugins, you don't simply drop a node in your scene and hit "Generate". Instead, you author structures in their own dedicated viewport, then export them as reusable `.tscn` files. This keeps your scene hierarchy clean and your structures organized as proper assets.
+**Note for beginners:** Unlike some plugins, you don't simply drop a node in your scene and hit "Generate". Instead, you author structures in the dedicated bottom panel, then export them as reusable `.tscn` files. This keeps your scene hierarchy clean and your structures organized as proper assets.
 
 ---
 
