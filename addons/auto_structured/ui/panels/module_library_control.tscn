@@ -1,0 +1,114 @@
+[gd_scene load_steps=8 format=3 uid="uid://cec3w2gsnnq6m"]
+
+[ext_resource type="Script" uid="uid://d0fv7bhim0no5" path="res://addons/auto_structured/ui/panels/module_library_control.gd" id="1_aecy8"]
+[ext_resource type="Texture2D" uid="uid://dntpfw4citkar" path="res://addons/auto_structured/assets/icon_GUI_tab_menu.svg" id="2_caqod"]
+[ext_resource type="PackedScene" uid="uid://der372wddvos5" path="res://addons/auto_structured/ui/controls/tile_item.tscn" id="3_ija4x"]
+[ext_resource type="Script" uid="uid://bou4nb0t7hher" path="res://addons/auto_structured/core/requirements/requirement.gd" id="4_fjvda"]
+[ext_resource type="Script" uid="uid://c7f03neubtkf3" path="res://addons/auto_structured/core/tile.gd" id="5_61fu2"]
+[ext_resource type="Script" uid="uid://bddgr0flhmhcl" path="res://addons/auto_structured/core/socket.gd" id="6_oq3xc"]
+
+[sub_resource type="Resource" id="Resource_k136f"]
+script = ExtResource("5_61fu2")
+metadata/_custom_type_script = "uid://c7f03neubtkf3"
+
+[node name="ModuleLibraryControl" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_aecy8")
+
+[node name="Panel" type="Panel" parent="."]
+clip_contents = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="LibrarySelectorBar" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="OptionButton" type="OptionButton" parent="Panel/MarginContainer/VBoxContainer/VBoxContainer/LibrarySelectorBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+selected = 0
+fit_to_longest_item = false
+item_count = 1
+popup/item_0/text = "Select Library"
+popup/item_0/id = 0
+popup/item_0/disabled = true
+
+[node name="MenuButton" type="MenuButton" parent="Panel/MarginContainer/VBoxContainer/VBoxContainer/LibrarySelectorBar"]
+layout_mode = 2
+icon = ExtResource("2_caqod")
+switch_on_hover = true
+item_count = 4
+popup/item_0/text = "Save"
+popup/item_0/id = 3
+popup/item_1/text = "Rename"
+popup/item_1/id = 0
+popup/item_2/text = "New"
+popup/item_2/id = 2
+popup/item_3/text = "Delete"
+popup/item_3/id = 1
+
+[node name="AssetSearchEdit" type="LineEdit" parent="Panel/MarginContainer/VBoxContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Search"
+clear_button_enabled = true
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ModuleGrid" type="GridContainer" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+columns = 2
+
+[node name="ModuleItem" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer/ModuleGrid" instance=ExtResource("3_ija4x")]
+layout_mode = 2
+
+[node name="ModuleItem2" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer/ModuleGrid" instance=ExtResource("3_ija4x")]
+layout_mode = 2
+tile = SubResource("Resource_k136f")
+
+[node name="ModuleItem3" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer/ModuleGrid" instance=ExtResource("3_ija4x")]
+layout_mode = 2
+
+[node name="ModuleItem4" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer/ModuleGrid" instance=ExtResource("3_ija4x")]
+layout_mode = 2
+
+[node name="ModuleItem5" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer/ModuleGrid" instance=ExtResource("3_ija4x")]
+layout_mode = 2
+
+[node name="ModuleItem6" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer/ModuleGrid" instance=ExtResource("3_ija4x")]
+layout_mode = 2

@@ -1,0 +1,88 @@
+[gd_scene load_steps=4 format=3 uid="uid://bvlwexitood1h"]
+
+[ext_resource type="Script" uid="uid://cvrojwigf4xog" path="res://addons/auto_structured/ui/controls/socket_item.gd" id="1_5yc8y"]
+[ext_resource type="Texture2D" uid="uid://cklj47goa3tag" path="res://addons/auto_structured/assets/add.svg" id="2_2ra0v"]
+[ext_resource type="Texture2D" uid="uid://c45ah2jrtar3s" path="res://addons/auto_structured/assets/remove.svg" id="3_yvgxj"]
+
+[node name="FoldableContainer" type="FoldableContainer"]
+offset_top = 125.0
+offset_right = 1152.0
+offset_bottom = 157.0
+script = ExtResource("1_5yc8y")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+
+[node name="Label" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Name"
+
+[node name="NameEdit" type="LineEdit" parent="VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "Socket Name"
+
+[node name="DirectionContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="DirectionLabel" type="Label" parent="VBoxContainer/DirectionContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 6
+text = "Direction"
+
+[node name="DirectionOption" type="OptionButton" parent="VBoxContainer/DirectionContainer"]
+layout_mode = 2
+selected = 0
+item_count = 7
+popup/item_0/text = "Choose Direction"
+popup/item_0/id = 0
+popup/item_0/disabled = true
+popup/item_1/text = "Right"
+popup/item_1/id = 1
+popup/item_2/text = "Left"
+popup/item_2/id = 2
+popup/item_3/text = "Up"
+popup/item_3/id = 3
+popup/item_4/text = "Down"
+popup/item_4/id = 4
+popup/item_5/text = "Forward"
+popup/item_5/id = 5
+popup/item_6/text = "Back"
+popup/item_6/id = 6
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Sockets"
+
+[node name="TextureButton" type="TextureButton" parent="VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+tooltip_text = "Add another Socket to which this can connect."
+texture_normal = ExtResource("2_2ra0v")
+stretch_mode = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "TEST"
+
+[node name="TextureRect" type="TextureButton" parent="VBoxContainer/VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+texture_normal = ExtResource("3_yvgxj")
+stretch_mode = 3
+
+[connection signal="item_selected" from="VBoxContainer/DirectionContainer/DirectionOption" to="." method="set_direction"]

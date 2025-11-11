@@ -1,0 +1,1 @@
+const Socket = preload("res://addons/auto_structured/core/socket.gd")

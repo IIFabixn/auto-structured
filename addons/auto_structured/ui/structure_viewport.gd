@@ -1,12 +1,12 @@
 @tool
 class_name StructureViewport extends Control
 
+@onready var module_library_control: ModuleLibraryControl = %ModuleLibraryControl
+@onready var details_panel: DetailsPanel = %DetailsPanel
+@onready var viewport_panel: PreviewPanel = %PreviewPanel
 
-# Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	pass # Replace with function body.
+    module_library_control.tile_selected.connect(_on_module_tile_selected)
 
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	pass
+func _on_module_tile_selected(tile: Tile) -> void:
+    details_panel.display_tile_details(tile)

@@ -1,7 +1,26 @@
-[gd_scene load_steps=3 format=3 uid="uid://c42yn8m3jhp6p"]
+[gd_scene load_steps=12 format=3 uid="uid://c42yn8m3jhp6p"]
 
 [ext_resource type="Script" uid="uid://dhawin6ohfkr1" path="res://addons/auto_structured/ui/panels/preview_panel.gd" id="1_qeup7"]
-[ext_resource type="Texture2D" uid="uid://d04dma5ci7ufp" path="res://icon.svg" id="2_s3do3"]
+[ext_resource type="Texture2D" uid="uid://cklj47goa3tag" path="res://addons/auto_structured/assets/add.svg" id="2_8vq50"]
+[ext_resource type="Texture2D" uid="uid://dntpfw4citkar" path="res://addons/auto_structured/assets/icon_GUI_tab_menu.svg" id="2_rgf8d"]
+[ext_resource type="Texture2D" uid="uid://b0edrc0kwyyc8" path="res://addons/auto_structured/assets/step.svg" id="3_8vq50"]
+[ext_resource type="Texture2D" uid="uid://r7yic3lsjybn" path="res://addons/auto_structured/assets/solve.svg" id="3_flumd"]
+[ext_resource type="Texture2D" uid="uid://depdtuwl4wok3" path="res://addons/auto_structured/assets/rotate_left.svg" id="3_qo023"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_qo023"]
+
+[sub_resource type="World3D" id="World3D_s3do3"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_s3do3"]
+
+[sub_resource type="Sky" id="Sky_qo023"]
+sky_material = SubResource("ProceduralSkyMaterial_s3do3")
+
+[sub_resource type="Environment" id="Environment_rgf8d"]
+background_mode = 2
+sky = SubResource("Sky_qo023")
+tonemap_mode = 2
+glow_enabled = true
 
 [node name="PreviewPanel" type="Control"]
 layout_mode = 3
@@ -45,44 +64,103 @@ size_flags_vertical = 3
 z_index = 1
 layout_mode = 2
 
-[node name="NewButton" type="Button" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
+[node name="NewButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
+custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
-size_flags_horizontal = 3
-text = "New"
+tooltip_text = "Start new"
+texture_normal = ExtResource("2_8vq50")
+stretch_mode = 3
 
-[node name="ImportButton" type="Button" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
+[node name="VSeparator" type="VSeparator" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Import"
+theme_override_styles/separator = SubResource("StyleBoxEmpty_qo023")
 
-[node name="ExportButton" type="Button" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
+[node name="StepButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
+custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
-size_flags_horizontal = 3
-text = "Export"
+tooltip_text = "Solve to next step."
+texture_normal = ExtResource("3_8vq50")
+stretch_mode = 3
 
-[node name="SolveButton" type="Button" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
+[node name="SolveButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
+custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
-size_flags_horizontal = 3
-text = "Solve"
+tooltip_text = "Solve till end"
+texture_normal = ExtResource("3_flumd")
+stretch_mode = 3
 
-[node name="StepButton" type="Button" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
+[node name="MenuButton" type="MenuButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
+custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
-size_flags_horizontal = 3
-text = "Step"
+icon = ExtResource("2_rgf8d")
+icon_alignment = 1
+item_count = 2
+popup/item_0/text = "Add to current Scene"
+popup/item_0/id = 0
+popup/item_1/text = "Save as Scene"
+popup/item_1/id = 1
 
 [node name="Panel" type="Panel" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer"]
 clip_contents = true
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="CenterContainer" type="CenterContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/Panel"]
+[node name="SubViewportContainer" type="SubViewportContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/Panel"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+stretch = true
 
-[node name="TextureRect" type="TextureRect" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/Panel/CenterContainer"]
+[node name="PreviewViewport" type="SubViewport" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/Panel/SubViewportContainer"]
+unique_name_in_owner = true
+own_world_3d = true
+world_3d = SubResource("World3D_s3do3")
+handle_input_locally = false
+size = Vector2i(1144, 604)
+render_target_update_mode = 4
+
+[node name="PreviewCamera" type="Camera3D" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/Panel/SubViewportContainer/PreviewViewport"]
+unique_name_in_owner = true
+transform = Transform3D(-0.8939404, -0.11599905, 0.4329143, 0, 0.9659258, 0.25881907, -0.44818586, 0.23136882, -0.8634801, 4.329143, 2.5881906, -8.634801)
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/Panel/SubViewportContainer/PreviewViewport"]
+transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 5, 0)
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/Panel/SubViewportContainer/PreviewViewport"]
+environment = SubResource("Environment_rgf8d")
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/Panel"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -40.0
+offset_top = -40.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="ViewportOptions" type="MenuButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/Panel/MarginContainer"]
+unique_name_in_owner = true
 layout_mode = 2
-texture = ExtResource("2_s3do3")
+icon = ExtResource("2_rgf8d")
+flat = false
+icon_alignment = 1
+item_count = 2
+popup/item_0/text = "Auto Rotate"
+popup/item_0/checkable = 1
+popup/item_0/checked = true
+popup/item_0/id = 0
+popup/item_1/text = "Reset Viewport"
+popup/item_1/icon = ExtResource("3_qo023")
+popup/item_1/id = 1

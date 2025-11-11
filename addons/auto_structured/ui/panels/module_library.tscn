@@ -1,8 +1,12 @@
-[gd_scene load_steps=4 format=3 uid="uid://dh58uwmfq6ceu"]
+[gd_scene load_steps=6 format=3 uid="uid://c7ady62any2b0"]
 
-[ext_resource type="Script" uid="uid://d0fv7bhim0no5" path="res://addons/auto_structured/ui/panels/module_library.gd" id="1_10nda"]
-[ext_resource type="Texture2D" uid="uid://b45uugcvk2x03" path="res://addons/auto_structured/assets/icon_animation_filter.svg" id="2_jmuhx"]
-[ext_resource type="PackedScene" uid="uid://der372wddvos5" path="res://addons/auto_structured/ui/controls/module_item.tscn" id="2_l08rt"]
+[ext_resource type="Script" uid="uid://d0fv7bhim0no5" path="res://addons/auto_structured/ui/panels/module_library_control.gd" id="1_6tsvv"]
+[ext_resource type="Texture2D" uid="uid://dntpfw4citkar" path="res://addons/auto_structured/assets/icon_GUI_tab_menu.svg" id="3_6tsvv"]
+[ext_resource type="Texture2D" uid="uid://cklj47goa3tag" path="res://addons/auto_structured/assets/add.svg" id="3_mwgey"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_mwgey"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_jmuhx"]
 
 [node name="ModuleLibrary" type="Control"]
 layout_mode = 3
@@ -13,7 +17,7 @@ grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-script = ExtResource("1_10nda")
+script = ExtResource("1_6tsvv")
 
 [node name="Panel" type="Panel" parent="."]
 clip_contents = true
@@ -39,46 +43,73 @@ theme_override_constants/margin_right = 4
 theme_override_constants/margin_bottom = 4
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer"]
+clip_contents = true
 layout_mode = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="LineEdit" type="LineEdit" parent="Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+[node name="LibrarySelectorBar" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="OptionButton" type="OptionButton" parent="Panel/MarginContainer/VBoxContainer/VBoxContainer/LibrarySelectorBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+selected = 0
+fit_to_longest_item = false
+item_count = 1
+popup/item_0/text = "Select Library"
+popup/item_0/id = 0
+popup/item_0/disabled = true
+popup/item_0/separator = true
+
+[node name="MenuButton" type="MenuButton" parent="Panel/MarginContainer/VBoxContainer/VBoxContainer/LibrarySelectorBar"]
+layout_mode = 2
+icon = ExtResource("3_6tsvv")
+switch_on_hover = true
+item_count = 5
+popup/item_0/text = "Save"
+popup/item_0/id = 3
+popup/item_1/text = "Rename"
+popup/item_1/id = 0
+popup/item_2/text = "New"
+popup/item_2/id = 2
+popup/item_3/text = "Delete"
+popup/item_3/id = 1
+popup/item_4/text = "Add Tile"
+popup/item_4/id = 4
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="AssetSearchEdit" type="LineEdit" parent="Panel/MarginContainer/VBoxContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "Search"
+clear_button_enabled = true
 
-[node name="TextureButton" type="TextureButton" parent="Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+[node name="TextureButton" type="TextureButton" parent="Panel/MarginContainer/VBoxContainer/VBoxContainer/HBoxContainer"]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
-texture_normal = ExtResource("2_jmuhx")
+tooltip_text = "Add Tile/s"
+texture_normal = ExtResource("3_mwgey")
 stretch_mode = 3
 
 [node name="ScrollContainer" type="ScrollContainer" parent="Panel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_mwgey")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_jmuhx")
+draw_focus_border = true
 
-[node name="GridContainer" type="GridContainer" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer"]
+[node name="TileList" type="ItemList" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 3
-columns = 2
+auto_width = true
+auto_height = true
+max_columns = 2
+same_column_width = true
+icon_mode = 0
 
-[node name="ModuleItem" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer/GridContainer" instance=ExtResource("2_l08rt")]
-layout_mode = 2
-
-[node name="ModuleItem2" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer/GridContainer" instance=ExtResource("2_l08rt")]
-layout_mode = 2
-
-[node name="ModuleItem3" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer/GridContainer" instance=ExtResource("2_l08rt")]
-layout_mode = 2
-
-[node name="ModuleItem4" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer/GridContainer" instance=ExtResource("2_l08rt")]
-layout_mode = 2
-
-[node name="ModuleItem5" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer/GridContainer" instance=ExtResource("2_l08rt")]
-layout_mode = 2
-
-[node name="ModuleItem6" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer/GridContainer" instance=ExtResource("2_l08rt")]
-layout_mode = 2
+[connection signal="pressed" from="Panel/MarginContainer/VBoxContainer/VBoxContainer/HBoxContainer/TextureButton" to="." method="add_tiles"]
