@@ -2,6 +2,7 @@
 class_name SocketItem extends FoldableContainer
 
 signal socket_changed(new_socket: Socket)
+signal socket_deleted(socket: Socket)
 
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
 
@@ -81,4 +82,5 @@ func set_direction(value: int) -> void:
 
 func _on_delete_selected(id: int) -> void:
     if id == 0:
+        socket_deleted.emit(socket)
         queue_free()

@@ -37,11 +37,7 @@ func _on_add_socket_button_pressed() -> void:
 	# Create socket and add to tile
 	var socket = Socket.new()
 	socket.socket_id = socket_id
-
-	var sockets_copy: Array[Socket] = []
-	sockets_copy.assign(current_tile.sockets)
-	sockets_copy.append(socket)
-	current_tile.sockets = sockets_copy
+	current_tile.add_socket(socket)
 
 	# Add socket to UI
 	add_socket_item(socket)
@@ -54,12 +50,27 @@ func add_socket_item(socket: Socket) -> void:
 		return
 	var socket_item = SocketItemScene.instantiate()
 	socket_item.socket = socket
+	socket_item.socket_changed.connect(_on_socket_changed)
+	socket_item.socket_deleted.connect(_on_socket_deleted)
 	sockets_container.add_child(socket_item)
 
 
 func clear_sockets() -> void:
 	for child in sockets_container.get_children():
 		child.queue_free()
+
+
+func _on_socket_changed(_socket: Socket) -> void:
+	# Socket properties were modified, save changes
+	save_tile_changes()
+
+
+func _on_socket_deleted(socket: Socket) -> void:
+	if not current_tile:
+		return
+	
+	current_tile.remove_socket(socket)
+	save_tile_changes()
 
 
 func add_tag(tag: String) -> void:
