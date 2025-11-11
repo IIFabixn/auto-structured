@@ -1,7 +1,8 @@
 @tool
 class_name TileItem extends Control
 
-signal delete_requested
+signal deleted
+signal changed
 signal selected
 
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
@@ -11,10 +12,14 @@ const Tile = preload("res://addons/auto_structured/core/tile.gd")
 		module_name = value
 		if name_label:
 			name_label.text = module_name
+		changed.emit()
 	get:
 		return module_name
 
-@export var tile: Tile
+@export var tile: Tile:
+	set(value):
+		tile = value
+		selected.emit()
 
 @onready var popup_menu: PopupMenu = $PopupMenu
 @onready var name_label: Label = $Panel/MarginContainer/VBoxContainer/NameLabel
@@ -34,4 +39,5 @@ func _gui_input(event: InputEvent) -> void:
 
 func _on_delete_selected(id: int) -> void:
 	if id == 0:
-		delete_requested.emit()
+		deleted.emit()
+		queue_free()

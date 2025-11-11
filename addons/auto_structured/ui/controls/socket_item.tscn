@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://bvlwexitood1h"]
+[gd_scene load_steps=5 format=3 uid="uid://bvlwexitood1h"]
 
 [ext_resource type="Script" uid="uid://cvrojwigf4xog" path="res://addons/auto_structured/ui/controls/socket_item.gd" id="1_5yc8y"]
 [ext_resource type="Texture2D" uid="uid://cklj47goa3tag" path="res://addons/auto_structured/assets/add.svg" id="2_2ra0v"]
 [ext_resource type="Texture2D" uid="uid://c45ah2jrtar3s" path="res://addons/auto_structured/assets/remove.svg" id="3_yvgxj"]
+[ext_resource type="Texture2D" uid="uid://b45uugcvk2x03" path="res://addons/auto_structured/assets/icon_animation_filter.svg" id="4_danx6"]
 
 [node name="FoldableContainer" type="FoldableContainer"]
 offset_top = 125.0
@@ -61,7 +62,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "Sockets"
 
-[node name="TextureButton" type="TextureButton" parent="VBoxContainer/HBoxContainer"]
+[node name="AddSocketButton" type="TextureButton" parent="VBoxContainer/HBoxContainer"]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 tooltip_text = "Add another Socket to which this can connect."
@@ -84,5 +85,39 @@ custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 texture_normal = ExtResource("3_yvgxj")
 stretch_mode = 3
+
+[node name="PopupPanel" type="PopupPanel" parent="."]
+oversampling_override = 1.0
+title = "Select Socket"
+size = Vector2i(112, 100)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PopupPanel"]
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 108.0
+offset_bottom = 96.0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="PopupPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="LineEdit" type="LineEdit" parent="PopupPanel/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Search"
+
+[node name="TextureButton" type="TextureButton" parent="PopupPanel/VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+texture_normal = ExtResource("4_danx6")
+stretch_mode = 3
+
+[node name="AvailableSocketList" type="VBoxContainer" parent="PopupPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="Button" type="Button" parent="PopupPanel/VBoxContainer/AvailableSocketList"]
+layout_mode = 2
+text = "wall"
+flat = true
+alignment = 0
 
 [connection signal="item_selected" from="VBoxContainer/DirectionContainer/DirectionOption" to="." method="set_direction"]

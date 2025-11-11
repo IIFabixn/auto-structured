@@ -4,7 +4,7 @@ class_name DetailsPanel extends Control
 signal closed
 signal tile_modified(tile: Tile)
 
-const SocketItemScene = preload("res://addons/auto_structured/ui/controls/socket_item.tscn")
+const SocketItem = preload("res://addons/auto_structured/ui/controls/socket_item.tscn")
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const TagControl = preload("res://addons/auto_structured/ui/controls/tag_control.tscn")
@@ -48,16 +48,17 @@ func _on_add_socket_button_pressed() -> void:
 func add_socket_item(socket: Socket) -> void:
 	if not socket or not current_tile:
 		return
-	var socket_item = SocketItemScene.instantiate()
+	var socket_item: SocketItem = SocketItem.instantiate()
 	socket_item.socket = socket
-	socket_item.socket_changed.connect(_on_socket_changed)
-	socket_item.socket_deleted.connect(_on_socket_deleted)
+	socket_item.changed.connect(_on_socket_changed)
+	socket_item.deleted.connect(_on_socket_deleted)
 	sockets_container.add_child(socket_item)
 
 
 func clear_sockets() -> void:
 	for child in sockets_container.get_children():
-		child.queue_free()
+		if child is SocketItem:
+			child.queue_free()
 
 
 func _on_socket_changed(_socket: Socket) -> void:

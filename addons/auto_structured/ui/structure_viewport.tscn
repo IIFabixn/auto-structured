@@ -45,6 +45,7 @@ layout_mode = 2
 
 [node name="DetailsPanel" parent="ScrollContainer/HBoxContainer/HSplitContainer/HBoxContainer/HSplitContainer" instance=ExtResource("4_55lkt")]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 

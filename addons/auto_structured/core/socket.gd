@@ -2,7 +2,9 @@
 class_name Socket extends Resource
 
 ## Unique identifier for this socket type
-@export var socket_id: String = ""
+@export var socket_id: String = "":
+	set(value):
+		socket_id = value
 
 ## Direction this socket is facing (must be one of the 6 cardinal directions)
 @export var direction: Vector3i = Vector3i.UP:
@@ -19,12 +21,12 @@ class_name Socket extends Resource
 static func is_valid_direction(dir: Vector3i) -> bool:
 	"""Check if direction is one of the 6 cardinal directions."""
 	return dir in [
-		Vector3i.RIGHT,   # (1, 0, 0)
-		Vector3i.LEFT,    # (-1, 0, 0)
-		Vector3i.UP,      # (0, 1, 0)
-		Vector3i.DOWN,    # (0, -1, 0)
+		Vector3i.RIGHT, # (1, 0, 0)
+		Vector3i.LEFT, # (-1, 0, 0)
+		Vector3i.UP, # (0, 1, 0)
+		Vector3i.DOWN, # (0, -1, 0)
 		Vector3i.FORWARD, # (0, 0, -1)
-		Vector3i.BACK     # (0, 0, 1)
+		Vector3i.BACK # (0, 0, 1)
 	]
 
 func is_compatible_with(other_socket: Socket) -> bool:
@@ -38,3 +40,19 @@ func is_compatible_with(other_socket: Socket) -> bool:
 		true if compatible, false otherwise
 	"""
 	return other_socket.socket_id in compatible_sockets
+
+func add_compatible_socket(id: String) -> void:
+	if id in compatible_sockets:
+		return
+	var compatible_copy: Array[String] = []
+	compatible_copy.assign(compatible_sockets)
+	compatible_copy.append(id)
+	compatible_sockets = compatible_copy
+
+func remove_compatible_socket(id: String) -> void:
+	if id in compatible_sockets:
+		return
+	var compatible_copy: Array[String] = []
+	compatible_copy.assign(compatible_sockets)
+	compatible_copy.erase(id)
+	compatible_sockets = compatible_copy
