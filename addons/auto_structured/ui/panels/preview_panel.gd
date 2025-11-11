@@ -18,10 +18,10 @@ var resume_timer: float = 0.0
 
 @onready var viewport: SubViewport = %PreviewViewport
 @onready var camera: Camera3D = %PreviewCamera
-@onready var viewport_container: SubViewportContainer = (
-	$Panel/MarginContainer/ScrollContainer/VBoxContainer/Panel/SubViewportContainer
-)
+@onready
+var viewport_container: SubViewportContainer = $Panel/MarginContainer/ScrollContainer/VBoxContainer/Panel/SubViewportContainer
 @onready var viewport_options: MenuButton = %ViewportOptions
+
 
 func _ready() -> void:
 	update_camera_transform()
@@ -33,6 +33,7 @@ func _ready() -> void:
 	var popup = viewport_options.get_popup()
 	popup.id_pressed.connect(_on_viewport_option_selected)
 	popup.set_item_checked(0, auto_rotate)
+
 
 func _process(delta: float) -> void:
 	# Handle auto-rotate resume timer
@@ -46,14 +47,16 @@ func _process(delta: float) -> void:
 		camera_rotation.y += delta * 15.0  # Rotate 15 degrees per second
 		update_camera_transform()
 
+
 func _on_viewport_option_selected(id: int) -> void:
 	var popup = viewport_options.get_popup()
 	match id:
 		0:  # Auto Rotate
 			auto_rotate = !auto_rotate
 			popup.set_item_checked(0, auto_rotate)
-		1: # Reset Camera
+		1:  # Reset Camera
 			frame_structure()
+
 
 func _on_viewport_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
@@ -137,6 +140,7 @@ func _on_viewport_gui_input(event: InputEvent) -> void:
 			else:
 				last_mouse_pos = current_mouse
 
+
 func update_camera_transform() -> void:
 	"""Update camera position based on orbit controls"""
 	if not camera:
@@ -145,14 +149,14 @@ func update_camera_transform() -> void:
 	var pitch_rad = deg_to_rad(camera_rotation.x)
 	var yaw_rad = deg_to_rad(camera_rotation.y)
 
-	var offset = Vector3(
-		cos(pitch_rad) * sin(yaw_rad),
-		sin(pitch_rad),
-		cos(pitch_rad) * cos(yaw_rad)
-	) * camera_distance
+	var offset = (
+		Vector3(cos(pitch_rad) * sin(yaw_rad), sin(pitch_rad), cos(pitch_rad) * cos(yaw_rad))
+		* camera_distance
+	)
 
 	camera.global_position = camera_target + offset
 	camera.look_at(camera_target, Vector3.UP)
+
 
 func frame_structure() -> void:
 	"""Frame the camera to show the entire structure"""
@@ -162,9 +166,35 @@ func frame_structure() -> void:
 	camera_rotation = Vector2(15, 45)  # Reset to default pitch and yaw
 	update_camera_transform()
 
+
 func add_structure_node(node: Node3D) -> void:
 	"""Add a generated structure to the viewport for preview"""
 	viewport.add_child(node)
+
+
+func display_tile_preview(tile: Tile) -> void:
+	"""Display a preview of the given tile in the viewport"""
+	clear_structure()
+
+	if tile.scene != null:
+		var instance = tile.scene.instantiate()
+		if instance is Node3D:
+			add_structure_node(instance)
+			frame_structure()
+			return
+
+		push_error("Tile %s scene is not a Node3D" % tile.name)
+		return
+
+	if tile.mesh != null:
+		var mesh_instance = MeshInstance3D.new()
+		mesh_instance.mesh = tile.mesh
+		add_structure_node(mesh_instance)
+		frame_structure()
+		return
+
+	push_error("Tile has no scene assigned")
+
 
 func clear_structure() -> void:
 	"""Remove all structure nodes from the viewport"""
@@ -172,9 +202,11 @@ func clear_structure() -> void:
 		if child is Node3D and child != camera:
 			child.queue_free()
 
+
 func get_viewport_world() -> World3D:
 	"""Get the 3D world of the preview viewport"""
 	return viewport.world_3d
+
 
 func _add_test_cube() -> void:
 	"""Add a test cube to the viewport for testing camera controls"""

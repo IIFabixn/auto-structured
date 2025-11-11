@@ -1,3 +1,4 @@
+@tool
 class_name HeightRequirement extends Requirement
 ## Constrains module placement based on vertical position in the grid
 

@@ -1,7 +1,7 @@
 @tool
 class_name TagControl extends Control
 
-signal delete_requested
+signal deleted(tag_name: String)
 signal name_changed(new_name: String)
 
 @export var tag_name: String = "Tag":
@@ -20,4 +20,5 @@ func _ready() -> void:
 	tag_edit.text = tag_name
 
 func delete_pressed() -> void:
-	delete_requested.emit()
+	deleted.emit(tag_name)
+	queue_free()

@@ -1,3 +1,4 @@
+@tool
 class_name Socket extends Resource
 
 ## Unique identifier for this socket type

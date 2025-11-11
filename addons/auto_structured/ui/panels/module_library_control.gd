@@ -18,19 +18,29 @@ var library_option: OptionButton = $Panel/MarginContainer/VBoxContainer/VBoxCont
 @onready
 var library_menu_button: MenuButton = $Panel/MarginContainer/VBoxContainer/VBoxContainer/LibrarySelectorBar/MenuButton
 @onready var tile_list: ItemList = %TileList
+@onready var search_edit: LineEdit = %AssetSearchEdit
 
 
 func _ready() -> void:
 	find_libraries()
+	_refresh_tile_list()
 	tile_list.get_parent().resized.connect(_on_tile_list_size_flags_changed)
 	tile_list.item_selected.connect(on_tile_selected)
 	library_option.item_selected.connect(_on_library_selected)
+	search_edit.text_changed.connect(func(_new_text):
+		_refresh_tile_list()
+	)
 
 	_on_tile_list_size_flags_changed()
 	_setup_file_dialog()
 	_setup_menu_button()
 	_setup_rename_dialog()
 
+func _exit_tree() -> void:
+	if file_dialog:
+		file_dialog.queue_free()
+	if rename_dialog:
+		rename_dialog.queue_free()
 
 func find_libraries() -> void:
 	# Scan the resource folder for ModuleLibrary resources.
@@ -52,7 +62,6 @@ func find_libraries() -> void:
 	if not libraries.is_empty():
 		current_library = libraries[0]
 		library_option.selected = 0
-		_refresh_tile_list()
 
 
 func _on_library_selected(index: int) -> void:
@@ -216,6 +225,10 @@ func _save_library() -> void:
 		push_error("Failed to save library: ", err)
 
 
+func save_current_library() -> void:
+	_save_library()
+
+
 func create_new_library() -> void:
 	var new_library = ModuleLibrary.new()
 	new_library.library_name = "New Library"
@@ -265,14 +278,8 @@ func _on_files_selected(paths: PackedStringArray) -> void:
 			or path.ends_with(".obj")
 			or path.ends_with(".fbx")
 		):
-			var loaded_scene = load(path)
-			if loaded_scene is PackedScene:
-				tile.scene = loaded_scene
-			else:
-				# For direct mesh imports, wrap in a scene
-				var mesh_instance = loaded_scene as Mesh
-				if mesh_instance:
-					tile.mesh = mesh_instance
+			# GLTF files are imported as PackedScene by Godot
+			tile.scene = load(path)
 
 		# Add tile to the writable copy
 		tiles_copy.append(tile)
@@ -295,8 +302,20 @@ func on_tile_selected(index: int) -> void:
 		return
 
 	selected_tile = current_library.tiles[index]
+
+	# Duplicate the tile to ensure it's not a placeholder instance
+	# This workaround is needed because sub-resources in @tool scripts
+	# can remain as placeholders even with @tool on all classes
+	var tile_copy = selected_tile.duplicate(true)
+	current_library.tiles[index] = tile_copy
+	selected_tile = tile_copy
+
 	tile_selected.emit(selected_tile)
 
+func unselect_tile() -> void:
+	tile_list.select(-1)
+	tile_list.item_selected.emit(-1)
+	selected_tile = null
 
 func _refresh_tile_list() -> void:
 	tile_list.clear()
@@ -304,6 +323,11 @@ func _refresh_tile_list() -> void:
 	if not current_library:
 		return
 
+	var search_lower = search_edit.text.to_lower()
+	var filtered_tiles: Array[Tile] = []
 	for tile in current_library.tiles:
+		if search_lower == "" or tile.name.to_lower().findn(search_lower) != -1:
+			filtered_tiles.append(tile)
+	for tile in filtered_tiles:
 		tile_list.add_item(tile.name)
 		# TODO: Add thumbnail preview if mesh/scene has one

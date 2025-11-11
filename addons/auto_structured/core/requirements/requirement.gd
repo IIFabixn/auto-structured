@@ -1,3 +1,4 @@
+@tool
 class_name Requirement extends Resource
 ## Base class for WFC generation requirements
 ##

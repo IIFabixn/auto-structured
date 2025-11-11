@@ -185,6 +185,7 @@
 script = ExtResource("2_xc6o2")
 name = "Balcony_Cross_Corner"
 scene = ExtResource("4_g0csp")
+tags = Array[String](["test2"])
 
 [sub_resource type="Resource" id="Resource_j83s0"]
 script = ExtResource("2_xc6o2")
@@ -200,16 +201,19 @@ scene = ExtResource("7_jyw2h")
 script = ExtResource("2_xc6o2")
 name = "Balcony_Simple_Straight"
 scene = ExtResource("8_oc654")
+tags = Array[String](["test"])
 
 [sub_resource type="Resource" id="Resource_qqd6d"]
 script = ExtResource("2_xc6o2")
 name = "Corner_ExteriorWide_Brick"
 scene = ExtResource("9_u0i2c")
+tags = Array[String](["test"])
 
 [sub_resource type="Resource" id="Resource_2ytf3"]
 script = ExtResource("2_xc6o2")
 name = "Corner_ExteriorWide_Wood"
 scene = ExtResource("10_fluws")
+tags = Array[String](["test"])
 
 [sub_resource type="Resource" id="Resource_3vkxr"]
 script = ExtResource("2_xc6o2")

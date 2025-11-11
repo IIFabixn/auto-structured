@@ -68,10 +68,9 @@ size_flags_vertical = 3
 [node name="TabContainer" type="TabContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-current_tab = 1
+current_tab = 0
 
 [node name="Generel" type="ScrollContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer"]
-visible = false
 layout_mode = 2
 metadata/_tab_index = 0
 
@@ -83,29 +82,32 @@ size_flags_horizontal = 3
 layout_mode = 2
 title = "Tags"
 
-[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer/Tags"]
+[node name="TagsContainer" type="VBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer/Tags"]
+unique_name_in_owner = true
 layout_mode = 2
 
-[node name="TagControl" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer/Tags/VBoxContainer" instance=ExtResource("3_d84tf")]
-layout_mode = 2
-tag_name = "Wall"
-
-[node name="AddTagContainer" type="HBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer/Tags/VBoxContainer"]
+[node name="AddTagContainer" type="HBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer/Tags/TagsContainer"]
 custom_minimum_size = Vector2(121, 0)
 layout_mode = 2
 size_flags_horizontal = 4
 alignment = 1
 
-[node name="AddTagButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer/Tags/VBoxContainer/AddTagContainer"]
+[node name="AddTagButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer/Tags/TagsContainer/AddTagContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 texture_normal = ExtResource("3_mh04o")
 stretch_mode = 3
 
-[node name="AddTagEdit" type="LineEdit" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer/Tags/VBoxContainer/AddTagContainer"]
+[node name="AddTagEdit" type="LineEdit" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer/Tags/TagsContainer/AddTagContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "New Tag"
 expand_to_text_length = true
+
+[node name="TagControl" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer/Tags/TagsContainer" instance=ExtResource("3_d84tf")]
+layout_mode = 2
+tag_name = "Wall"
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer"]
 layout_mode = 2
@@ -146,6 +148,7 @@ virtual_keyboard_type = 2
 caret_blink = true
 
 [node name="Sockets" type="ScrollContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer"]
+visible = false
 layout_mode = 2
 metadata/_tab_index = 1
 

@@ -1,3 +1,4 @@
+@tool
 class_name GroundRequirement extends Requirement
 ## Requires module to be placed on the ground level (y = 0)
 

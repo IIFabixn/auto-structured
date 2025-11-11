@@ -1,3 +1,4 @@
+@tool
 class_name PositionRequirement extends Requirement
 ## Forces a specific module at a specific position
 
