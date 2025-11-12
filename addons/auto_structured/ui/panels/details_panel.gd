@@ -8,50 +8,30 @@ const SocketItem = preload("res://addons/auto_structured/ui/controls/socket_item
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const TagControl = preload("res://addons/auto_structured/ui/controls/tag_control.tscn")
+const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.gd")
 
 @export var current_tile: Tile
+var current_library: ModuleLibrary = null
 
 @onready var sockets_container = %SocketsContainer
-@onready var new_socket_id_edit = %NewSocketIDEdit
-@onready var add_socket_button = %AddSocketButton
 @onready var name_label = $Panel/MarginContainer/ScrollContainer/VBoxContainer/NameLabel
+
 @onready var add_tag_edit: LineEdit = %AddTagEdit
 @onready var add_tag_button: TextureButton = %AddTagButton
 @onready var tags_container: VBoxContainer = %TagsContainer
 
 
 func _ready() -> void:
-	add_socket_button.pressed.connect(_on_add_socket_button_pressed)
 	add_tag_button.pressed.connect(_on_add_tag)
 	add_tag_edit.text_submitted.connect(func(new_tag: String) -> void: _on_add_tag())
-
-
-func _on_add_socket_button_pressed() -> void:
-	if not current_tile:
-		return
-
-	var socket_id = new_socket_id_edit.text.strip_edges()
-	if socket_id == "":
-		return
-
-	# Create socket and add to tile
-	var socket = Socket.new()
-	socket.socket_id = socket_id
-	current_tile.add_socket(socket)
-
-	# Add socket to UI
-	add_socket_item(socket)
-	new_socket_id_edit.text = ""
-	save_tile_changes()
-
 
 func add_socket_item(socket: Socket) -> void:
 	if not socket or not current_tile:
 		return
 	var socket_item: SocketItem = SocketItem.instantiate()
 	socket_item.socket = socket
+	socket_item.library = current_library
 	socket_item.changed.connect(_on_socket_changed)
-	socket_item.deleted.connect(_on_socket_deleted)
 	sockets_container.add_child(socket_item)
 
 
@@ -64,16 +44,6 @@ func clear_sockets() -> void:
 func _on_socket_changed(_socket: Socket) -> void:
 	# Socket properties were modified, save changes
 	save_tile_changes()
-
-
-func _on_socket_deleted(socket: Socket) -> void:
-	if not current_tile:
-		return
-	
-	current_tile.remove_socket(socket)
-	save_tile_changes()
-
-
 func add_tag(tag: String) -> void:
 	var tag_item: TagControl = TagControl.instantiate()
 	tag_item.tag_name = tag
@@ -97,12 +67,13 @@ func _on_tag_name_changed(new_name: String) -> void:
 func _on_tag_delete_requested(tag_name: String) -> void:
 	if not current_tile:
 		return
-	
+
 	current_tile.remove_tag(tag_name)
 	save_tile_changes()
 
 
 func _on_add_tag() -> void:
+	print("Adding tag")
 	if not current_tile:
 		return
 
@@ -136,20 +107,41 @@ func clear_tags() -> void:
 			child.queue_free()
 
 
-func display_tile_details(tile: Tile) -> void:
+func display_tile_details(tile: Tile, library: ModuleLibrary = null) -> void:
 	# Clear previous tile data
 	name_label.text = "Tile: "
 	clear_sockets()
 	clear_tags()
 
-	# Set new tile
+	# Set new tile and library
 	current_tile = tile
+	current_library = library
 	name_label.text = "Tile: %s" % tile.name
+
+	# Ensure tile has all 6 sockets
+	tile.ensure_all_sockets()
 
 	# Populate UI with tile data
 	for tag in tile.tags:
 		add_tag(tag)
-	for socket in tile.sockets:
-		add_socket_item(socket)
+	
+	# Display sockets in fixed order
+	_display_all_sockets_in_order()
 
 	show()
+
+func _display_all_sockets_in_order() -> void:
+	"""Display all 6 sockets in a fixed order: Up, Down, Right, Left, Forward, Back"""
+	var directions = [
+		Vector3i.UP,      # (0, 1, 0)
+		Vector3i.DOWN,    # (0, -1, 0)
+		Vector3i.RIGHT,   # (1, 0, 0)
+		Vector3i.LEFT,    # (-1, 0, 0)
+		Vector3i.FORWARD, # (0, 0, -1)
+		Vector3i.BACK     # (0, 0, 1)
+	]
+	
+	for direction in directions:
+		var socket = current_tile.get_socket_by_direction(direction)
+		if socket:
+			add_socket_item(socket)

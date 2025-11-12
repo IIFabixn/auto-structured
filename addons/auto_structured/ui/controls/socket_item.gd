@@ -1,47 +1,197 @@
 @tool
 class_name SocketItem extends FoldableContainer
 
-signal deleted
 signal changed
 signal selected
 
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
+const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.gd")
+const ManageSocketsDialog = preload("res://addons/auto_structured/ui/controls/manage_sockets_dialog.tscn")
 
 @export var socket: Socket = null:
 	set(value):
 		socket = value
-		if name_edit and socket:
-			name_edit.text = socket.socket_id
+		if socket_type_option and socket:
+			_select_socket_type_in_dropdown(socket.socket_id)
+		_update_sockets_button_text()
 		selected.emit()
 
-var name_edit: LineEdit
-var direction_option: OptionButton
+var library: ModuleLibrary = null:
+	set(value):
+		library = value
+		_refresh_socket_type_dropdown()
 
-@onready var add_socket_button: TextureButton = $VBoxContainer/HBoxContainer/AddSocketButton
-@onready var compatible_sockets_popup: PopupPanel = $PopupPanel
-@onready var compatible_sockets_list: VBoxContainer = $PopupPanel/VBoxContainer/AvailableSocketList
+var socket_type_option: OptionButton
+var manage_sockets_dialog: Window
+
+@onready var manage_sockets_button: Button = $VBoxContainer/ManageSocketsButton
 
 func _ready() -> void:
-	name_edit = get_node_or_null("VBoxContainer/NameEdit")
-	direction_option = get_node_or_null("VBoxContainer/DirectionContainer/DirectionOption")
-	add_socket_button.pressed.connect(_on_add_socket_pressed)
+	socket_type_option = get_node_or_null("VBoxContainer/SocketTypeOption")
+	
+	if manage_sockets_button:
+		manage_sockets_button.pressed.connect(_on_manage_sockets_pressed)
+	
+	if socket_type_option:
+		socket_type_option.item_selected.connect(_on_socket_type_selected)
+	
+	_refresh_socket_type_dropdown()
+	_update_sockets_button_text()
 	update_title()
-	if socket and name_edit:
-		name_edit.text = socket.socket_id
 
-func _on_add_socket_pressed() -> void:
-	for child in compatible_sockets_list.get_children():
-		child.queue_free()
-	# TODO: Load available compatible sockets from current library
-	compatible_sockets_popup.popup_centered()
+func _update_sockets_button_text() -> void:
+	"""Update the manage sockets button to show count"""
+	if not manage_sockets_button or not socket:
+		return
+	
+	var count = socket.compatible_sockets.size()
+	if count == 0:
+		manage_sockets_button.text = "Compatible Sockets: None"
+	elif count == 1:
+		manage_sockets_button.text = "Compatible Sockets: 1"
+	else:
+		manage_sockets_button.text = "Compatible Sockets: %d" % count
+
+func _on_manage_sockets_pressed() -> void:
+	"""Open dialog to manage compatible sockets"""
+	if not socket or not library:
+		return
+	
+	# Create dialog if it doesn't exist
+	if not manage_sockets_dialog:
+		manage_sockets_dialog = ManageSocketsDialog.instantiate()
+		manage_sockets_dialog.sockets_changed.connect(_on_compatible_sockets_changed)
+		manage_sockets_dialog.new_type_requested.connect(_on_new_type_requested)
+		add_child(manage_sockets_dialog)
+	
+	# Get all registered socket types from library
+	var available_sockets = library.get_socket_types()
+	
+	# Update the dialog with available and selected sockets
+	manage_sockets_dialog.set_available_sockets(available_sockets, socket.compatible_sockets)
+	
+	# Show dialog
+	manage_sockets_dialog.popup_centered()
+
+func _on_compatible_sockets_changed(socket_ids: Array[String]) -> void:
+	"""Handle changes from the manage sockets dialog"""
+	if not socket:
+		return
+	
+	# Clear current compatible sockets
+	socket.compatible_sockets = []
+	
+	# Add all selected sockets
+	for socket_id in socket_ids:
+		socket.add_compatible_socket(socket_id)
+	
+	_update_sockets_button_text()
+	changed.emit(socket)
+
+func _on_new_type_requested(type_name: String) -> void:
+	"""Handle request to add a new socket type"""
+	if not library:
+		return
+	
+	# Register the new type in the library
+	library.register_socket_type(type_name)
+	
+	# Refresh the dialog with updated list (use socket_types, not just IDs in use)
+	if manage_sockets_dialog and manage_sockets_dialog.visible:
+		var available_sockets = library.get_socket_types()
+		manage_sockets_dialog.set_available_sockets(available_sockets, socket.compatible_sockets)
+	
+	# Also refresh the socket type dropdown
+	_refresh_socket_type_dropdown()
+
+func _refresh_socket_type_dropdown() -> void:
+	if not socket_type_option or not library:
+		return
+	
+	socket_type_option.clear()
+	socket_type_option.add_item("-- Select Socket Type --", -1)
+	socket_type_option.set_item_disabled(0, true)
+	
+	var socket_types = library.get_socket_types()
+	for i in range(socket_types.size()):
+		socket_type_option.add_item(socket_types[i], i)
+	
+	socket_type_option.add_separator()
+	socket_type_option.add_item("+ Add New Type...", 9999)
+	
+	if socket:
+		_select_socket_type_in_dropdown(socket.socket_id)
+
+func _select_socket_type_in_dropdown(socket_id: String) -> void:
+	if not socket_type_option:
+		return
+	
+	for i in range(socket_type_option.item_count):
+		if socket_type_option.get_item_text(i) == socket_id:
+			socket_type_option.selected = i
+			return
+
+func _on_socket_type_selected(index: int) -> void:
+	if not socket or not socket_type_option:
+		return
+	
+	var item_id = socket_type_option.get_item_id(index)
+	
+	# Handle "Add New Type" option
+	if item_id == 9999:
+		_show_add_new_type_dialog()
+		return
+	
+	var selected_type = socket_type_option.get_item_text(index)
+	socket.socket_id = selected_type
+	update_title()
+	changed.emit(socket)
+
+func _show_add_new_type_dialog() -> void:
+	# Create a simple dialog for adding new socket type
+	var dialog = AcceptDialog.new()
+	dialog.title = "Add New Socket Type"
+	dialog.dialog_text = "Enter new socket type ID:"
+	
+	var line_edit = LineEdit.new()
+	line_edit.placeholder_text = "e.g. wall_plain"
+	dialog.add_child(line_edit)
+	
+	dialog.confirmed.connect(func():
+		var new_type = line_edit.text.strip_edges()
+		if new_type and library:
+			library.register_socket_type(new_type)
+			_refresh_socket_type_dropdown()
+			# Select the newly added type
+			_select_socket_type_in_dropdown(new_type)
+			socket.socket_id = new_type
+			update_title()
+			changed.emit(socket)
+		dialog.queue_free()
+	)
+	
+	dialog.canceled.connect(func():
+		# Reset to previous selection
+		if socket:
+			_select_socket_type_in_dropdown(socket.socket_id)
+		dialog.queue_free()
+	)
+	
+	add_child(dialog)
+	dialog.popup_centered()
+	line_edit.grab_focus()
 
 func update_title() -> void:
 	if not socket:
 		return
 
-	title = "Socket: %s" % get_direction_name(socket.direction)
-	if name_edit:
-		name_edit.text = socket.socket_id
+	var icon = get_direction_icon(socket.direction)
+	var dir_name = get_direction_name(socket.direction)
+	var socket_type = socket.socket_id if socket.socket_id else "(not set)"
+	title = "%s %s: %s" % [icon, dir_name, socket_type]
+	
+	if socket_type_option:
+		_select_socket_type_in_dropdown(socket.socket_id)
 
 func get_direction_name(direction: Vector3i) -> String:
 	var direction_names = {
@@ -55,28 +205,14 @@ func get_direction_name(direction: Vector3i) -> String:
 
 	return direction_names.get(direction, "Unknown")
 
-func set_direction(value: int) -> void:
-	if not socket:
-		return
+func get_direction_icon(direction: Vector3i) -> String:
+	var direction_icons = {
+		Vector3i(1, 0, 0): "➡️",
+		Vector3i(-1, 0, 0): "⬅️",
+		Vector3i(0, 1, 0): "⬆️",
+		Vector3i(0, -1, 0): "⬇️",
+		Vector3i(0, 0, 1): "⏩",
+		Vector3i(0, 0, -1): "⏪"
+	}
 
-	match value:
-		0:
-			pass
-		1:
-			socket.direction = Vector3i(1, 0, 0) # Right
-		2:
-			socket.direction = Vector3i(-1, 0, 0) # Left
-		3:
-			socket.direction = Vector3i(0, 1, 0) # Up
-		4:
-			socket.direction = Vector3i(0, -1, 0) # Down
-		5:
-			socket.direction = Vector3i(0, 0, 1) # Forward
-		6:
-			socket.direction = Vector3i(0, 0, -1) # Back
-	update_title()
-
-func _on_delete_selected(id: int) -> void:
-	if id == 0:
-		deleted.emit(socket)
-		queue_free()
+	return direction_icons.get(direction, "❓")

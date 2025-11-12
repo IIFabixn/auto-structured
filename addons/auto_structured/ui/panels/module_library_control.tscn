@@ -68,7 +68,7 @@ popup/item_0/disabled = true
 layout_mode = 2
 icon = ExtResource("2_caqod")
 switch_on_hover = true
-item_count = 4
+item_count = 5
 popup/item_0/text = "Save"
 popup/item_0/id = 3
 popup/item_1/text = "Rename"
@@ -77,6 +77,8 @@ popup/item_2/text = "New"
 popup/item_2/id = 2
 popup/item_3/text = "Delete"
 popup/item_3/id = 1
+popup/item_4/text = "Manage Sockets"
+popup/item_4/id = 4
 
 [node name="AssetSearchEdit" type="LineEdit" parent="Panel/MarginContainer/VBoxContainer/VBoxContainer"]
 layout_mode = 2

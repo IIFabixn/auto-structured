@@ -74,7 +74,7 @@ popup/item_2/text = "New"
 popup/item_2/id = 2
 popup/item_3/text = "Delete"
 popup/item_3/id = 1
-popup/item_4/text = "Add Tile"
+popup/item_4/text = "Manage Sockets"
 popup/item_4/id = 4
 
 [node name="HBoxContainer" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/VBoxContainer"]
@@ -99,7 +99,6 @@ layout_mode = 2
 size_flags_vertical = 3
 theme_override_styles/panel = SubResource("StyleBoxEmpty_mwgey")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_jmuhx")
-draw_focus_border = true
 
 [node name="TileList" type="ItemList" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer"]
 unique_name_in_owner = true

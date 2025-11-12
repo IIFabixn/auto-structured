@@ -12,7 +12,7 @@ func _ready() -> void:
 
 
 func _on_module_tile_selected(tile: Tile) -> void:
-	details_panel.display_tile_details(tile)
+	details_panel.display_tile_details(tile, module_library_control.current_library)
 	viewport_panel.display_tile_preview(tile)
 
 

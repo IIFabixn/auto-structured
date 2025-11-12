@@ -5,6 +5,7 @@ signal tile_selected(tile: Tile)
 
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.gd")
+const ManageSocketsDialog = preload("res://addons/auto_structured/ui/controls/manage_sockets_dialog.tscn")
 
 var libraries: Array[ModuleLibrary] = []
 var current_library: ModuleLibrary
@@ -12,6 +13,7 @@ var selected_tile: Tile
 var file_dialog: EditorFileDialog
 var rename_dialog: AcceptDialog
 var rename_line_edit: LineEdit
+var manage_sockets_dialog: Window
 
 @onready
 var library_option: OptionButton = $Panel/MarginContainer/VBoxContainer/VBoxContainer/LibrarySelectorBar/OptionButton
@@ -154,6 +156,8 @@ func _on_library_menu_item_selected(id: int) -> void:
 			create_new_library()
 		3:  # Save
 			_save_library()
+		4:  # Manage Sockets
+			_manage_library_sockets()
 
 
 func _rename_library() -> void:
@@ -232,7 +236,16 @@ func save_current_library() -> void:
 func create_new_library() -> void:
 	var new_library = ModuleLibrary.new()
 	new_library.library_name = "New Library"
-	var save_path = "res://new_module_library.tres"
+	
+	# Find a unique filename
+	var base_path = "res://module_library"
+	var save_path = base_path + ".tres"
+	var counter = 1
+	
+	while FileAccess.file_exists(save_path):
+		save_path = base_path + "_" + str(counter) + ".tres"
+		counter += 1
+	
 	var err = ResourceSaver.save(new_library, save_path)
 
 	if err == OK:
@@ -241,8 +254,9 @@ func create_new_library() -> void:
 		library_option.selected = libraries.size() - 1
 		current_library = new_library
 		_refresh_tile_list()
+		print("Created new library at: ", save_path)
 	else:
-		push_warning("Failed to save new library resource.")
+		push_error("Failed to save new library resource. Error code: ", err)
 
 
 func add_tiles() -> void:
@@ -331,3 +345,81 @@ func _refresh_tile_list() -> void:
 	for tile in filtered_tiles:
 		tile_list.add_item(tile.name)
 		# TODO: Add thumbnail preview if mesh/scene has one
+
+func _manage_library_sockets() -> void:
+	"""Open dialog to manage socket types in the current library"""
+	if not current_library:
+		push_warning("No library selected to manage sockets")
+		return
+	
+	# Create dialog if it doesn't exist
+	if not manage_sockets_dialog:
+		manage_sockets_dialog = ManageSocketsDialog.instantiate()
+		manage_sockets_dialog.socket_renamed.connect(_on_socket_renamed)
+		manage_sockets_dialog.socket_deleted.connect(_on_socket_deleted)
+		add_child(manage_sockets_dialog)
+	
+	# Get all registered socket types from library
+	var socket_types = current_library.get_socket_types()
+	
+	# Update the dialog (no selection needed in editable mode)
+	var empty_selection: Array[String] = []
+	manage_sockets_dialog.set_available_sockets(socket_types, empty_selection)
+	
+	# Set editable mode (after data is set)
+	manage_sockets_dialog.is_editable = true
+	
+	# Show dialog centered with explicit size (deferred to ensure UI is ready)
+	manage_sockets_dialog.call_deferred("popup_centered", Vector2i(500, 500))
+
+func _on_socket_renamed(old_name: String, new_name: String) -> void:
+	"""Handle socket type rename"""
+	if not current_library:
+		return
+	
+	# Find and replace in socket_types array
+	var index = current_library.socket_types.find(old_name)
+	if index >= 0:
+		current_library.socket_types[index] = new_name
+	
+	# Update all tiles that use this socket type
+	for tile in current_library.tiles:
+		for socket in tile.sockets:
+			if socket.socket_id == old_name:
+				socket.socket_id = new_name
+			# Also update compatible sockets
+			if old_name in socket.compatible_sockets:
+				var compat_index = socket.compatible_sockets.find(old_name)
+				socket.compatible_sockets[compat_index] = new_name
+	
+	# Refresh the dialog
+	manage_sockets_dialog.set_available_sockets(current_library.get_socket_types(), [])
+	
+	# Save the library
+	_save_library()
+	
+	print("Socket type renamed from '%s' to '%s'" % [old_name, new_name])
+
+func _on_socket_deleted(socket_name: String) -> void:
+	"""Handle socket type deletion"""
+	if not current_library:
+		return
+	
+	# Remove from socket_types array
+	current_library.socket_types.erase(socket_name)
+	
+	# Update all tiles - replace deleted socket type with "none"
+	for tile in current_library.tiles:
+		for socket in tile.sockets:
+			if socket.socket_id == socket_name:
+				socket.socket_id = "none"
+			# Also remove from compatible sockets
+			socket.compatible_sockets.erase(socket_name)
+	
+	# Refresh the dialog
+	manage_sockets_dialog.set_available_sockets(current_library.get_socket_types(), [])
+	
+	# Save the library
+	_save_library()
+	
+	print("Socket type '%s' deleted" % socket_name)

@@ -77,3 +77,41 @@ func remove_socket(socket: Socket) -> void:
     sockets_copy.assign(sockets)
     sockets_copy.erase(socket)
     sockets = sockets_copy
+
+func ensure_all_sockets() -> void:
+    """
+    Ensure this tile has exactly 6 sockets (one for each cardinal direction).
+    Creates missing sockets with socket_id = 'none'.
+    """
+    var directions = [
+        Vector3i.UP,      # (0, 1, 0)
+        Vector3i.DOWN,    # (0, -1, 0)
+        Vector3i.RIGHT,   # (1, 0, 0)
+        Vector3i.LEFT,    # (-1, 0, 0)
+        Vector3i.FORWARD, # (0, 0, -1)
+        Vector3i.BACK     # (0, 0, 1)
+    ]
+    
+    for direction in directions:
+        var existing = get_sockets_in_direction(direction)
+        if existing.is_empty():
+            # Create a 'none' socket for this direction
+            var new_socket = Socket.new()
+            new_socket.direction = direction
+            new_socket.socket_id = "none"
+            add_socket(new_socket)
+
+func get_socket_by_direction(direction: Vector3i) -> Socket:
+    """
+    Get the socket for a specific direction.
+    
+    Args:
+        direction: The direction to get the socket for
+    
+    Returns:
+        The Socket instance for that direction, or null if not found
+    """
+    var sockets_in_dir = get_sockets_in_direction(direction)
+    if not sockets_in_dir.is_empty():
+        return sockets_in_dir[0]
+    return null

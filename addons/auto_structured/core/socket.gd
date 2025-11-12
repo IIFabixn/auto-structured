@@ -50,7 +50,7 @@ func add_compatible_socket(id: String) -> void:
 	compatible_sockets = compatible_copy
 
 func remove_compatible_socket(id: String) -> void:
-	if id in compatible_sockets:
+	if id not in compatible_sockets:
 		return
 	var compatible_copy: Array[String] = []
 	compatible_copy.assign(compatible_sockets)

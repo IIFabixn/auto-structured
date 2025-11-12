@@ -157,22 +157,6 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="HBoxContainer" type="HBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Sockets/SocketsContainer"]
-layout_mode = 2
-
-[node name="NewSocketIDEdit" type="LineEdit" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Sockets/SocketsContainer/HBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-placeholder_text = "New Socket"
-
-[node name="AddSocketButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Sockets/SocketsContainer/HBoxContainer"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(32, 32)
-layout_mode = 2
-texture_normal = ExtResource("3_mh04o")
-stretch_mode = 3
-
 [node name="FoldableContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Sockets/SocketsContainer" instance=ExtResource("5_mh04o")]
 layout_mode = 2
 title = "Socket: Up"
