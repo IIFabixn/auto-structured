@@ -125,7 +125,7 @@ render_target_update_mode = 4
 
 [node name="PreviewCamera" type="Camera3D" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/Panel/SubViewportContainer/PreviewViewport"]
 unique_name_in_owner = true
-transform = Transform3D(-0.8939404, -0.11599905, 0.4329143, 0, 0.9659258, 0.25881907, -0.44818586, 0.23136882, -0.8634801, 4.329143, 2.5881906, -8.634801)
+transform = Transform3D(-0.82250094, -0.1472069, 0.54938364, 0, 0.9659258, 0.25881904, -0.5687638, 0.21287891, -0.7944749, 5.493836, 2.5881906, -7.944749)
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/Panel/SubViewportContainer/PreviewViewport"]
 transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 5, 0)

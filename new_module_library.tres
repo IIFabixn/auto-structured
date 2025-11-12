@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="ModuleLibrary" load_steps=369 format=3 uid="uid://cmr45go3wf8kq"]
+[gd_resource type="Resource" script_class="ModuleLibrary" load_steps=855 format=3 uid="uid://cmr45go3wf8kq"]
 
 [ext_resource type="Script" uid="uid://n5qundf42kiu" path="res://addons/auto_structured/core/module_library.gd" id="1_wmpsw"]
 [ext_resource type="Script" uid="uid://c7f03neubtkf3" path="res://addons/auto_structured/core/tile.gd" id="2_xc6o2"]
@@ -258,85 +258,565 @@ name = "Balcony_Cross_Straight"
 scene = ExtResource("6_feqg5")
 sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_fluws"), SubResource("Resource_wkhhu"), SubResource("Resource_xrthu"), SubResource("Resource_c573h"), SubResource("Resource_47exj"), SubResource("Resource_ehmmj")])
 
-[sub_resource type="Resource" id="Resource_bew07"]
+[sub_resource type="Resource" id="Resource_dwnrv"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_usyit"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_yxib7"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_v4xfh"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_vu1qo"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_hur8k"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_kk6lc"]
 script = ExtResource("2_xc6o2")
 name = "Balcony_Simple_Corner"
 scene = ExtResource("7_jyw2h")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_dwnrv"), SubResource("Resource_usyit"), SubResource("Resource_yxib7"), SubResource("Resource_v4xfh"), SubResource("Resource_vu1qo"), SubResource("Resource_hur8k")])
 
-[sub_resource type="Resource" id="Resource_j4lj0"]
+[sub_resource type="Resource" id="Resource_gihxs"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_63ysr"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_s7l4b"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_u68l7"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_vny6o"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_ry8xj"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_wpoee"]
 script = ExtResource("2_xc6o2")
 name = "Balcony_Simple_Straight"
 scene = ExtResource("8_oc654")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_gihxs"), SubResource("Resource_63ysr"), SubResource("Resource_s7l4b"), SubResource("Resource_u68l7"), SubResource("Resource_vny6o"), SubResource("Resource_ry8xj")])
 
-[sub_resource type="Resource" id="Resource_qqd6d"]
+[sub_resource type="Resource" id="Resource_a26ni"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_2ou0k"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_j0ucn"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_nnj8p"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_bnq40"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_aln3m"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_cm3tb"]
 script = ExtResource("2_xc6o2")
 name = "Corner_ExteriorWide_Brick"
 scene = ExtResource("9_u0i2c")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_a26ni"), SubResource("Resource_2ou0k"), SubResource("Resource_j0ucn"), SubResource("Resource_nnj8p"), SubResource("Resource_bnq40"), SubResource("Resource_aln3m")])
 
-[sub_resource type="Resource" id="Resource_2ytf3"]
+[sub_resource type="Resource" id="Resource_li223"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_u5y75"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_0nxph"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_7dm7t"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_h4uuv"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_uf50t"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_b24b7"]
 script = ExtResource("2_xc6o2")
 name = "Corner_ExteriorWide_Wood"
 scene = ExtResource("10_fluws")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_li223"), SubResource("Resource_u5y75"), SubResource("Resource_0nxph"), SubResource("Resource_7dm7t"), SubResource("Resource_h4uuv"), SubResource("Resource_uf50t")])
 
-[sub_resource type="Resource" id="Resource_3vkxr"]
+[sub_resource type="Resource" id="Resource_47vac"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_q4wx2"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_l5gib"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_brcjg"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_s712f"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_rb4re"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_h28vv"]
 script = ExtResource("2_xc6o2")
 name = "Corner_Exterior_Brick"
 scene = ExtResource("11_wkhhu")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_47vac"), SubResource("Resource_q4wx2"), SubResource("Resource_l5gib"), SubResource("Resource_brcjg"), SubResource("Resource_s712f"), SubResource("Resource_rb4re")])
 
-[sub_resource type="Resource" id="Resource_x8obq"]
+[sub_resource type="Resource" id="Resource_q0ds4"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_g70yg"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_opvy3"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_n574f"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_u62gh"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_o66ep"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_jfb4f"]
 script = ExtResource("2_xc6o2")
 name = "Corner_Exterior_TopDown"
 scene = ExtResource("12_xrthu")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_q0ds4"), SubResource("Resource_g70yg"), SubResource("Resource_opvy3"), SubResource("Resource_n574f"), SubResource("Resource_u62gh"), SubResource("Resource_o66ep")])
 
-[sub_resource type="Resource" id="Resource_0wgij"]
+[sub_resource type="Resource" id="Resource_ypcc0"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_jjui6"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_74nca"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_hcsij"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_kpane"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_dh54g"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_3ai62"]
 script = ExtResource("2_xc6o2")
 name = "Corner_Exterior_TopOnly"
 scene = ExtResource("13_c573h")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_ypcc0"), SubResource("Resource_jjui6"), SubResource("Resource_74nca"), SubResource("Resource_hcsij"), SubResource("Resource_kpane"), SubResource("Resource_dh54g")])
 
-[sub_resource type="Resource" id="Resource_27s2o"]
+[sub_resource type="Resource" id="Resource_3fam3"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_chjnu"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_us1nx"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_1gegl"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_mi1ha"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_fv3nn"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_lvh28"]
 script = ExtResource("2_xc6o2")
 name = "Corner_Exterior_Wood"
 scene = ExtResource("14_47exj")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_3fam3"), SubResource("Resource_chjnu"), SubResource("Resource_us1nx"), SubResource("Resource_1gegl"), SubResource("Resource_mi1ha"), SubResource("Resource_fv3nn")])
 
-[sub_resource type="Resource" id="Resource_sj0df"]
+[sub_resource type="Resource" id="Resource_hgouw"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_x0cph"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_d4ksa"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_l1x0t"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_1j8fy"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_kbm0e"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_tdull"]
 script = ExtResource("2_xc6o2")
 name = "Corner_Interior_Big"
 scene = ExtResource("15_ehmmj")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_hgouw"), SubResource("Resource_x0cph"), SubResource("Resource_d4ksa"), SubResource("Resource_l1x0t"), SubResource("Resource_1j8fy"), SubResource("Resource_kbm0e")])
 
-[sub_resource type="Resource" id="Resource_77cme"]
+[sub_resource type="Resource" id="Resource_2g0wd"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_fk6kl"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_fe2wj"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_ofnix"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_o3rrn"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_lkqmt"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_tn76w"]
 script = ExtResource("2_xc6o2")
 name = "Corner_Interior_Small"
 scene = ExtResource("16_sl5rr")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_2g0wd"), SubResource("Resource_fk6kl"), SubResource("Resource_fe2wj"), SubResource("Resource_ofnix"), SubResource("Resource_o3rrn"), SubResource("Resource_lkqmt")])
 
-[sub_resource type="Resource" id="Resource_6b7nh"]
+[sub_resource type="Resource" id="Resource_e86no"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_e45pe"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_ivko6"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_lltjp"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_eimk6"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_wc6mp"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_hm6xu"]
 script = ExtResource("2_xc6o2")
 name = "DoorFrame_Flat_Brick"
 scene = ExtResource("17_dwnrv")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_e86no"), SubResource("Resource_e45pe"), SubResource("Resource_ivko6"), SubResource("Resource_lltjp"), SubResource("Resource_eimk6"), SubResource("Resource_wc6mp")])
 
-[sub_resource type="Resource" id="Resource_107c1"]
+[sub_resource type="Resource" id="Resource_cbnly"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_fkn13"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_vg6qx"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_8nw82"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_sh35q"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_wcude"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_5qier"]
 script = ExtResource("2_xc6o2")
 name = "DoorFrame_Flat_WoodDark"
 scene = ExtResource("18_usyit")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_cbnly"), SubResource("Resource_fkn13"), SubResource("Resource_vg6qx"), SubResource("Resource_8nw82"), SubResource("Resource_sh35q"), SubResource("Resource_wcude")])
 
-[sub_resource type="Resource" id="Resource_xlf2p"]
+[sub_resource type="Resource" id="Resource_3snfw"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_sqot1"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_ptgyv"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_ykhh4"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_xsjdl"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_knmej"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_7ut4r"]
 script = ExtResource("2_xc6o2")
 name = "DoorFrame_Round_Brick"
 scene = ExtResource("19_yxib7")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_3snfw"), SubResource("Resource_sqot1"), SubResource("Resource_ptgyv"), SubResource("Resource_ykhh4"), SubResource("Resource_xsjdl"), SubResource("Resource_knmej")])
 
-[sub_resource type="Resource" id="Resource_r6mbx"]
+[sub_resource type="Resource" id="Resource_u3q5e"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_wc0yp"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_wk7hy"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_ncw0w"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_q6yqk"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_21dpp"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_j6f4j"]
 script = ExtResource("2_xc6o2")
 name = "DoorFrame_Round_WoodDark"
 scene = ExtResource("20_v4xfh")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_u3q5e"), SubResource("Resource_wc0yp"), SubResource("Resource_wk7hy"), SubResource("Resource_ncw0w"), SubResource("Resource_q6yqk"), SubResource("Resource_21dpp")])
 
-[sub_resource type="Resource" id="Resource_u5ovj"]
+[sub_resource type="Resource" id="Resource_tr2ar"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_me6we"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_ahwfo"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_vg0e8"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_sui78"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_1fr7r"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_wr2j2"]
 script = ExtResource("2_xc6o2")
 name = "Door_1_Flat"
 scene = ExtResource("21_vu1qo")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_tr2ar"), SubResource("Resource_me6we"), SubResource("Resource_ahwfo"), SubResource("Resource_vg0e8"), SubResource("Resource_sui78"), SubResource("Resource_1fr7r")])
 
-[sub_resource type="Resource" id="Resource_le5lq"]
+[sub_resource type="Resource" id="Resource_ci5g8"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_vvu1d"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_3pq0g"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_d4f6s"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_7f2ya"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_rc2by"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_0ik4s"]
 script = ExtResource("2_xc6o2")
 name = "Door_1_Round"
 scene = ExtResource("22_hur8k")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_ci5g8"), SubResource("Resource_vvu1d"), SubResource("Resource_3pq0g"), SubResource("Resource_d4f6s"), SubResource("Resource_7f2ya"), SubResource("Resource_rc2by")])
 
 [sub_resource type="Resource" id="Resource_gccx6"]
 script = ExtResource("2_xc6o2")
@@ -373,20 +853,111 @@ script = ExtResource("2_xc6o2")
 name = "Floor_Brick"
 scene = ExtResource("29_ry8xj")
 
-[sub_resource type="Resource" id="Resource_o78io"]
+[sub_resource type="Resource" id="Resource_cpac0"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_yrdd2"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_04o8r"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_kxdll"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_j83s0"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_bew07"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_j4lj0"]
 script = ExtResource("2_xc6o2")
 name = "Floor_RedBrick"
 scene = ExtResource("30_wpoee")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_cpac0"), SubResource("Resource_yrdd2"), SubResource("Resource_04o8r"), SubResource("Resource_kxdll"), SubResource("Resource_j83s0"), SubResource("Resource_bew07")])
 
-[sub_resource type="Resource" id="Resource_cfnwx"]
+[sub_resource type="Resource" id="Resource_o075i"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_hleie"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_aa0bm"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_qwje1"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_ra1ec"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_gm357"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_lr7bw"]
 script = ExtResource("2_xc6o2")
 name = "Floor_UnevenBrick"
 scene = ExtResource("31_o075i")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_o075i"), SubResource("Resource_hleie"), SubResource("Resource_aa0bm"), SubResource("Resource_qwje1"), SubResource("Resource_ra1ec"), SubResource("Resource_gm357")])
 
 [sub_resource type="Resource" id="Resource_77bel"]
+script = ExtResource("5_xyi65")
+socket_id = "floor"
+compatible_sockets = Array[String](["single_roof"])
+
+[sub_resource type="Resource" id="Resource_8wrp1"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_aq6hp"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_i5pge"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_oiygo"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_p110c"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_3f7v0"]
 script = ExtResource("2_xc6o2")
 name = "Floor_WoodDark"
 scene = ExtResource("32_hleie")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_77bel"), SubResource("Resource_8wrp1"), SubResource("Resource_aq6hp"), SubResource("Resource_i5pge"), SubResource("Resource_oiygo"), SubResource("Resource_p110c")])
 
 [sub_resource type="Resource" id="Resource_uxiwe"]
 script = ExtResource("2_xc6o2")
@@ -413,70 +984,313 @@ script = ExtResource("2_xc6o2")
 name = "Floor_WoodDark_OverhangCorner"
 scene = ExtResource("37_lr7bw")
 
-[sub_resource type="Resource" id="Resource_yff44"]
+[sub_resource type="Resource" id="Resource_qqd6d"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_2ytf3"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_3vkxr"]
+script = ExtResource("5_xyi65")
+socket_id = "floor"
+direction = Vector3i(1, 0, 0)
+compatible_sockets = Array[String](["floor"])
+
+[sub_resource type="Resource" id="Resource_x8obq"]
+script = ExtResource("5_xyi65")
+socket_id = "floor"
+direction = Vector3i(-1, 0, 0)
+compatible_sockets = Array[String](["floor"])
+
+[sub_resource type="Resource" id="Resource_0wgij"]
+script = ExtResource("5_xyi65")
+socket_id = "floor"
+direction = Vector3i(0, 0, -1)
+compatible_sockets = Array[String](["floor"])
+
+[sub_resource type="Resource" id="Resource_27s2o"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_sj0df"]
 script = ExtResource("2_xc6o2")
 name = "Floor_WoodLight"
 scene = ExtResource("38_a26ni")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_qqd6d"), SubResource("Resource_2ytf3"), SubResource("Resource_3vkxr"), SubResource("Resource_x8obq"), SubResource("Resource_0wgij"), SubResource("Resource_27s2o")])
 
 [sub_resource type="Resource" id="Resource_daa8m"]
 script = ExtResource("2_xc6o2")
 name = "Floor_WoodLight_OverhangCorner2"
 scene = ExtResource("39_2ou0k")
 
-[sub_resource type="Resource" id="Resource_trxuy"]
+[sub_resource type="Resource" id="Resource_77cme"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_6b7nh"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_107c1"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_xlf2p"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_r6mbx"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_u5ovj"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_le5lq"]
 script = ExtResource("2_xc6o2")
 name = "Floor_WoodLight_OverhangCorner"
 scene = ExtResource("40_j0ucn")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_77cme"), SubResource("Resource_6b7nh"), SubResource("Resource_107c1"), SubResource("Resource_xlf2p"), SubResource("Resource_r6mbx"), SubResource("Resource_u5ovj")])
 
 [sub_resource type="Resource" id="Resource_k0i6y"]
 script = ExtResource("2_xc6o2")
 name = "HoleCover_90Angle"
 scene = ExtResource("41_nnj8p")
 
+[sub_resource type="Resource" id="Resource_o78io"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_cfnwx"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_yff44"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_trxuy"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
 [sub_resource type="Resource" id="Resource_pndoo"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_6ob12"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_uw6ln"]
 script = ExtResource("2_xc6o2")
 name = "HoleCover_90Half"
 scene = ExtResource("42_bnq40")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_o78io"), SubResource("Resource_cfnwx"), SubResource("Resource_yff44"), SubResource("Resource_trxuy"), SubResource("Resource_pndoo"), SubResource("Resource_6ob12")])
 
 [sub_resource type="Resource" id="Resource_n75y7"]
 script = ExtResource("2_xc6o2")
 name = "HoleCover_90Stairs"
 scene = ExtResource("43_aln3m")
 
-[sub_resource type="Resource" id="Resource_6ob12"]
+[sub_resource type="Resource" id="Resource_yc6ih"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_ijkcl"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_fuc86"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_vm1nc"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_6rxt6"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_oaae1"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_7mu8n"]
 script = ExtResource("2_xc6o2")
 name = "HoleCover_Straight"
 scene = ExtResource("44_cm3tb")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_yc6ih"), SubResource("Resource_ijkcl"), SubResource("Resource_fuc86"), SubResource("Resource_vm1nc"), SubResource("Resource_6rxt6"), SubResource("Resource_oaae1")])
 
 [sub_resource type="Resource" id="Resource_hels3"]
 script = ExtResource("2_xc6o2")
 name = "HoleCover_StraightHalf"
 scene = ExtResource("45_li223")
 
-[sub_resource type="Resource" id="Resource_uw6ln"]
+[sub_resource type="Resource" id="Resource_ks55i"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_tn76p"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_k0iy3"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_3w3pf"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_kvbgu"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_th48c"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_wqmp4"]
 script = ExtResource("2_xc6o2")
 name = "Overhang_Plaster_Corner"
 scene = ExtResource("46_u5y75")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_ks55i"), SubResource("Resource_tn76p"), SubResource("Resource_k0iy3"), SubResource("Resource_3w3pf"), SubResource("Resource_kvbgu"), SubResource("Resource_th48c")])
 
-[sub_resource type="Resource" id="Resource_yc6ih"]
+[sub_resource type="Resource" id="Resource_5uctw"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_bwcqm"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_hktf7"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_js5aw"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_8uygl"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_tjbc3"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_6ltcp"]
 script = ExtResource("2_xc6o2")
 name = "Overhang_Plaster_Corner_Front"
 scene = ExtResource("47_0nxph")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_5uctw"), SubResource("Resource_bwcqm"), SubResource("Resource_hktf7"), SubResource("Resource_js5aw"), SubResource("Resource_8uygl"), SubResource("Resource_tjbc3")])
 
-[sub_resource type="Resource" id="Resource_ijkcl"]
+[sub_resource type="Resource" id="Resource_j54uv"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_l48oi"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_j2j77"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_7ao8d"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_icylf"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_2t3yd"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_oh3ph"]
 script = ExtResource("2_xc6o2")
 name = "Overhang_Plaster_Long"
 scene = ExtResource("48_7dm7t")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_j54uv"), SubResource("Resource_l48oi"), SubResource("Resource_j2j77"), SubResource("Resource_7ao8d"), SubResource("Resource_icylf"), SubResource("Resource_2t3yd")])
 
 [sub_resource type="Resource" id="Resource_oki7i"]
 script = ExtResource("2_xc6o2")
 name = "Overhang_Plaster_Short"
 scene = ExtResource("49_h4uuv")
 
-[sub_resource type="Resource" id="Resource_fuc86"]
+[sub_resource type="Resource" id="Resource_a43am"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_7vae2"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_ihnds"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_j3fuj"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_rqepl"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_ywg1f"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_hygm1"]
 script = ExtResource("2_xc6o2")
 name = "Overhang_RoofIncline_Plaster"
 scene = ExtResource("50_uf50t")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_a43am"), SubResource("Resource_7vae2"), SubResource("Resource_ihnds"), SubResource("Resource_j3fuj"), SubResource("Resource_rqepl"), SubResource("Resource_ywg1f")])
 
 [sub_resource type="Resource" id="Resource_e3e6m"]
 script = ExtResource("2_xc6o2")
@@ -493,10 +1307,40 @@ script = ExtResource("2_xc6o2")
 name = "Overhang_Roof_UnevenBricks"
 scene = ExtResource("53_bwcqm")
 
-[sub_resource type="Resource" id="Resource_vm1nc"]
+[sub_resource type="Resource" id="Resource_r6e7g"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_uk7n7"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_yxkkl"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_emloq"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_gse0x"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_bpn76"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_sk31v"]
 script = ExtResource("2_xc6o2")
 name = "Overhang_Side_Plaster_Long_L"
 scene = ExtResource("54_hktf7")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_r6e7g"), SubResource("Resource_uk7n7"), SubResource("Resource_yxkkl"), SubResource("Resource_emloq"), SubResource("Resource_gse0x"), SubResource("Resource_bpn76")])
 
 [sub_resource type="Resource" id="Resource_alc7q"]
 script = ExtResource("2_xc6o2")
@@ -543,20 +1387,110 @@ script = ExtResource("2_xc6o2")
 name = "Overhang_UnevenBrick_Corner_Front"
 scene = ExtResource("63_icylf")
 
-[sub_resource type="Resource" id="Resource_6rxt6"]
+[sub_resource type="Resource" id="Resource_opsby"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_j6hht"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_islas"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_8utrv"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_5nw7h"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_7itef"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_f8mqk"]
 script = ExtResource("2_xc6o2")
 name = "Overhang_UnevenBrick_Long"
 scene = ExtResource("64_2t3yd")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_opsby"), SubResource("Resource_j6hht"), SubResource("Resource_islas"), SubResource("Resource_8utrv"), SubResource("Resource_5nw7h"), SubResource("Resource_7itef")])
 
-[sub_resource type="Resource" id="Resource_oaae1"]
+[sub_resource type="Resource" id="Resource_ea13n"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_6mqj7"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_6fydj"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_jm8t0"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_v38tx"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_wtco3"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_bpb25"]
 script = ExtResource("2_xc6o2")
 name = "Overhang_UnevenBrick_Short"
 scene = ExtResource("65_oh3ph")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_ea13n"), SubResource("Resource_6mqj7"), SubResource("Resource_6fydj"), SubResource("Resource_jm8t0"), SubResource("Resource_v38tx"), SubResource("Resource_wtco3")])
 
-[sub_resource type="Resource" id="Resource_7mu8n"]
+[sub_resource type="Resource" id="Resource_ll7w0"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_xx60c"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_8j06n"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_1n4c0"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_qyyd3"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_rr6ma"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_6x8he"]
 script = ExtResource("2_xc6o2")
 name = "Prop_Brick1"
 scene = ExtResource("66_a43am")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_ll7w0"), SubResource("Resource_xx60c"), SubResource("Resource_8j06n"), SubResource("Resource_1n4c0"), SubResource("Resource_qyyd3"), SubResource("Resource_rr6ma")])
 
 [sub_resource type="Resource" id="Resource_d7xg5"]
 script = ExtResource("2_xc6o2")
@@ -603,10 +1537,40 @@ script = ExtResource("2_xc6o2")
 name = "Prop_ExteriorBorder_Straight2"
 scene = ExtResource("75_6fydj")
 
-[sub_resource type="Resource" id="Resource_ks55i"]
+[sub_resource type="Resource" id="Resource_r0hm7"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_ejt1f"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_tow7l"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_l04h8"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_gbxbv"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_wg64p"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_sa3w4"]
 script = ExtResource("2_xc6o2")
 name = "Prop_MetalFence_Ornament"
 scene = ExtResource("76_jm8t0")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_r0hm7"), SubResource("Resource_ejt1f"), SubResource("Resource_tow7l"), SubResource("Resource_l04h8"), SubResource("Resource_gbxbv"), SubResource("Resource_wg64p")])
 
 [sub_resource type="Resource" id="Resource_ldchf"]
 script = ExtResource("2_xc6o2")
@@ -653,10 +1617,40 @@ script = ExtResource("2_xc6o2")
 name = "Prop_Wagon"
 scene = ExtResource("85_rb4re")
 
-[sub_resource type="Resource" id="Resource_tn76p"]
+[sub_resource type="Resource" id="Resource_yjdf0"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_jfvl3"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_ifa6p"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_whj1s"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_afnwo"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_drk5i"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_jqosx"]
 script = ExtResource("2_xc6o2")
 name = "Prop_WoodenFence_Extension1"
 scene = ExtResource("86_h28vv")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_yjdf0"), SubResource("Resource_jfvl3"), SubResource("Resource_ifa6p"), SubResource("Resource_whj1s"), SubResource("Resource_afnwo"), SubResource("Resource_drk5i")])
 
 [sub_resource type="Resource" id="Resource_dc6fa"]
 script = ExtResource("2_xc6o2")
@@ -693,20 +1687,80 @@ script = ExtResource("2_xc6o2")
 name = "Roof_Front_Brick4"
 scene = ExtResource("93_jfb4f")
 
-[sub_resource type="Resource" id="Resource_k0iy3"]
+[sub_resource type="Resource" id="Resource_0nev3"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_byuiu"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_s8fiq"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_l5n5f"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_q15vx"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_p7h7d"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_ev4vg"]
 script = ExtResource("2_xc6o2")
 name = "Roof_Front_Brick4_Half_L"
 scene = ExtResource("94_ypcc0")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_0nev3"), SubResource("Resource_byuiu"), SubResource("Resource_s8fiq"), SubResource("Resource_l5n5f"), SubResource("Resource_q15vx"), SubResource("Resource_p7h7d")])
 
 [sub_resource type="Resource" id="Resource_bc4f8"]
 script = ExtResource("2_xc6o2")
 name = "Roof_Front_Brick4_Half_R"
 scene = ExtResource("95_jjui6")
 
-[sub_resource type="Resource" id="Resource_3w3pf"]
+[sub_resource type="Resource" id="Resource_cp082"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_ojjxb"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_473ve"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_4020c"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_c0lhi"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_dtmie"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_x6sou"]
 script = ExtResource("2_xc6o2")
 name = "Roof_Front_Brick6"
 scene = ExtResource("96_74nca")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_cp082"), SubResource("Resource_ojjxb"), SubResource("Resource_473ve"), SubResource("Resource_4020c"), SubResource("Resource_c0lhi"), SubResource("Resource_dtmie")])
 
 [sub_resource type="Resource" id="Resource_0hpg0"]
 script = ExtResource("2_xc6o2")
@@ -723,50 +1777,290 @@ script = ExtResource("2_xc6o2")
 name = "Roof_Front_Brick8"
 scene = ExtResource("99_dh54g")
 
-[sub_resource type="Resource" id="Resource_kvbgu"]
+[sub_resource type="Resource" id="Resource_dv57b"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_ycney"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_i7u2s"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_s0on6"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_dt0ab"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_n62s0"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_3lgg4"]
 script = ExtResource("2_xc6o2")
 name = "Roof_Front_Brick8_Half_L"
 scene = ExtResource("100_3ai62")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_dv57b"), SubResource("Resource_ycney"), SubResource("Resource_i7u2s"), SubResource("Resource_s0on6"), SubResource("Resource_dt0ab"), SubResource("Resource_n62s0")])
 
-[sub_resource type="Resource" id="Resource_th48c"]
+[sub_resource type="Resource" id="Resource_l1mmp"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_8at0d"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_385ce"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_6sh60"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_iyi0o"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_ixky2"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_g8c60"]
 script = ExtResource("2_xc6o2")
 name = "Roof_Front_Brick8_Half_R"
 scene = ExtResource("101_3fam3")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_l1mmp"), SubResource("Resource_8at0d"), SubResource("Resource_385ce"), SubResource("Resource_6sh60"), SubResource("Resource_iyi0o"), SubResource("Resource_ixky2")])
 
-[sub_resource type="Resource" id="Resource_wqmp4"]
+[sub_resource type="Resource" id="Resource_txi0j"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_ikodo"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_jr1hj"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_loet6"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_ci6p2"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_en8qu"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_rvvej"]
 script = ExtResource("2_xc6o2")
 name = "Roof_Log"
 scene = ExtResource("102_chjnu")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_txi0j"), SubResource("Resource_ikodo"), SubResource("Resource_jr1hj"), SubResource("Resource_loet6"), SubResource("Resource_ci6p2"), SubResource("Resource_en8qu")])
 
-[sub_resource type="Resource" id="Resource_r6e7g"]
+[sub_resource type="Resource" id="Resource_cibfs"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_i1i87"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_3ux1y"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_3cuf6"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_eq2mo"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_modab"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_o04ps"]
 script = ExtResource("2_xc6o2")
 name = "Roof_Modular_RoundTiles"
 scene = ExtResource("103_us1nx")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_cibfs"), SubResource("Resource_i1i87"), SubResource("Resource_3ux1y"), SubResource("Resource_3cuf6"), SubResource("Resource_eq2mo"), SubResource("Resource_modab")])
 
-[sub_resource type="Resource" id="Resource_uk7n7"]
+[sub_resource type="Resource" id="Resource_jx4f5"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_vdkfh"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_n5if6"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_764dc"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_l8qqq"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_v2slt"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_8walv"]
 script = ExtResource("2_xc6o2")
 name = "Roof_RoundTiles_4x4"
 scene = ExtResource("104_1gegl")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_jx4f5"), SubResource("Resource_vdkfh"), SubResource("Resource_n5if6"), SubResource("Resource_764dc"), SubResource("Resource_l8qqq"), SubResource("Resource_v2slt")])
 
-[sub_resource type="Resource" id="Resource_yxkkl"]
+[sub_resource type="Resource" id="Resource_1iojx"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_32gjq"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_wfran"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_3xlnn"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_5ruvl"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_ahgdr"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_o0j1u"]
 script = ExtResource("2_xc6o2")
 name = "Roof_RoundTiles_4x6"
 scene = ExtResource("105_mi1ha")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_1iojx"), SubResource("Resource_32gjq"), SubResource("Resource_wfran"), SubResource("Resource_3xlnn"), SubResource("Resource_5ruvl"), SubResource("Resource_ahgdr")])
 
-[sub_resource type="Resource" id="Resource_emloq"]
+[sub_resource type="Resource" id="Resource_ivbs8"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_o2cjo"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_0h1wm"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_5an11"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_5rn2w"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_njjv4"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_1f6h4"]
 script = ExtResource("2_xc6o2")
 name = "Roof_RoundTiles_4x8"
 scene = ExtResource("106_fv3nn")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_ivbs8"), SubResource("Resource_o2cjo"), SubResource("Resource_0h1wm"), SubResource("Resource_5an11"), SubResource("Resource_5rn2w"), SubResource("Resource_njjv4")])
 
 [sub_resource type="Resource" id="Resource_b5ov2"]
 script = ExtResource("2_xc6o2")
 name = "Roof_RoundTiles_6x4"
 scene = ExtResource("107_lvh28")
 
-[sub_resource type="Resource" id="Resource_gse0x"]
+[sub_resource type="Resource" id="Resource_5c6m6"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_73aku"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_u2rsd"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_gbyrw"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_fw44o"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_odlf7"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_q5ds4"]
 script = ExtResource("2_xc6o2")
 name = "Roof_RoundTiles_6x6"
 scene = ExtResource("108_k1rx7")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_5c6m6"), SubResource("Resource_73aku"), SubResource("Resource_u2rsd"), SubResource("Resource_gbyrw"), SubResource("Resource_fw44o"), SubResource("Resource_odlf7")])
 
 [sub_resource type="Resource" id="Resource_rc2p3"]
 script = ExtResource("2_xc6o2")
@@ -783,10 +2077,40 @@ script = ExtResource("2_xc6o2")
 name = "Roof_RoundTiles_6x12"
 scene = ExtResource("111_3lp58")
 
-[sub_resource type="Resource" id="Resource_bpn76"]
+[sub_resource type="Resource" id="Resource_a2w65"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_qqq7y"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_jv45e"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_pqy21"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_jmu04"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_hbm8s"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_b7nfr"]
 script = ExtResource("2_xc6o2")
 name = "Roof_RoundTiles_6x14"
 scene = ExtResource("112_1bjqw")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_a2w65"), SubResource("Resource_qqq7y"), SubResource("Resource_jv45e"), SubResource("Resource_pqy21"), SubResource("Resource_jmu04"), SubResource("Resource_hbm8s")])
 
 [sub_resource type="Resource" id="Resource_aj3l7"]
 script = ExtResource("2_xc6o2")
@@ -803,170 +2127,1131 @@ script = ExtResource("2_xc6o2")
 name = "Roof_RoundTiles_8x12"
 scene = ExtResource("115_q4y2d")
 
-[sub_resource type="Resource" id="Resource_sk31v"]
+[sub_resource type="Resource" id="Resource_pwd3q"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_mb3pi"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_n8p8n"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_5l7y3"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_fix21"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_11h5q"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_76lwu"]
 script = ExtResource("2_xc6o2")
 name = "Roof_RoundTiles_8x14"
 scene = ExtResource("116_8kdir")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_pwd3q"), SubResource("Resource_mb3pi"), SubResource("Resource_n8p8n"), SubResource("Resource_5l7y3"), SubResource("Resource_fix21"), SubResource("Resource_11h5q")])
 
 [sub_resource type="Resource" id="Resource_q68yj"]
 script = ExtResource("2_xc6o2")
 name = "Roof_RoundTile_2x1"
 scene = ExtResource("117_3iem4")
 
-[sub_resource type="Resource" id="Resource_opsby"]
+[sub_resource type="Resource" id="Resource_m1g2j"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_qwwhk"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_37wig"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_jfpkk"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_oda64"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_fpkla"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_0aqx8"]
 script = ExtResource("2_xc6o2")
 name = "Roof_RoundTile_2x1_Long"
 scene = ExtResource("118_hwayr")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_m1g2j"), SubResource("Resource_qwwhk"), SubResource("Resource_37wig"), SubResource("Resource_jfpkk"), SubResource("Resource_oda64"), SubResource("Resource_fpkla")])
 
-[sub_resource type="Resource" id="Resource_j6hht"]
+[sub_resource type="Resource" id="Resource_ggwgj"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_ubf8n"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_7btgm"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_gadwk"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_r53rm"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_n5hrj"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_mkrw1"]
 script = ExtResource("2_xc6o2")
 name = "Roof_Support2"
 scene = ExtResource("119_r4t73")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_ggwgj"), SubResource("Resource_ubf8n"), SubResource("Resource_7btgm"), SubResource("Resource_gadwk"), SubResource("Resource_r53rm"), SubResource("Resource_n5hrj")])
 
-[sub_resource type="Resource" id="Resource_islas"]
+[sub_resource type="Resource" id="Resource_y6lg6"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_borac"]
+script = ExtResource("5_xyi65")
+socket_id = "single_roof"
+direction = Vector3i(0, -1, 0)
+compatible_sockets = Array[String](["floor"])
+
+[sub_resource type="Resource" id="Resource_fc1ys"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_ugcbm"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_qplf8"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_04cqt"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_qtvdo"]
 script = ExtResource("2_xc6o2")
 name = "Roof_Tower_RoundTiles"
 scene = ExtResource("120_xcsno")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_y6lg6"), SubResource("Resource_borac"), SubResource("Resource_fc1ys"), SubResource("Resource_ugcbm"), SubResource("Resource_qplf8"), SubResource("Resource_04cqt")])
 
-[sub_resource type="Resource" id="Resource_8utrv"]
+[sub_resource type="Resource" id="Resource_s6f8d"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_ovj5r"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_4wku1"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_m5isb"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_aigea"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_1hiq4"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_ebsnw"]
 script = ExtResource("2_xc6o2")
 name = "Roof_Wooden_2x1"
 scene = ExtResource("121_d7ecc")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_s6f8d"), SubResource("Resource_ovj5r"), SubResource("Resource_4wku1"), SubResource("Resource_m5isb"), SubResource("Resource_aigea"), SubResource("Resource_1hiq4")])
 
-[sub_resource type="Resource" id="Resource_5nw7h"]
+[sub_resource type="Resource" id="Resource_posda"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_muvyf"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_74s0p"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_dynp6"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_3xtqr"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_mmklb"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_lprl3"]
 script = ExtResource("2_xc6o2")
 name = "Roof_Wooden_2x1_Center"
 scene = ExtResource("122_hgouw")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_posda"), SubResource("Resource_muvyf"), SubResource("Resource_74s0p"), SubResource("Resource_dynp6"), SubResource("Resource_3xtqr"), SubResource("Resource_mmklb")])
 
-[sub_resource type="Resource" id="Resource_7itef"]
+[sub_resource type="Resource" id="Resource_xy7rk"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_nqnlh"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_mpim6"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_5v0cb"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_gcun4"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_cnqa0"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_y30q4"]
 script = ExtResource("2_xc6o2")
 name = "Roof_Wooden_2x1_Center_Mirror"
 scene = ExtResource("123_x0cph")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_xy7rk"), SubResource("Resource_nqnlh"), SubResource("Resource_mpim6"), SubResource("Resource_5v0cb"), SubResource("Resource_gcun4"), SubResource("Resource_cnqa0")])
 
-[sub_resource type="Resource" id="Resource_f8mqk"]
+[sub_resource type="Resource" id="Resource_5tgbl"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_urrqq"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_1n4we"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_v3e0u"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_2gtco"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_5amb4"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_2c2an"]
 script = ExtResource("2_xc6o2")
 name = "Roof_Wooden_2x1_Corner"
 scene = ExtResource("124_d4ksa")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_5tgbl"), SubResource("Resource_urrqq"), SubResource("Resource_1n4we"), SubResource("Resource_v3e0u"), SubResource("Resource_2gtco"), SubResource("Resource_5amb4")])
 
-[sub_resource type="Resource" id="Resource_ll7w0"]
+[sub_resource type="Resource" id="Resource_5uyrs"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_ek30l"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_skcij"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_lsyy1"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_hl5id"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_happw"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_xagxw"]
 script = ExtResource("2_xc6o2")
 name = "Roof_Wooden_2x1_L"
 scene = ExtResource("125_l1x0t")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_5uyrs"), SubResource("Resource_ek30l"), SubResource("Resource_skcij"), SubResource("Resource_lsyy1"), SubResource("Resource_hl5id"), SubResource("Resource_happw")])
 
-[sub_resource type="Resource" id="Resource_xx60c"]
+[sub_resource type="Resource" id="Resource_u2ohu"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_qwl48"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_3btbc"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_bulli"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_ugqo6"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_l1pds"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_4v757"]
 script = ExtResource("2_xc6o2")
 name = "Roof_Wooden_2x1_Middle"
 scene = ExtResource("126_1j8fy")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_u2ohu"), SubResource("Resource_qwl48"), SubResource("Resource_3btbc"), SubResource("Resource_bulli"), SubResource("Resource_ugqo6"), SubResource("Resource_l1pds")])
 
-[sub_resource type="Resource" id="Resource_8j06n"]
+[sub_resource type="Resource" id="Resource_fniji"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_dow5y"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_c6q41"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_swbeh"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_7x756"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_5qa2v"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_78say"]
 script = ExtResource("2_xc6o2")
 name = "Roof_Wooden_2x1_R"
 scene = ExtResource("127_kbm0e")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_fniji"), SubResource("Resource_dow5y"), SubResource("Resource_c6q41"), SubResource("Resource_swbeh"), SubResource("Resource_7x756"), SubResource("Resource_5qa2v")])
 
-[sub_resource type="Resource" id="Resource_1n4c0"]
+[sub_resource type="Resource" id="Resource_opy6p"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_nk1mt"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_kcvbe"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_q3eve"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_j1ben"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_6tjy4"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_xibke"]
 script = ExtResource("2_xc6o2")
 name = "Stairs_Exterior_NoFirstStep"
 scene = ExtResource("128_tdull")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_opy6p"), SubResource("Resource_nk1mt"), SubResource("Resource_kcvbe"), SubResource("Resource_q3eve"), SubResource("Resource_j1ben"), SubResource("Resource_6tjy4")])
 
-[sub_resource type="Resource" id="Resource_qyyd3"]
+[sub_resource type="Resource" id="Resource_ehjsb"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_upaji"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_hlhgg"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_l1r27"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_nerux"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_plk27"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_ihyh8"]
 script = ExtResource("2_xc6o2")
 name = "Stairs_Exterior_Platform45"
 scene = ExtResource("129_2g0wd")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_ehjsb"), SubResource("Resource_upaji"), SubResource("Resource_hlhgg"), SubResource("Resource_l1r27"), SubResource("Resource_nerux"), SubResource("Resource_plk27")])
 
-[sub_resource type="Resource" id="Resource_rr6ma"]
+[sub_resource type="Resource" id="Resource_yv8ve"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_71fnq"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_lfash"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_mhlt7"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_2g0ra"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_q8ceh"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_c2f8r"]
 script = ExtResource("2_xc6o2")
 name = "Stairs_Exterior_Platform45Clean"
 scene = ExtResource("130_fk6kl")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_yv8ve"), SubResource("Resource_71fnq"), SubResource("Resource_lfash"), SubResource("Resource_mhlt7"), SubResource("Resource_2g0ra"), SubResource("Resource_q8ceh")])
 
-[sub_resource type="Resource" id="Resource_6x8he"]
+[sub_resource type="Resource" id="Resource_qfnl5"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_hwkri"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_j5ehw"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_oicti"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_hr5ty"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_1tefj"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_nccxx"]
 script = ExtResource("2_xc6o2")
 name = "Stairs_Exterior_Platform"
 scene = ExtResource("131_fe2wj")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_qfnl5"), SubResource("Resource_hwkri"), SubResource("Resource_j5ehw"), SubResource("Resource_oicti"), SubResource("Resource_hr5ty"), SubResource("Resource_1tefj")])
 
-[sub_resource type="Resource" id="Resource_r0hm7"]
+[sub_resource type="Resource" id="Resource_ciq3g"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_r21iy"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_sl0hh"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_a7pp6"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_cl6sv"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_7wfve"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_n46xj"]
 script = ExtResource("2_xc6o2")
 name = "Stairs_Exterior_PlatformU"
 scene = ExtResource("132_ofnix")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_ciq3g"), SubResource("Resource_r21iy"), SubResource("Resource_sl0hh"), SubResource("Resource_a7pp6"), SubResource("Resource_cl6sv"), SubResource("Resource_7wfve")])
 
-[sub_resource type="Resource" id="Resource_ejt1f"]
+[sub_resource type="Resource" id="Resource_yrbpa"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_5d1if"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_2axkd"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_6qr5f"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_u2xfn"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_a21bl"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_0awxr"]
 script = ExtResource("2_xc6o2")
 name = "Stairs_Exterior_SidePlatform"
 scene = ExtResource("133_o3rrn")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_yrbpa"), SubResource("Resource_5d1if"), SubResource("Resource_2axkd"), SubResource("Resource_6qr5f"), SubResource("Resource_u2xfn"), SubResource("Resource_a21bl")])
 
-[sub_resource type="Resource" id="Resource_tow7l"]
+[sub_resource type="Resource" id="Resource_ec61k"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_46eg5"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_fyivy"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_srwco"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_kwxs5"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_llkya"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_6nskh"]
 script = ExtResource("2_xc6o2")
 name = "Stairs_Exterior_Sides45"
 scene = ExtResource("134_lkqmt")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_ec61k"), SubResource("Resource_46eg5"), SubResource("Resource_fyivy"), SubResource("Resource_srwco"), SubResource("Resource_kwxs5"), SubResource("Resource_llkya")])
 
-[sub_resource type="Resource" id="Resource_l04h8"]
+[sub_resource type="Resource" id="Resource_4emim"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_j5go1"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_vkk3w"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_f0ig6"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_7gx68"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_bqrfg"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_gd4ke"]
 script = ExtResource("2_xc6o2")
 name = "Stairs_Exterior_Sides"
 scene = ExtResource("135_tn76w")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_4emim"), SubResource("Resource_j5go1"), SubResource("Resource_vkk3w"), SubResource("Resource_f0ig6"), SubResource("Resource_7gx68"), SubResource("Resource_bqrfg")])
 
-[sub_resource type="Resource" id="Resource_gbxbv"]
+[sub_resource type="Resource" id="Resource_wr23e"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_gik1d"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_al13y"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_nccmw"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_pao8l"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_g0meo"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_ofeyn"]
 script = ExtResource("2_xc6o2")
 name = "Stairs_Exterior_SidesU"
 scene = ExtResource("136_e86no")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_wr23e"), SubResource("Resource_gik1d"), SubResource("Resource_al13y"), SubResource("Resource_nccmw"), SubResource("Resource_pao8l"), SubResource("Resource_g0meo")])
 
-[sub_resource type="Resource" id="Resource_wg64p"]
+[sub_resource type="Resource" id="Resource_vqyeq"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_0ac2p"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_lt88s"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_3vbnw"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_8i36k"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_4lkoa"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_n1vxb"]
 script = ExtResource("2_xc6o2")
 name = "Stairs_Exterior_SingleSide"
 scene = ExtResource("137_e45pe")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_vqyeq"), SubResource("Resource_0ac2p"), SubResource("Resource_lt88s"), SubResource("Resource_3vbnw"), SubResource("Resource_8i36k"), SubResource("Resource_4lkoa")])
 
-[sub_resource type="Resource" id="Resource_sa3w4"]
+[sub_resource type="Resource" id="Resource_nkgtu"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_u251t"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_1xmko"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_ykoj5"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_7d0x7"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_h8y4x"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_xdmhp"]
 script = ExtResource("2_xc6o2")
 name = "Stairs_Exterior_SingleSideThick"
 scene = ExtResource("138_ivko6")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_nkgtu"), SubResource("Resource_u251t"), SubResource("Resource_1xmko"), SubResource("Resource_ykoj5"), SubResource("Resource_7d0x7"), SubResource("Resource_h8y4x")])
 
-[sub_resource type="Resource" id="Resource_yjdf0"]
+[sub_resource type="Resource" id="Resource_vpv1s"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_dor56"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_6qd3i"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_1nefm"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_0ciht"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_mepc7"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_0psy2"]
 script = ExtResource("2_xc6o2")
 name = "Stairs_Exterior_Straight"
 scene = ExtResource("139_lltjp")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_vpv1s"), SubResource("Resource_dor56"), SubResource("Resource_6qd3i"), SubResource("Resource_1nefm"), SubResource("Resource_0ciht"), SubResource("Resource_mepc7")])
 
-[sub_resource type="Resource" id="Resource_jfvl3"]
+[sub_resource type="Resource" id="Resource_x1fal"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_urw2j"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_3044b"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_ivakd"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_2uw3a"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_qjw73"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_s6pa3"]
 script = ExtResource("2_xc6o2")
 name = "Stairs_Exterior_Straight_Center"
 scene = ExtResource("140_eimk6")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_x1fal"), SubResource("Resource_urw2j"), SubResource("Resource_3044b"), SubResource("Resource_ivakd"), SubResource("Resource_2uw3a"), SubResource("Resource_qjw73")])
 
-[sub_resource type="Resource" id="Resource_ifa6p"]
+[sub_resource type="Resource" id="Resource_m1cqd"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_j5cgo"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_wxqsx"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_ih1kb"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_ho48j"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_qjoam"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_1nhnm"]
 script = ExtResource("2_xc6o2")
 name = "Stairs_Exterior_Straight_L"
 scene = ExtResource("141_wc6mp")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_m1cqd"), SubResource("Resource_j5cgo"), SubResource("Resource_wxqsx"), SubResource("Resource_ih1kb"), SubResource("Resource_ho48j"), SubResource("Resource_qjoam")])
 
-[sub_resource type="Resource" id="Resource_whj1s"]
+[sub_resource type="Resource" id="Resource_8r8sv"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_1hxqy"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_p5eur"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_5k5oc"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_k1yuo"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_l62e2"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_mitck"]
 script = ExtResource("2_xc6o2")
 name = "Stairs_Exterior_Straight_R"
 scene = ExtResource("142_hm6xu")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_8r8sv"), SubResource("Resource_1hxqy"), SubResource("Resource_p5eur"), SubResource("Resource_5k5oc"), SubResource("Resource_k1yuo"), SubResource("Resource_l62e2")])
 
-[sub_resource type="Resource" id="Resource_afnwo"]
+[sub_resource type="Resource" id="Resource_ejf0g"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_cklkk"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_qqj5a"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_4f1yy"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_gpmlg"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_ne3jb"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_b3q40"]
 script = ExtResource("2_xc6o2")
 name = "Stair_Interior_Rails"
 scene = ExtResource("143_cbnly")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_ejf0g"), SubResource("Resource_cklkk"), SubResource("Resource_qqj5a"), SubResource("Resource_4f1yy"), SubResource("Resource_gpmlg"), SubResource("Resource_ne3jb")])
 
-[sub_resource type="Resource" id="Resource_drk5i"]
+[sub_resource type="Resource" id="Resource_skv3s"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_tv6aj"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_grpuu"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_033s8"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_7tl77"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_xj38r"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_kovpp"]
 script = ExtResource("2_xc6o2")
 name = "Stair_Interior_Simple"
 scene = ExtResource("144_fkn13")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_skv3s"), SubResource("Resource_tv6aj"), SubResource("Resource_grpuu"), SubResource("Resource_033s8"), SubResource("Resource_7tl77"), SubResource("Resource_xj38r")])
 
-[sub_resource type="Resource" id="Resource_jqosx"]
+[sub_resource type="Resource" id="Resource_5aqql"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_6c437"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_ydg5m"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_nhyfb"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_dfsnt"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_q40pl"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_ijkac"]
 script = ExtResource("2_xc6o2")
 name = "Stair_Interior_Solid"
 scene = ExtResource("145_vg6qx")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_5aqql"), SubResource("Resource_6c437"), SubResource("Resource_ydg5m"), SubResource("Resource_nhyfb"), SubResource("Resource_dfsnt"), SubResource("Resource_q40pl")])
 
-[sub_resource type="Resource" id="Resource_0nev3"]
+[sub_resource type="Resource" id="Resource_rkyp6"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_d5ihv"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_q4spt"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_ea11v"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_ety3w"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_dgplc"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_3ipk0"]
 script = ExtResource("2_xc6o2")
 name = "Stair_Interior_SolidExtended"
 scene = ExtResource("146_8nw82")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_rkyp6"), SubResource("Resource_d5ihv"), SubResource("Resource_q4spt"), SubResource("Resource_ea11v"), SubResource("Resource_ety3w"), SubResource("Resource_dgplc")])
 
-[sub_resource type="Resource" id="Resource_byuiu"]
+[sub_resource type="Resource" id="Resource_k1rx7"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_jj6ul"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_li6bm"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_3lp58"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_1bjqw"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_2gjm2"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_4lc3j"]
 script = ExtResource("2_xc6o2")
 name = "Wall_Arch"
 scene = ExtResource("147_sh35q")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_k1rx7"), SubResource("Resource_jj6ul"), SubResource("Resource_li6bm"), SubResource("Resource_3lp58"), SubResource("Resource_1bjqw"), SubResource("Resource_2gjm2")])
 
-[sub_resource type="Resource" id="Resource_s8fiq"]
+[sub_resource type="Resource" id="Resource_q4y2d"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_8kdir"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_3iem4"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_hwayr"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_r4t73"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_xcsno"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_d7ecc"]
 script = ExtResource("2_xc6o2")
 name = "Wall_BottomCover"
 scene = ExtResource("148_wcude")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_q4y2d"), SubResource("Resource_8kdir"), SubResource("Resource_3iem4"), SubResource("Resource_hwayr"), SubResource("Resource_r4t73"), SubResource("Resource_xcsno")])
 
 [sub_resource type="Resource" id="Resource_vxu7q"]
 script = ExtResource("2_xc6o2")
@@ -1098,38 +3383,188 @@ script = ExtResource("2_xc6o2")
 name = "WindowShutters_Wide_Round_Open"
 scene = ExtResource("174_d4f6s")
 
-[sub_resource type="Resource" id="Resource_l5n5f"]
+[sub_resource type="Resource" id="Resource_414ot"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_4kfsl"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_accdp"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_05lqn"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_4ytwq"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_kxuur"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_8v0y8"]
 script = ExtResource("2_xc6o2")
 name = "Window_Roof_Thin"
 scene = ExtResource("175_7f2ya")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_414ot"), SubResource("Resource_4kfsl"), SubResource("Resource_accdp"), SubResource("Resource_05lqn"), SubResource("Resource_4ytwq"), SubResource("Resource_kxuur")])
 
-[sub_resource type="Resource" id="Resource_q15vx"]
+[sub_resource type="Resource" id="Resource_2mpqo"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_rmetj"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_jo2pw"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_eu2cc"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_fivel"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_gxqbf"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_36b0b"]
 script = ExtResource("2_xc6o2")
 name = "Window_Roof_Wide"
 scene = ExtResource("176_rc2by")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_2mpqo"), SubResource("Resource_rmetj"), SubResource("Resource_jo2pw"), SubResource("Resource_eu2cc"), SubResource("Resource_fivel"), SubResource("Resource_gxqbf")])
 
-[sub_resource type="Resource" id="Resource_p7h7d"]
+[sub_resource type="Resource" id="Resource_yf826"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_su6ni"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_50bw7"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_wlf7p"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_4t5s8"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_b6ext"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_mlwn1"]
 script = ExtResource("2_xc6o2")
 name = "Window_Thin_Flat1"
 scene = ExtResource("177_0ik4s")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_yf826"), SubResource("Resource_su6ni"), SubResource("Resource_50bw7"), SubResource("Resource_wlf7p"), SubResource("Resource_4t5s8"), SubResource("Resource_b6ext")])
 
-[sub_resource type="Resource" id="Resource_ev4vg"]
+[sub_resource type="Resource" id="Resource_x3m06"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_lniwh"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_pvk7f"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_it4at"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_csots"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_wflsl"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_67r8u"]
 script = ExtResource("2_xc6o2")
 name = "Window_Thin_Round1"
 scene = ExtResource("178_cpac0")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_x3m06"), SubResource("Resource_lniwh"), SubResource("Resource_pvk7f"), SubResource("Resource_it4at"), SubResource("Resource_csots"), SubResource("Resource_wflsl")])
 
 [sub_resource type="Resource" id="Resource_eyhkd"]
 script = ExtResource("2_xc6o2")
 name = "Window_Wide_Flat1"
 scene = ExtResource("179_yrdd2")
 
-[sub_resource type="Resource" id="Resource_cp082"]
+[sub_resource type="Resource" id="Resource_nt12v"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_7blko"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_woapr"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_bt2cw"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_hk6yu"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_ebkkn"]
+script = ExtResource("5_xyi65")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_42th5"]
 script = ExtResource("2_xc6o2")
 name = "Window_Wide_Round1"
 scene = ExtResource("180_04o8r")
+sockets = Array[ExtResource("5_xyi65")]([SubResource("Resource_nt12v"), SubResource("Resource_7blko"), SubResource("Resource_woapr"), SubResource("Resource_bt2cw"), SubResource("Resource_hk6yu"), SubResource("Resource_ebkkn")])
 
 [resource]
 script = ExtResource("1_wmpsw")
 library_name = "New Library"
-tiles = Array[ExtResource("2_xc6o2")]([SubResource("Resource_u0i2c"), SubResource("Resource_sl5rr"), SubResource("Resource_bew07"), SubResource("Resource_j4lj0"), SubResource("Resource_qqd6d"), SubResource("Resource_2ytf3"), SubResource("Resource_3vkxr"), SubResource("Resource_x8obq"), SubResource("Resource_0wgij"), SubResource("Resource_27s2o"), SubResource("Resource_sj0df"), SubResource("Resource_77cme"), SubResource("Resource_6b7nh"), SubResource("Resource_107c1"), SubResource("Resource_xlf2p"), SubResource("Resource_r6mbx"), SubResource("Resource_u5ovj"), SubResource("Resource_le5lq"), SubResource("Resource_gccx6"), SubResource("Resource_kb302"), SubResource("Resource_v57gh"), SubResource("Resource_f8wmc"), SubResource("Resource_67vq3"), SubResource("Resource_pdcrn"), SubResource("Resource_ptrfb"), SubResource("Resource_o78io"), SubResource("Resource_cfnwx"), SubResource("Resource_77bel"), SubResource("Resource_uxiwe"), SubResource("Resource_7ysxm"), SubResource("Resource_vtk71"), SubResource("Resource_ds206"), SubResource("Resource_n6x7r"), SubResource("Resource_yff44"), SubResource("Resource_daa8m"), SubResource("Resource_trxuy"), SubResource("Resource_k0i6y"), SubResource("Resource_pndoo"), SubResource("Resource_n75y7"), SubResource("Resource_6ob12"), SubResource("Resource_hels3"), SubResource("Resource_uw6ln"), SubResource("Resource_yc6ih"), SubResource("Resource_ijkcl"), SubResource("Resource_oki7i"), SubResource("Resource_fuc86"), SubResource("Resource_e3e6m"), SubResource("Resource_ru0fg"), SubResource("Resource_oiq10"), SubResource("Resource_vm1nc"), SubResource("Resource_alc7q"), SubResource("Resource_e2c5c"), SubResource("Resource_ku7gh"), SubResource("Resource_gebjc"), SubResource("Resource_kkaxt"), SubResource("Resource_klo27"), SubResource("Resource_gch64"), SubResource("Resource_3rg5q"), SubResource("Resource_t265w"), SubResource("Resource_6rxt6"), SubResource("Resource_oaae1"), SubResource("Resource_7mu8n"), SubResource("Resource_d7xg5"), SubResource("Resource_naik5"), SubResource("Resource_8cxmm"), SubResource("Resource_8kdj5"), SubResource("Resource_4phoh"), SubResource("Resource_y1ai3"), SubResource("Resource_gkoqo"), SubResource("Resource_bd06a"), SubResource("Resource_mysr1"), SubResource("Resource_ks55i"), SubResource("Resource_ldchf"), SubResource("Resource_xb6m7"), SubResource("Resource_bagwv"), SubResource("Resource_kinpo"), SubResource("Resource_5mj75"), SubResource("Resource_ku8w6"), SubResource("Resource_wcfsp"), SubResource("Resource_ch6t0"), SubResource("Resource_et7di"), SubResource("Resource_tn76p"), SubResource("Resource_dc6fa"), SubResource("Resource_yyyka"), SubResource("Resource_s7dhy"), SubResource("Resource_8t343"), SubResource("Resource_cc4ot"), SubResource("Resource_l7jpa"), SubResource("Resource_ys47e"), SubResource("Resource_k0iy3"), SubResource("Resource_bc4f8"), SubResource("Resource_3w3pf"), SubResource("Resource_0hpg0"), SubResource("Resource_4thfo"), SubResource("Resource_fisu6"), SubResource("Resource_kvbgu"), SubResource("Resource_th48c"), SubResource("Resource_wqmp4"), SubResource("Resource_r6e7g"), SubResource("Resource_uk7n7"), SubResource("Resource_yxkkl"), SubResource("Resource_emloq"), SubResource("Resource_b5ov2"), SubResource("Resource_gse0x"), SubResource("Resource_rc2p3"), SubResource("Resource_6fsci"), SubResource("Resource_kf5sb"), SubResource("Resource_bpn76"), SubResource("Resource_aj3l7"), SubResource("Resource_ksobi"), SubResource("Resource_6fxli"), SubResource("Resource_sk31v"), SubResource("Resource_q68yj"), SubResource("Resource_opsby"), SubResource("Resource_j6hht"), SubResource("Resource_islas"), SubResource("Resource_8utrv"), SubResource("Resource_5nw7h"), SubResource("Resource_7itef"), SubResource("Resource_f8mqk"), SubResource("Resource_ll7w0"), SubResource("Resource_xx60c"), SubResource("Resource_8j06n"), SubResource("Resource_1n4c0"), SubResource("Resource_qyyd3"), SubResource("Resource_rr6ma"), SubResource("Resource_6x8he"), SubResource("Resource_r0hm7"), SubResource("Resource_ejt1f"), SubResource("Resource_tow7l"), SubResource("Resource_l04h8"), SubResource("Resource_gbxbv"), SubResource("Resource_wg64p"), SubResource("Resource_sa3w4"), SubResource("Resource_yjdf0"), SubResource("Resource_jfvl3"), SubResource("Resource_ifa6p"), SubResource("Resource_whj1s"), SubResource("Resource_afnwo"), SubResource("Resource_drk5i"), SubResource("Resource_jqosx"), SubResource("Resource_0nev3"), SubResource("Resource_byuiu"), SubResource("Resource_s8fiq"), SubResource("Resource_vxu7q"), SubResource("Resource_dwvx3"), SubResource("Resource_3n50s"), SubResource("Resource_vl21r"), SubResource("Resource_uv7pq"), SubResource("Resource_fjah6"), SubResource("Resource_qvbim"), SubResource("Resource_se1r1"), SubResource("Resource_gkstf"), SubResource("Resource_2mmdu"), SubResource("Resource_ro1bw"), SubResource("Resource_j4t38"), SubResource("Resource_q71vx"), SubResource("Resource_udvv4"), SubResource("Resource_hfled"), SubResource("Resource_8ckta"), SubResource("Resource_0vu5r"), SubResource("Resource_tgo77"), SubResource("Resource_ga6bs"), SubResource("Resource_5wlkq"), SubResource("Resource_focxm"), SubResource("Resource_ekeyo"), SubResource("Resource_isovy"), SubResource("Resource_dkdjp"), SubResource("Resource_2b030"), SubResource("Resource_65oru"), SubResource("Resource_l5n5f"), SubResource("Resource_q15vx"), SubResource("Resource_p7h7d"), SubResource("Resource_ev4vg"), SubResource("Resource_eyhkd"), SubResource("Resource_cp082")])
-socket_types = Array[String](["any", "balcony", "none", "test"])
+tiles = Array[ExtResource("2_xc6o2")]([SubResource("Resource_u0i2c"), SubResource("Resource_sl5rr"), SubResource("Resource_kk6lc"), SubResource("Resource_wpoee"), SubResource("Resource_cm3tb"), SubResource("Resource_b24b7"), SubResource("Resource_h28vv"), SubResource("Resource_jfb4f"), SubResource("Resource_3ai62"), SubResource("Resource_lvh28"), SubResource("Resource_tdull"), SubResource("Resource_tn76w"), SubResource("Resource_hm6xu"), SubResource("Resource_5qier"), SubResource("Resource_7ut4r"), SubResource("Resource_j6f4j"), SubResource("Resource_wr2j2"), SubResource("Resource_0ik4s"), SubResource("Resource_gccx6"), SubResource("Resource_kb302"), SubResource("Resource_v57gh"), SubResource("Resource_f8wmc"), SubResource("Resource_67vq3"), SubResource("Resource_pdcrn"), SubResource("Resource_ptrfb"), SubResource("Resource_j4lj0"), SubResource("Resource_lr7bw"), SubResource("Resource_3f7v0"), SubResource("Resource_uxiwe"), SubResource("Resource_7ysxm"), SubResource("Resource_vtk71"), SubResource("Resource_ds206"), SubResource("Resource_n6x7r"), SubResource("Resource_sj0df"), SubResource("Resource_daa8m"), SubResource("Resource_le5lq"), SubResource("Resource_k0i6y"), SubResource("Resource_uw6ln"), SubResource("Resource_n75y7"), SubResource("Resource_7mu8n"), SubResource("Resource_hels3"), SubResource("Resource_wqmp4"), SubResource("Resource_6ltcp"), SubResource("Resource_oh3ph"), SubResource("Resource_oki7i"), SubResource("Resource_hygm1"), SubResource("Resource_e3e6m"), SubResource("Resource_ru0fg"), SubResource("Resource_oiq10"), SubResource("Resource_sk31v"), SubResource("Resource_alc7q"), SubResource("Resource_e2c5c"), SubResource("Resource_ku7gh"), SubResource("Resource_gebjc"), SubResource("Resource_kkaxt"), SubResource("Resource_klo27"), SubResource("Resource_gch64"), SubResource("Resource_3rg5q"), SubResource("Resource_t265w"), SubResource("Resource_f8mqk"), SubResource("Resource_bpb25"), SubResource("Resource_6x8he"), SubResource("Resource_d7xg5"), SubResource("Resource_naik5"), SubResource("Resource_8cxmm"), SubResource("Resource_8kdj5"), SubResource("Resource_4phoh"), SubResource("Resource_y1ai3"), SubResource("Resource_gkoqo"), SubResource("Resource_bd06a"), SubResource("Resource_mysr1"), SubResource("Resource_sa3w4"), SubResource("Resource_ldchf"), SubResource("Resource_xb6m7"), SubResource("Resource_bagwv"), SubResource("Resource_kinpo"), SubResource("Resource_5mj75"), SubResource("Resource_ku8w6"), SubResource("Resource_wcfsp"), SubResource("Resource_ch6t0"), SubResource("Resource_et7di"), SubResource("Resource_jqosx"), SubResource("Resource_dc6fa"), SubResource("Resource_yyyka"), SubResource("Resource_s7dhy"), SubResource("Resource_8t343"), SubResource("Resource_cc4ot"), SubResource("Resource_l7jpa"), SubResource("Resource_ys47e"), SubResource("Resource_ev4vg"), SubResource("Resource_bc4f8"), SubResource("Resource_x6sou"), SubResource("Resource_0hpg0"), SubResource("Resource_4thfo"), SubResource("Resource_fisu6"), SubResource("Resource_3lgg4"), SubResource("Resource_g8c60"), SubResource("Resource_rvvej"), SubResource("Resource_o04ps"), SubResource("Resource_8walv"), SubResource("Resource_o0j1u"), SubResource("Resource_1f6h4"), SubResource("Resource_b5ov2"), SubResource("Resource_q5ds4"), SubResource("Resource_rc2p3"), SubResource("Resource_6fsci"), SubResource("Resource_kf5sb"), SubResource("Resource_b7nfr"), SubResource("Resource_aj3l7"), SubResource("Resource_ksobi"), SubResource("Resource_6fxli"), SubResource("Resource_76lwu"), SubResource("Resource_q68yj"), SubResource("Resource_0aqx8"), SubResource("Resource_mkrw1"), SubResource("Resource_qtvdo"), SubResource("Resource_ebsnw"), SubResource("Resource_lprl3"), SubResource("Resource_y30q4"), SubResource("Resource_2c2an"), SubResource("Resource_xagxw"), SubResource("Resource_4v757"), SubResource("Resource_78say"), SubResource("Resource_xibke"), SubResource("Resource_ihyh8"), SubResource("Resource_c2f8r"), SubResource("Resource_nccxx"), SubResource("Resource_n46xj"), SubResource("Resource_0awxr"), SubResource("Resource_6nskh"), SubResource("Resource_gd4ke"), SubResource("Resource_ofeyn"), SubResource("Resource_n1vxb"), SubResource("Resource_xdmhp"), SubResource("Resource_0psy2"), SubResource("Resource_s6pa3"), SubResource("Resource_1nhnm"), SubResource("Resource_mitck"), SubResource("Resource_b3q40"), SubResource("Resource_kovpp"), SubResource("Resource_ijkac"), SubResource("Resource_3ipk0"), SubResource("Resource_4lc3j"), SubResource("Resource_d7ecc"), SubResource("Resource_vxu7q"), SubResource("Resource_dwvx3"), SubResource("Resource_3n50s"), SubResource("Resource_vl21r"), SubResource("Resource_uv7pq"), SubResource("Resource_fjah6"), SubResource("Resource_qvbim"), SubResource("Resource_se1r1"), SubResource("Resource_gkstf"), SubResource("Resource_2mmdu"), SubResource("Resource_ro1bw"), SubResource("Resource_j4t38"), SubResource("Resource_q71vx"), SubResource("Resource_udvv4"), SubResource("Resource_hfled"), SubResource("Resource_8ckta"), SubResource("Resource_0vu5r"), SubResource("Resource_tgo77"), SubResource("Resource_ga6bs"), SubResource("Resource_5wlkq"), SubResource("Resource_focxm"), SubResource("Resource_ekeyo"), SubResource("Resource_isovy"), SubResource("Resource_dkdjp"), SubResource("Resource_2b030"), SubResource("Resource_65oru"), SubResource("Resource_8v0y8"), SubResource("Resource_36b0b"), SubResource("Resource_mlwn1"), SubResource("Resource_67r8u"), SubResource("Resource_eyhkd"), SubResource("Resource_42th5")])
+socket_types = Array[String](["any", "balcony", "none", "floor", "single_roof"])

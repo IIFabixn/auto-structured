@@ -33,17 +33,35 @@ var socket_direction: Vector3i = Vector3i.ZERO  # Direction of the socket for po
 var viewport_container: SubViewportContainer = $Panel/MarginContainer/ScrollContainer/VBoxContainer/Panel/SubViewportContainer
 @onready var viewport_options: MenuButton = %ViewportOptions
 
+# Grid and origin visualization
+var grid_mesh_instance: MeshInstance3D = null
+var origin_mesh_instance: MeshInstance3D = null
+var show_grid: bool = true
+var show_origin: bool = true
+var grid_size: int = 20  # Number of grid lines in each direction
+var grid_spacing: float = 1.0  # Space between grid lines
+
 
 func _ready() -> void:
 	update_camera_transform()
 	viewport_container.gui_input.connect(_on_viewport_gui_input)
 	viewport_rect = viewport_container.get_global_rect()
+	
+	# Create grid and origin
+	_create_grid()
+	_create_origin()
+	
 	_add_test_cube()
 
 	# Connect viewport options menu
 	var popup = viewport_options.get_popup()
 	popup.id_pressed.connect(_on_viewport_option_selected)
 	popup.set_item_checked(0, auto_rotate)
+	popup.add_separator()
+	popup.add_check_item("Show Grid", 2)
+	popup.set_item_checked(popup.get_item_index(2), show_grid)
+	popup.add_check_item("Show Origin", 3)
+	popup.set_item_checked(popup.get_item_index(3), show_origin)
 
 
 func _process(delta: float) -> void:
@@ -73,7 +91,18 @@ func _on_viewport_option_selected(id: int) -> void:
 			auto_rotate = !auto_rotate
 			popup.set_item_checked(0, auto_rotate)
 		1:  # Reset Camera
+			stop_compatible_tiles_preview()
 			frame_structure()
+		2:  # Show Grid
+			show_grid = !show_grid
+			popup.set_item_checked(popup.get_item_index(2), show_grid)
+			if grid_mesh_instance:
+				grid_mesh_instance.visible = show_grid
+		3:  # Show Origin
+			show_origin = !show_origin
+			popup.set_item_checked(popup.get_item_index(3), show_origin)
+			if origin_mesh_instance:
+				origin_mesh_instance.visible = show_origin
 
 
 func _on_viewport_gui_input(event: InputEvent) -> void:
@@ -225,7 +254,7 @@ func display_tile_preview(tile: Tile) -> void:
 func clear_structure() -> void:
 	"""Remove all structure nodes from the viewport"""
 	for child in viewport.get_children():
-		if child is Node3D and child != camera:
+		if child is Node3D and child != camera and child != grid_mesh_instance and child != origin_mesh_instance:
 			child.queue_free()
 	preview_root = null
 
@@ -347,3 +376,100 @@ func _make_translucent(node: Node3D) -> void:
 	for child in node.get_children():
 		if child is Node3D:
 			_make_translucent(child)
+
+
+func _create_grid() -> void:
+	"""Create a grid mesh for the viewport floor"""
+	var surface_tool = SurfaceTool.new()
+	surface_tool.begin(Mesh.PRIMITIVE_LINES)
+	
+	# Grid colors
+	var center_color = Color(0.7, 0.7, 0.7, 0.8)  # Brighter for center lines
+	var grid_color = Color(0.4, 0.4, 0.4, 0.5)    # Dimmer for regular lines
+	
+	# Create grid lines
+	for i in range(-grid_size, grid_size + 1):
+		var offset = i * grid_spacing
+		
+		# Determine color (center lines are brighter)
+		var color = center_color if i == 0 else grid_color
+		
+		# Lines parallel to X axis
+		surface_tool.set_color(color)
+		surface_tool.add_vertex(Vector3(-grid_size * grid_spacing, 0, offset))
+		surface_tool.set_color(color)
+		surface_tool.add_vertex(Vector3(grid_size * grid_spacing, 0, offset))
+		
+		# Lines parallel to Z axis
+		surface_tool.set_color(color)
+		surface_tool.add_vertex(Vector3(offset, 0, -grid_size * grid_spacing))
+		surface_tool.set_color(color)
+		surface_tool.add_vertex(Vector3(offset, 0, grid_size * grid_spacing))
+	
+	var grid_mesh = surface_tool.commit()
+	
+	# Create material for the grid
+	var material = StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.vertex_color_use_as_albedo = true
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.no_depth_test = false
+	material.disable_receive_shadows = true
+	material.albedo_color = Color.WHITE
+	
+	# Create mesh instance
+	grid_mesh_instance = MeshInstance3D.new()
+	grid_mesh_instance.mesh = grid_mesh
+	grid_mesh_instance.material_override = material
+	grid_mesh_instance.name = "Grid"
+	grid_mesh_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	grid_mesh_instance.visible = show_grid
+	
+	viewport.add_child(grid_mesh_instance)
+
+
+func _create_origin() -> void:
+	"""Create an origin indicator (axis gizmo) at world origin"""
+	var surface_tool = SurfaceTool.new()
+	surface_tool.begin(Mesh.PRIMITIVE_LINES)
+	
+	var axis_length = 2.0
+	var axis_thickness = 0.05
+	
+	# X axis (Red)
+	surface_tool.set_color(Color.RED)
+	surface_tool.add_vertex(Vector3.ZERO)
+	surface_tool.set_color(Color.RED)
+	surface_tool.add_vertex(Vector3(axis_length, 0, 0))
+	
+	# Y axis (Green)
+	surface_tool.set_color(Color.GREEN)
+	surface_tool.add_vertex(Vector3.ZERO)
+	surface_tool.set_color(Color.GREEN)
+	surface_tool.add_vertex(Vector3(0, axis_length, 0))
+	
+	# Z axis (Blue)
+	surface_tool.set_color(Color.BLUE)
+	surface_tool.add_vertex(Vector3.ZERO)
+	surface_tool.set_color(Color.BLUE)
+	surface_tool.add_vertex(Vector3(0, 0, axis_length))
+	
+	var origin_mesh = surface_tool.commit()
+	
+	# Create material for the origin
+	var material = StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.vertex_color_use_as_albedo = true
+	material.no_depth_test = true  # Always visible through objects
+	material.disable_receive_shadows = true
+	material.albedo_color = Color.WHITE
+	
+	# Create mesh instance
+	origin_mesh_instance = MeshInstance3D.new()
+	origin_mesh_instance.mesh = origin_mesh
+	origin_mesh_instance.material_override = material
+	origin_mesh_instance.name = "Origin"
+	origin_mesh_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	origin_mesh_instance.visible = show_origin
+	
+	viewport.add_child(origin_mesh_instance)

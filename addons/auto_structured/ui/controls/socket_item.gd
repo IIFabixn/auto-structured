@@ -216,12 +216,12 @@ func update_title() -> void:
 
 func get_direction_name(direction: Vector3i) -> String:
 	var direction_names = {
-		Vector3i(1, 0, 0): "Right",
-		Vector3i(-1, 0, 0): "Left",
-		Vector3i(0, 1, 0): "Up",
-		Vector3i(0, -1, 0): "Down",
-		Vector3i(0, 0, 1): "Forward",
-		Vector3i(0, 0, -1): "Back"
+		Vector3i(1, 0, 0): "Right (+X)",
+		Vector3i(-1, 0, 0): "Left (-X)",
+		Vector3i(0, 1, 0): "Up (+Y)",
+		Vector3i(0, -1, 0): "Down (-Y)",
+		Vector3i(0, 0, 1): "Forward (+Z)",
+		Vector3i(0, 0, -1): "Back (-Z)"
 	}
 
 	return direction_names.get(direction, "Unknown")

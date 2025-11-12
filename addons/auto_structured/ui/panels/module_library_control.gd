@@ -393,7 +393,8 @@ func _on_socket_renamed(old_name: String, new_name: String) -> void:
 				socket.compatible_sockets[compat_index] = new_name
 	
 	# Refresh the dialog
-	manage_sockets_dialog.set_available_sockets(current_library.get_socket_types(), [])
+	var empty_selection: Array[String] = []
+	manage_sockets_dialog.set_available_sockets(current_library.get_socket_types(), empty_selection)
 	
 	# Save the library
 	_save_library()
@@ -417,7 +418,8 @@ func _on_socket_deleted(socket_name: String) -> void:
 			socket.compatible_sockets.erase(socket_name)
 	
 	# Refresh the dialog
-	manage_sockets_dialog.set_available_sockets(current_library.get_socket_types(), [])
+	var empty_selection: Array[String] = []
+	manage_sockets_dialog.set_available_sockets(current_library.get_socket_types(), empty_selection)
 	
 	# Save the library
 	_save_library()
