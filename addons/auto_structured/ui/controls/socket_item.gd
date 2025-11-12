@@ -3,10 +3,12 @@ class_name SocketItem extends FoldableContainer
 
 signal changed
 signal selected
+signal preview_requested
 
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
 const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.gd")
 const ManageSocketsDialog = preload("res://addons/auto_structured/ui/controls/manage_sockets_dialog.tscn")
+const Tile = preload("res://addons/auto_structured/core/tile.gd")
 
 @export var socket: Socket = null:
 	set(value):
@@ -23,8 +25,12 @@ var library: ModuleLibrary = null:
 
 var socket_type_option: OptionButton
 var manage_sockets_dialog: Window
+var current_tile: Tile = null  # The tile this socket belongs to
 
 @onready var manage_sockets_button: Button = $VBoxContainer/ManageSocketsButton
+@onready var context_menu: PopupMenu = $PopupMenu
+
+const MENU_PREVIEW = 0
 
 func _ready() -> void:
 	socket_type_option = get_node_or_null("VBoxContainer/SocketTypeOption")
@@ -35,9 +41,24 @@ func _ready() -> void:
 	if socket_type_option:
 		socket_type_option.item_selected.connect(_on_socket_type_selected)
 	
+	# Setup context menu
+	if context_menu:
+		context_menu.clear()
+		context_menu.add_item("Preview Compatible Tiles", MENU_PREVIEW)
+		context_menu.id_pressed.connect(_on_context_menu_item_selected)
+
 	_refresh_socket_type_dropdown()
 	_update_sockets_button_text()
 	update_title()
+
+func _gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+		if context_menu:
+			# Get the screen position of the mouse
+			var mouse_pos = DisplayServer.mouse_get_position()
+			context_menu.position = mouse_pos
+			context_menu.popup()
+			accept_event()  # Prevent the event from propagating
 
 func _update_sockets_button_text() -> void:
 	"""Update the manage sockets button to show count"""
@@ -216,3 +237,36 @@ func get_direction_icon(direction: Vector3i) -> String:
 	}
 
 	return direction_icons.get(direction, "❓")
+
+func _on_context_menu_item_selected(id: int) -> void:
+	"""Handle context menu item selection"""
+	match id:
+		MENU_PREVIEW:
+			preview_requested.emit()
+
+func get_compatible_tiles() -> Array[Tile]:
+	"""Get all tiles that have sockets compatible with this socket"""
+	var compatible_tiles: Array[Tile] = []
+	
+	if not library or not socket:
+		return compatible_tiles
+	
+	# Get the opposite direction (where tiles would connect)
+	var opposite_direction = -socket.direction
+	
+	# Check all tiles in the library
+	for tile in library.tiles:
+		# Skip the current tile (don't show itself as compatible)
+		if tile == current_tile:
+			continue
+		
+		# Get the socket on the opposite side
+		var tile_socket = tile.get_socket_by_direction(opposite_direction)
+		if not tile_socket:
+			continue
+		
+		# Check if the sockets are compatible
+		if socket.is_compatible_with(tile_socket) or tile_socket.is_compatible_with(socket):
+			compatible_tiles.append(tile)
+	
+	return compatible_tiles

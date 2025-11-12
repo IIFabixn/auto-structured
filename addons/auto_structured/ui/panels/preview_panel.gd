@@ -2,6 +2,9 @@
 class_name PreviewPanel extends Control
 
 const RESUME_DELAY: float = 2.0  # seconds before auto-rotate resumes
+const CYCLE_DELAY: float = 3.0  # seconds between cycling compatible tiles
+
+const Tile = preload("res://addons/auto_structured/core/tile.gd")
 
 var camera_distance: float = 10.0
 var camera_rotation: Vector2 = Vector2(15, 45)  # pitch, yaw in degrees
@@ -15,6 +18,14 @@ var viewport_rect: Rect2
 var auto_rotate: bool = true
 var auto_rotate_paused: bool = false
 var resume_timer: float = 0.0
+
+# Compatible tiles cycling
+var compatible_tiles: Array[Tile] = []
+var current_compatible_index: int = 0
+var cycle_timer: float = 0.0
+var is_cycling: bool = false
+var preview_root: Node3D = null  # Root node containing the main tile and compatible tiles
+var socket_direction: Vector3i = Vector3i.ZERO  # Direction of the socket for positioning
 
 @onready var viewport: SubViewport = %PreviewViewport
 @onready var camera: Camera3D = %PreviewCamera
@@ -46,6 +57,13 @@ func _process(delta: float) -> void:
 	if auto_rotate and not auto_rotate_paused and not is_rotating and not is_panning:
 		camera_rotation.y += delta * 15.0  # Rotate 15 degrees per second
 		update_camera_transform()
+	
+	# Handle compatible tiles cycling
+	if is_cycling and compatible_tiles.size() > 0:
+		cycle_timer -= delta
+		if cycle_timer <= 0.0:
+			cycle_timer = CYCLE_DELAY
+			_show_next_compatible_tile()
 
 
 func _on_viewport_option_selected(id: int) -> void:
@@ -174,26 +192,34 @@ func add_structure_node(node: Node3D) -> void:
 
 func display_tile_preview(tile: Tile) -> void:
 	"""Display a preview of the given tile in the viewport"""
+	# Stop any ongoing compatible tile preview
+	stop_compatible_tiles_preview()
+	
 	clear_structure()
 
+	# Create a root node for the preview scene
+	preview_root = Node3D.new()
+	preview_root.name = "PreviewRoot"
+	add_structure_node(preview_root)
+
+	var instance: Node3D = null
 	if tile.scene != null:
-		var instance = tile.scene.instantiate()
-		if instance is Node3D:
-			add_structure_node(instance)
-			frame_structure()
+		instance = tile.scene.instantiate()
+		if not instance is Node3D:
+			push_error("Tile %s scene is not a Node3D" % tile.name)
 			return
-
-		push_error("Tile %s scene is not a Node3D" % tile.name)
-		return
-
-	if tile.mesh != null:
+	elif tile.mesh != null:
 		var mesh_instance = MeshInstance3D.new()
 		mesh_instance.mesh = tile.mesh
-		add_structure_node(mesh_instance)
-		frame_structure()
+		instance = mesh_instance
+	else:
+		push_error("Tile has no scene assigned")
 		return
-
-	push_error("Tile has no scene assigned")
+	
+	# Add the main tile as a child of the root
+	instance.name = "MainTile"
+	preview_root.add_child(instance)
+	frame_structure()
 
 
 func clear_structure() -> void:
@@ -201,6 +227,7 @@ func clear_structure() -> void:
 	for child in viewport.get_children():
 		if child is Node3D and child != camera:
 			child.queue_free()
+	preview_root = null
 
 
 func get_viewport_world() -> World3D:
@@ -221,3 +248,102 @@ func _add_test_cube() -> void:
 
 	mesh_instance.position = Vector3(0, 0, 0)
 	viewport.add_child(mesh_instance)
+
+func start_compatible_tiles_preview(tiles: Array[Tile], direction: Vector3i) -> void:
+	"""Start cycling through compatible tiles preview"""
+	compatible_tiles = tiles
+	socket_direction = direction
+	current_compatible_index = 0
+	
+	if compatible_tiles.size() == 0:
+		stop_compatible_tiles_preview()
+		return
+	
+	is_cycling = true
+	cycle_timer = CYCLE_DELAY
+	_show_compatible_tile(0)
+
+func stop_compatible_tiles_preview() -> void:
+	"""Stop cycling through compatible tiles and remove only the preview tile"""
+	is_cycling = false
+	compatible_tiles.clear()
+	current_compatible_index = 0
+	cycle_timer = 0.0
+	socket_direction = Vector3i.ZERO
+	_remove_compatible_tile_preview()
+
+func _show_next_compatible_tile() -> void:
+	"""Show the next tile in the compatible tiles list"""
+	if compatible_tiles.size() == 0:
+		return
+	
+	current_compatible_index = (current_compatible_index + 1) % compatible_tiles.size()
+	_show_compatible_tile(current_compatible_index)
+
+func _remove_compatible_tile_preview() -> void:
+	"""Remove the compatible tile preview but keep the main tile"""
+	if not preview_root:
+		return
+	
+	# Remove all children except the MainTile
+	for child in preview_root.get_children():
+		if child.name != "MainTile":
+			child.queue_free()
+
+func _show_compatible_tile(index: int) -> void:
+	"""Display a specific compatible tile with translucent appearance next to the current tile"""
+	if index < 0 or index >= compatible_tiles.size():
+		return
+	
+	if not preview_root:
+		return
+	
+	# Remove previous compatible tile preview
+	_remove_compatible_tile_preview()
+	
+	var tile = compatible_tiles[index]
+	var instance: Node3D = null
+	
+	# Try to instantiate from scene first, then mesh
+	if tile.scene != null:
+		instance = tile.scene.instantiate()
+	elif tile.mesh != null:
+		var mesh_instance = MeshInstance3D.new()
+		mesh_instance.mesh = tile.mesh
+		instance = mesh_instance
+	
+	if instance:
+		# Position the compatible tile based on socket direction
+		# Assuming tiles are 1 unit in size, position adjacent to the main tile
+		instance.name = "CompatibleTile"
+		instance.position = Vector3(socket_direction)
+		
+		# Make the preview translucent
+		_make_translucent(instance)
+		
+		# Add as child to the preview root
+		preview_root.add_child(instance)
+
+func _make_translucent(node: Node3D) -> void:
+	"""Recursively make all meshes in the node translucent"""
+	if node is MeshInstance3D:
+		var mesh_instance = node as MeshInstance3D
+		
+		# Create or duplicate material to make it translucent
+		var material: Material = mesh_instance.get_active_material(0)
+		if material:
+			# Duplicate the material to avoid modifying the original
+			material = material.duplicate()
+		else:
+			material = StandardMaterial3D.new()
+		
+		if material is StandardMaterial3D:
+			var std_mat = material as StandardMaterial3D
+			std_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			std_mat.albedo_color.a = 0.4  # 40% opacity
+			mesh_instance.set_surface_override_material(0, std_mat)
+	
+	# Recursively apply to children
+	for child in node.get_children():
+		if child is Node3D:
+			_make_translucent(child)

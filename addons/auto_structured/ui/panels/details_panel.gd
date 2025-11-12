@@ -3,6 +3,7 @@ class_name DetailsPanel extends Control
 
 signal closed
 signal tile_modified(tile: Tile)
+signal socket_preview_requested(socket_item: SocketItem)
 
 const SocketItem = preload("res://addons/auto_structured/ui/controls/socket_item.tscn")
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
@@ -31,7 +32,9 @@ func add_socket_item(socket: Socket) -> void:
 	var socket_item: SocketItem = SocketItem.instantiate()
 	socket_item.socket = socket
 	socket_item.library = current_library
+	socket_item.current_tile = current_tile
 	socket_item.changed.connect(_on_socket_changed)
+	socket_item.preview_requested.connect(_on_socket_preview_requested.bind(socket_item))
 	sockets_container.add_child(socket_item)
 
 
@@ -44,6 +47,10 @@ func clear_sockets() -> void:
 func _on_socket_changed(_socket: Socket) -> void:
 	# Socket properties were modified, save changes
 	save_tile_changes()
+
+func _on_socket_preview_requested(socket_item: SocketItem) -> void:
+	"""Forward socket preview request with the socket_item reference"""
+	socket_preview_requested.emit(socket_item)
 func add_tag(tag: String) -> void:
 	var tag_item: TagControl = TagControl.instantiate()
 	tag_item.tag_name = tag
