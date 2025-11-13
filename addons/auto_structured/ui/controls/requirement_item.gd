@@ -9,6 +9,7 @@ const GroundRequirement = preload("res://addons/auto_structured/core/requirement
 const HeightRequirement = preload("res://addons/auto_structured/core/requirements/height_requirement.gd")
 const TagRequirement = preload("res://addons/auto_structured/core/requirements/tag_requirement.gd")
 const PositionRequirement = preload("res://addons/auto_structured/core/requirements/position_requirement.gd")
+const RotationRequirement = preload("res://addons/auto_structured/core/requirements/rotation_requirement.gd")
 
 var requirement: Requirement:
 	set(value):
@@ -68,6 +69,11 @@ func _update_display() -> void:
 		type_label.text = "Force Position"
 		type_label.tooltip_text = "Forces a specific tile at an exact grid position.\nUseful for: ensuring doors at entrances, chimneys at specific spots."
 		_create_position_controls(requirement)
+	
+	elif requirement is RotationRequirement:
+		type_label.text = "Rotation"
+		type_label.tooltip_text = "Requires the connecting tile to be rotated by at least a minimum angle.\nUseful for: corner pieces that shouldn't connect without rotation."
+		_create_rotation_controls(requirement)
 	
 	else:
 		type_label.text = "Unknown"
@@ -166,6 +172,35 @@ func _create_position_controls(pos_req: PositionRequirement) -> void:
 				)
 		
 		config_container.add_child(spin)
+
+
+func _create_rotation_controls(rotation_req: RotationRequirement) -> void:
+	"""Create rotation angle option button"""
+	var label = Label.new()
+	label.text = "Min Angle:"
+	config_container.add_child(label)
+	
+	var option = OptionButton.new()
+	option.add_item("0° (Any)", 0)
+	option.add_item("90°+", 90)
+	option.add_item("180°", 180)
+	option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	
+	# Set current value
+	match rotation_req.minimum_rotation_degrees:
+		0:
+			option.selected = 0
+		90:
+			option.selected = 1
+		180:
+			option.selected = 2
+	
+	option.item_selected.connect(func(index):
+		rotation_req.minimum_rotation_degrees = option.get_item_id(index)
+		changed.emit(requirement)
+	)
+	
+	config_container.add_child(option)
 
 
 func _on_enabled_toggled(pressed: bool) -> void:

@@ -1,0 +1,92 @@
+[gd_resource type="Resource" script_class="ModuleLibrary" load_steps=21 format=3 uid="uid://c08upgg3c8ra1"]
+
+[ext_resource type="Script" uid="uid://n5qundf42kiu" path="res://addons/auto_structured/core/module_library.gd" id="1_g2r0m"]
+[ext_resource type="Script" uid="uid://c7f03neubtkf3" path="res://addons/auto_structured/core/tile.gd" id="2_f08mx"]
+[ext_resource type="Script" uid="uid://bou4nb0t7hher" path="res://addons/auto_structured/core/requirements/requirement.gd" id="3_peua7"]
+[ext_resource type="PackedScene" uid="uid://d0p2xcok0uosa" path="res://sample/assets/Balcony_Cross_Corner.gltf" id="4_e70lh"]
+[ext_resource type="Script" uid="uid://bddgr0flhmhcl" path="res://addons/auto_structured/core/socket.gd" id="5_ybimf"]
+[ext_resource type="PackedScene" uid="uid://bhntfahqd7e6i" path="res://sample/assets/Balcony_Cross_Straight.gltf" id="6_e70lh"]
+
+[sub_resource type="Resource" id="Resource_ybimf"]
+script = ExtResource("5_ybimf")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_ocyvf"]
+script = ExtResource("5_ybimf")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_7pgw0"]
+script = ExtResource("5_ybimf")
+socket_id = "none"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_4nsv4"]
+script = ExtResource("5_ybimf")
+socket_id = "balcony_corner_right"
+direction = Vector3i(-1, 0, 0)
+compatible_sockets = Array[String](["balcony_corner_right", "balcony_corner_left", "balcony_left"])
+
+[sub_resource type="Resource" id="Resource_wjay0"]
+script = ExtResource("5_ybimf")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_4d2ao"]
+script = ExtResource("5_ybimf")
+socket_id = "balcony_corner_left"
+direction = Vector3i(0, 0, 1)
+compatible_sockets = Array[String](["balcony_corner_left", "balcony_corner_right", "balcony_right"])
+
+[sub_resource type="Resource" id="Resource_22vab"]
+script = ExtResource("2_f08mx")
+name = "Balcony_Cross_Corner"
+scene = ExtResource("4_e70lh")
+size = Vector3(2, 2, 2)
+tags = Array[String](["wood"])
+sockets = Array[ExtResource("5_ybimf")]([SubResource("Resource_ybimf"), SubResource("Resource_ocyvf"), SubResource("Resource_7pgw0"), SubResource("Resource_4nsv4"), SubResource("Resource_wjay0"), SubResource("Resource_4d2ao")])
+
+[sub_resource type="Resource" id="Resource_e70lh"]
+script = ExtResource("5_ybimf")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_vv34b"]
+script = ExtResource("5_ybimf")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_t1vno"]
+script = ExtResource("5_ybimf")
+socket_id = "balcony_right"
+direction = Vector3i(1, 0, 0)
+compatible_sockets = Array[String](["balcony_corner_left", "balcony_left"])
+
+[sub_resource type="Resource" id="Resource_bdy81"]
+script = ExtResource("5_ybimf")
+socket_id = "balcony_left"
+direction = Vector3i(-1, 0, 0)
+compatible_sockets = Array[String](["balcony_corner_right", "balcony_right"])
+
+[sub_resource type="Resource" id="Resource_dki7u"]
+script = ExtResource("5_ybimf")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_nf2n2"]
+script = ExtResource("5_ybimf")
+socket_id = "none"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_ckqj4"]
+script = ExtResource("2_f08mx")
+name = "Balcony_Cross_Straight"
+scene = ExtResource("6_e70lh")
+size = Vector3(2, 2, 2)
+tags = Array[String](["wood"])
+sockets = Array[ExtResource("5_ybimf")]([SubResource("Resource_e70lh"), SubResource("Resource_vv34b"), SubResource("Resource_t1vno"), SubResource("Resource_bdy81"), SubResource("Resource_dki7u"), SubResource("Resource_nf2n2")])
+
+[resource]
+script = ExtResource("1_g2r0m")
+library_name = "Test"
+tiles = Array[ExtResource("2_f08mx")]([SubResource("Resource_22vab"), SubResource("Resource_ckqj4")])
+socket_types = Array[String](["any", "balcony", "balcony_corner", "balcony_corner_left", "balcony_corner_right", "balcony_left", "balcony_right", "none"])

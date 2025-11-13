@@ -2,6 +2,7 @@
 class_name ModuleLibraryPanel extends Control
 
 signal tile_selected(tile: Tile)
+signal library_loaded(library: ModuleLibrary)
 
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.gd")
@@ -27,6 +28,8 @@ var library_menu_button: MenuButton = $Panel/MarginContainer/VBoxContainer/VBoxC
 @onready var tile_list: ItemList = %TileList
 @onready var search_edit: LineEdit = %AssetSearchEdit
 
+const DELETE_TILE = 0
+const RESET_TILE = 1
 
 func _ready() -> void:
 	# Get EditorResourcePreview instance
@@ -76,6 +79,7 @@ func find_libraries() -> void:
 	if not libraries.is_empty():
 		current_library = libraries[0]
 		library_option.selected = 0
+		library_loaded.emit(current_library)
 
 
 func _on_library_selected(index: int) -> void:
@@ -84,6 +88,7 @@ func _on_library_selected(index: int) -> void:
 
 	current_library = libraries[index]
 	_refresh_tile_list()
+	library_loaded.emit(current_library)
 
 
 func _scan_directory_for_libraries(path: String) -> Array[ModuleLibrary]:
@@ -161,7 +166,8 @@ func _setup_rename_dialog() -> void:
 func _setup_tile_context_menu() -> void:
 	tile_context_menu = PopupMenu.new()
 	add_child(tile_context_menu)
-	tile_context_menu.add_item("Delete Tile", 0)
+	tile_context_menu.add_item("Delete Tile", DELETE_TILE)
+	tile_context_menu.add_item("Reset Tile", RESET_TILE)
 	tile_context_menu.id_pressed.connect(_on_tile_context_menu_item_selected)
 	
 	# Connect to ItemList's item_clicked signal for right-click detection
@@ -182,8 +188,15 @@ func _on_tile_list_item_clicked(index: int, at_position: Vector2, mouse_button_i
 
 func _on_tile_context_menu_item_selected(id: int) -> void:
 	match id:
-		0:  # Delete Tile
+		DELETE_TILE:  # Delete Tile
 			_delete_selected_tile()
+		RESET_TILE:  # Reset Tile (clear requirements, sockets, tags)
+			if selected_tile:
+				selected_tile.requirements = []
+				selected_tile.sockets = []
+				selected_tile.tags = []
+				_save_library()
+				_refresh_tile_list()
 
 
 func _delete_selected_tile() -> void:

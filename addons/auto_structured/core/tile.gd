@@ -7,6 +7,7 @@ const Requirement = preload("res://addons/auto_structured/core/requirements/requ
 @export var name: String = ""
 @export var mesh: Mesh = null
 @export var scene: PackedScene = null
+@export var size: Vector3 = Vector3.ONE  ## Size of the tile in grid units (default 1x1x1)
 @export var tags: Array[String] = []
 @export var requirements: Array[Requirement] = []
 @export var sockets: Array[Socket] = []

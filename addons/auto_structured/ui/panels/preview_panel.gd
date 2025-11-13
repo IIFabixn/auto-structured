@@ -1,10 +1,20 @@
 @tool
 class_name PreviewPanel extends Control
+## 3D preview panel for tiles and socket compatibility visualization.
+##
+## Main functions:
+##   - preview_tile(tile): Show a single tile preview
+##   - preview_socket(tile, socket, compatible_tiles): Show tile with compatible tiles for a socket
 
 const RESUME_DELAY: float = 2.0  # seconds before auto-rotate resumes
 const CYCLE_DELAY: float = 3.0  # seconds between cycling compatible tiles
 
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
+const Socket = preload("res://addons/auto_structured/core/socket.gd")
+const WfcHelper = preload("res://addons/auto_structured/core/wfc/wfc_helper.gd")
+const WfcGrid = preload("res://addons/auto_structured/core/wfc/wfc_grid.gd")
+const WfcSolver = preload("res://addons/auto_structured/core/wfc/wfc_solver.gd")
+const Viewport3DGrid = preload("res://addons/auto_structured/ui/controls/viewport_3d_grid.gd")
 
 var camera_distance: float = 10.0
 var camera_rotation: Vector2 = Vector2(15, 45)  # pitch, yaw in degrees
@@ -24,26 +34,36 @@ var auto_rotate_paused: bool = false
 var resume_timer: float = 0.0
 
 # Compatible tiles cycling
-var compatible_tiles: Array[Tile] = []
+var compatible_results: Array[Dictionary] = []  # Array of {tile: Tile, socket: Socket} dictionaries
 var current_compatible_index: int = 0
 var cycle_timer: float = 0.0
 var is_cycling: bool = false
 var preview_root: Node3D = null  # Root node containing the main tile and compatible tiles
-var socket_direction: Vector3i = Vector3i.ZERO  # Direction of the socket for positioning
+var main_tile: Tile = null  # The main tile being previewed
+var main_socket: Socket = null  # The socket on the main tile that we're previewing from
+
+# WFC generation state
+var wfc_grid: WfcGrid = null
+var wfc_solver: WfcSolver = null
+var module_library: ModuleLibrary = null
+var grid_size: Vector3i = Vector3i(5, 1, 5)
+var is_generating: bool = false
 
 @onready var viewport: SubViewport = %PreviewViewport
 @onready var camera: Camera3D = %PreviewCamera
 @onready
 var viewport_container: SubViewportContainer = $Panel/MarginContainer/ScrollContainer/VBoxContainer/Panel/SubViewportContainer
 @onready var viewport_options: MenuButton = %ViewportOptions
+@onready var new_button: TextureButton = $Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar/NewButton
+@onready var step_button: TextureButton = $Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar/StepButton
+@onready var solve_button: TextureButton = $Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar/SolveButton
+@onready var top_bar_menu: MenuButton = $Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar/MenuButton
 
 # Grid and origin visualization
-var grid_mesh_instance: MeshInstance3D = null
-var origin_mesh_instance: MeshInstance3D = null
-var show_grid: bool = true
-var show_origin: bool = true
-var grid_size: int = 20  # Number of grid lines in each direction
-var grid_spacing: float = 1.0  # Space between grid lines
+var viewport_grid: Viewport3DGrid = null
+
+# Grid size dialog
+var grid_size_dialog: AcceptDialog = null
 
 
 func _ready() -> void:
@@ -52,10 +72,8 @@ func _ready() -> void:
 	viewport_rect = viewport_container.get_global_rect()
 	
 	# Create grid and origin
-	_create_grid()
-	_create_origin()
-	
-	_add_test_cube()
+	viewport_grid = Viewport3DGrid.new()
+	viewport.add_child(viewport_grid)
 
 	# Connect viewport options menu
 	var popup = viewport_options.get_popup()
@@ -63,9 +81,21 @@ func _ready() -> void:
 	popup.set_item_checked(0, auto_rotate)
 	popup.add_separator()
 	popup.add_check_item("Show Grid", 2)
-	popup.set_item_checked(popup.get_item_index(2), show_grid)
+	popup.set_item_checked(popup.get_item_index(2), viewport_grid.show_grid if viewport_grid else true)
 	popup.add_check_item("Show Origin", 3)
-	popup.set_item_checked(popup.get_item_index(3), show_origin)
+	popup.set_item_checked(popup.get_item_index(3), viewport_grid.show_origin if viewport_grid else true)
+	
+	# Connect top bar menu
+	var top_menu_popup = top_bar_menu.get_popup()
+	top_menu_popup.id_pressed.connect(_on_top_menu_selected)
+	top_menu_popup.add_separator()
+	top_menu_popup.add_item("Configure Grid Size", 2)
+	
+	# Create grid size dialog
+	_create_grid_size_dialog()
+	
+	# Update button states
+	_update_button_states()
 
 
 func _process(delta: float) -> void:
@@ -85,7 +115,7 @@ func _process(delta: float) -> void:
 		camera.global_position = camera.global_position.lerp(target_camera_position, delta * camera_lerp_speed)
 	
 	# Handle compatible tiles cycling
-	if is_cycling and compatible_tiles.size() > 0:
+	if is_cycling and compatible_results.size() > 0:
 		cycle_timer -= delta
 		if cycle_timer <= 0.0:
 			cycle_timer = CYCLE_DELAY
@@ -102,15 +132,13 @@ func _on_viewport_option_selected(id: int) -> void:
 			stop_compatible_tiles_preview()
 			frame_structure()
 		2:  # Show Grid
-			show_grid = !show_grid
-			popup.set_item_checked(popup.get_item_index(2), show_grid)
-			if grid_mesh_instance:
-				grid_mesh_instance.visible = show_grid
+			if viewport_grid:
+				viewport_grid.show_grid = !viewport_grid.show_grid
+				popup.set_item_checked(popup.get_item_index(2), viewport_grid.show_grid)
 		3:  # Show Origin
-			show_origin = !show_origin
-			popup.set_item_checked(popup.get_item_index(3), show_origin)
-			if origin_mesh_instance:
-				origin_mesh_instance.visible = show_origin
+			if viewport_grid:
+				viewport_grid.show_origin = !viewport_grid.show_origin
+				popup.set_item_checked(popup.get_item_index(3), viewport_grid.show_origin)
 
 
 func _on_viewport_gui_input(event: InputEvent) -> void:
@@ -234,18 +262,64 @@ func add_structure_node(node: Node3D) -> void:
 	viewport.add_child(node)
 
 
-func display_tile_preview(tile: Tile) -> void:
-	"""Display a preview of the given tile in the viewport"""
-	# Stop any ongoing compatible tile preview
+func preview_tile(tile: Tile) -> void:
+	"""Display a preview of a tile (no socket preview)"""
+	# Stop any socket preview
 	stop_compatible_tiles_preview()
 	
+	# Clear and recreate the preview
 	clear_structure()
+	_create_tile_instance(tile)
+	
+	# Store the main tile reference
+	main_tile = tile
+	
+	frame_structure()
 
-	# Create a root node for the preview scene
-	preview_root = Node3D.new()
-	preview_root.name = "PreviewRoot"
-	add_structure_node(preview_root)
 
+func preview_socket(tile: Tile, socket: Socket, compatible_tiles: Array[Dictionary]) -> void:
+	"""
+	Display a preview of a tile with its socket's compatible tiles.
+	
+	Args:
+		tile: The main tile to preview
+		socket: The socket on the tile to show compatible connections for
+		compatible_tiles: Array of {tile: Tile, socket: Socket} dictionaries
+	"""
+	# Clear previous preview
+	stop_compatible_tiles_preview()
+	clear_structure()
+	
+	# Create the main tile instance
+	_create_tile_instance(tile)
+	
+	# Store references
+	main_tile = tile
+	main_socket = socket
+	
+	# Start cycling through compatible tiles if any exist
+	if compatible_tiles.size() > 0:
+		compatible_results = compatible_tiles
+		is_cycling = true
+		cycle_timer = CYCLE_DELAY
+		_show_compatible_tile(0)
+	else:
+		push_warning("No compatible tiles found for socket: %s" % socket.socket_id)
+	
+	frame_structure()
+
+
+func _create_tile_instance(tile: Tile) -> void:
+	"""Create the main tile instance in the preview"""
+	if not tile:
+		return
+	
+	# Create preview root if needed
+	if not preview_root:
+		preview_root = Node3D.new()
+		preview_root.name = "PreviewRoot"
+		add_structure_node(preview_root)
+	
 	var instance: Node3D = null
 	if tile.scene != null:
 		instance = tile.scene.instantiate()
@@ -263,65 +337,36 @@ func display_tile_preview(tile: Tile) -> void:
 	# Add the main tile as a child of the root
 	instance.name = "MainTile"
 	preview_root.add_child(instance)
-	frame_structure()
-
 
 func clear_structure() -> void:
 	"""Remove all structure nodes from the viewport"""
 	for child in viewport.get_children():
-		if child is Node3D and child != camera and child != grid_mesh_instance and child != origin_mesh_instance:
+		if child is Node3D and child != camera and child != viewport_grid:
 			child.queue_free()
 	preview_root = null
+	main_tile = null
 
 
 func get_viewport_world() -> World3D:
 	"""Get the 3D world of the preview viewport"""
 	return viewport.world_3d
 
-
-func _add_test_cube() -> void:
-	"""Add a test cube to the viewport for testing camera controls"""
-	var mesh_instance = MeshInstance3D.new()
-	var box_mesh = BoxMesh.new()
-	box_mesh.size = Vector3(2, 2, 2)
-	mesh_instance.mesh = box_mesh
-
-	var material = StandardMaterial3D.new()
-	material.albedo_color = Color(0.8, 0.4, 0.2)
-	mesh_instance.material_override = material
-
-	mesh_instance.position = Vector3(0, 0, 0)
-	viewport.add_child(mesh_instance)
-
-func start_compatible_tiles_preview(tiles: Array[Tile], direction: Vector3i) -> void:
-	"""Start cycling through compatible tiles preview"""
-	compatible_tiles = tiles
-	socket_direction = direction
-	current_compatible_index = 0
-	
-	if compatible_tiles.size() == 0:
-		stop_compatible_tiles_preview()
-		return
-	
-	is_cycling = true
-	cycle_timer = CYCLE_DELAY
-	_show_compatible_tile(0)
-
 func stop_compatible_tiles_preview() -> void:
 	"""Stop cycling through compatible tiles and remove only the preview tile"""
 	is_cycling = false
-	compatible_tiles.clear()
+	compatible_results.clear()
 	current_compatible_index = 0
 	cycle_timer = 0.0
-	socket_direction = Vector3i.ZERO
+	main_socket = null
+	# Note: main_tile is not cleared here as it's still being previewed
 	_remove_compatible_tile_preview()
 
 func _show_next_compatible_tile() -> void:
 	"""Show the next tile in the compatible tiles list"""
-	if compatible_tiles.size() == 0:
+	if compatible_results.size() == 0:
 		return
 	
-	current_compatible_index = (current_compatible_index + 1) % compatible_tiles.size()
+	current_compatible_index = (current_compatible_index + 1) % compatible_results.size()
 	_show_compatible_tile(current_compatible_index)
 
 func _remove_compatible_tile_preview() -> void:
@@ -336,16 +381,19 @@ func _remove_compatible_tile_preview() -> void:
 
 func _show_compatible_tile(index: int) -> void:
 	"""Display a specific compatible tile with translucent appearance next to the current tile"""
-	if index < 0 or index >= compatible_tiles.size():
+	if index < 0 or index >= compatible_results.size():
 		return
 	
-	if not preview_root:
+	if not preview_root or not main_socket:
 		return
 	
 	# Remove previous compatible tile preview
 	_remove_compatible_tile_preview()
 	
-	var tile = compatible_tiles[index]
+	var result = compatible_results[index]
+	var tile: Tile = result["tile"]
+	var connecting_socket: Socket = result["socket"]
+	var predetermined_rotation: float = result.get("rotation_degrees", 0.0)
 	var instance: Node3D = null
 	
 	# Try to instantiate from scene first, then mesh
@@ -357,10 +405,22 @@ func _show_compatible_tile(index: int) -> void:
 		instance = mesh_instance
 	
 	if instance:
-		# Position the compatible tile based on socket direction
-		# Assuming tiles are 1 unit in size, position adjacent to the main tile
 		instance.name = "CompatibleTile"
-		instance.position = Vector3(socket_direction)
+		
+		# Get tile sizes
+		var main_tile_size = main_tile.size if main_tile else Vector3.ONE
+		var compatible_tile_size = tile.size
+		
+		# Position the compatible tile adjacent to the main tile
+		var main_direction = main_socket.direction
+		instance.position = WfcHelper.calculate_adjacent_tile_position(
+			main_tile_size,
+			compatible_tile_size,
+			main_direction
+		)
+		
+		# Use the rotation that was determined in find_compatible_tiles
+		instance.transform.basis = Basis(Vector3.UP, deg_to_rad(predetermined_rotation))
 		
 		# Make the preview translucent
 		_make_translucent(instance)
@@ -392,7 +452,7 @@ func _make_translucent(node: Node3D) -> void:
 			if material is StandardMaterial3D:
 				var std_mat = material as StandardMaterial3D
 				std_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-				std_mat.albedo_color.a = 0.4  # 40% opacity
+				std_mat.albedo_color.a = 0.5  # 50% opacity
 				mesh_instance.set_surface_override_material(surface_idx, std_mat)
 	
 	# Recursively apply to children
@@ -401,98 +461,328 @@ func _make_translucent(node: Node3D) -> void:
 			_make_translucent(child)
 
 
-func _create_grid() -> void:
-	"""Create a grid mesh for the viewport floor"""
-	var surface_tool = SurfaceTool.new()
-	surface_tool.begin(Mesh.PRIMITIVE_LINES)
-	
-	# Grid colors
-	var center_color = Color(0.7, 0.7, 0.7, 0.8)  # Brighter for center lines
-	var grid_color = Color(0.4, 0.4, 0.4, 0.5)    # Dimmer for regular lines
-	
-	# Create grid lines
-	for i in range(-grid_size, grid_size + 1):
-		var offset = i * grid_spacing
-		
-		# Determine color (center lines are brighter)
-		var color = center_color if i == 0 else grid_color
-		
-		# Lines parallel to X axis
-		surface_tool.set_color(color)
-		surface_tool.add_vertex(Vector3(-grid_size * grid_spacing, 0, offset))
-		surface_tool.set_color(color)
-		surface_tool.add_vertex(Vector3(grid_size * grid_spacing, 0, offset))
-		
-		# Lines parallel to Z axis
-		surface_tool.set_color(color)
-		surface_tool.add_vertex(Vector3(offset, 0, -grid_size * grid_spacing))
-		surface_tool.set_color(color)
-		surface_tool.add_vertex(Vector3(offset, 0, grid_size * grid_spacing))
-	
-	var grid_mesh = surface_tool.commit()
-	
-	# Create material for the grid
-	var material = StandardMaterial3D.new()
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.vertex_color_use_as_albedo = true
-	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	material.no_depth_test = false
-	material.disable_receive_shadows = true
-	material.albedo_color = Color.WHITE
-	
-	# Create mesh instance
-	grid_mesh_instance = MeshInstance3D.new()
-	grid_mesh_instance.mesh = grid_mesh
-	grid_mesh_instance.material_override = material
-	grid_mesh_instance.name = "Grid"
-	grid_mesh_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	grid_mesh_instance.visible = show_grid
-	
-	viewport.add_child(grid_mesh_instance)
+# =============================================================================
+# WFC Generation Control
+# =============================================================================
+
+func set_module_library(library: ModuleLibrary) -> void:
+	"""Set the module library to use for generation"""
+	module_library = library
+	_update_button_states()
 
 
-func _create_origin() -> void:
-	"""Create an origin indicator (axis gizmo) at world origin"""
-	var surface_tool = SurfaceTool.new()
-	surface_tool.begin(Mesh.PRIMITIVE_LINES)
+func set_grid_size(size: Vector3i) -> void:
+	"""Set the grid size for generation"""
+	grid_size = size
+	print("WFC grid size set to: ", grid_size)
+
+
+func _update_button_states() -> void:
+	"""Update button enabled/disabled states based on current state"""
+	if not new_button:
+		return
 	
-	var axis_length = 2.0
-	var axis_thickness = 0.05
+	var has_library = module_library != null and module_library.tiles.size() > 0
+	new_button.disabled = not has_library
+	step_button.disabled = not is_generating
+	solve_button.disabled = not is_generating
+
+
+func _on_new_button_pressed() -> void:
+	"""Start a new WFC generation"""
+	print("\n=== Initiating WFC Generation ===")
+	if not module_library or module_library.tiles.is_empty():
+		push_warning("No module library or tiles available")
+		return
 	
-	# X axis (Red)
-	surface_tool.set_color(Color.RED)
-	surface_tool.add_vertex(Vector3.ZERO)
-	surface_tool.set_color(Color.RED)
-	surface_tool.add_vertex(Vector3(axis_length, 0, 0))
+	print("\n=== Starting New WFC Generation ===")
+	print("Grid size: ", grid_size)
+	print("Available tiles: ", module_library.tiles.size())
 	
-	# Y axis (Green)
-	surface_tool.set_color(Color.GREEN)
-	surface_tool.add_vertex(Vector3.ZERO)
-	surface_tool.set_color(Color.GREEN)
-	surface_tool.add_vertex(Vector3(0, axis_length, 0))
+	# Stop any current preview
+	stop_compatible_tiles_preview()
+	clear_structure()
 	
-	# Z axis (Blue)
-	surface_tool.set_color(Color.BLUE)
-	surface_tool.add_vertex(Vector3.ZERO)
-	surface_tool.set_color(Color.BLUE)
-	surface_tool.add_vertex(Vector3(0, 0, axis_length))
+	# Create new grid and solver
+	wfc_grid = WfcGrid.from_library(grid_size, module_library)
+	wfc_solver = WfcSolver.new(wfc_grid)
+	is_generating = true
 	
-	var origin_mesh = surface_tool.commit()
+	print("Grid created with ", wfc_grid.cells.size(), " cells")
+	print("Waiting for user to step through or solve...")
 	
-	# Create material for the origin
-	var material = StandardMaterial3D.new()
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.vertex_color_use_as_albedo = true
-	material.no_depth_test = true  # Always visible through objects
-	material.disable_receive_shadows = true
-	material.albedo_color = Color.WHITE
+	# Visualize the initial empty grid
+	_visualize_grid()
 	
-	# Create mesh instance
-	origin_mesh_instance = MeshInstance3D.new()
-	origin_mesh_instance.mesh = origin_mesh
-	origin_mesh_instance.material_override = material
-	origin_mesh_instance.name = "Origin"
-	origin_mesh_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	origin_mesh_instance.visible = show_origin
+	_update_button_states()
+	frame_structure()
+
+
+func _on_step_button_pressed() -> void:
+	"""Execute one step of WFC generation (collapse one cell)"""
+	if not is_generating or not wfc_grid or not wfc_solver:
+		return
 	
-	viewport.add_child(origin_mesh_instance)
+	if wfc_grid.is_fully_collapsed():
+		print("Generation complete!")
+		_finish_generation()
+		return
+	
+	if wfc_grid.has_contradiction():
+		push_error("WFC: Contradiction detected - cannot continue")
+		_finish_generation()
+		return
+	
+	# Get the cell with lowest entropy
+	var cell = wfc_grid.get_lowest_entropy_cell()
+	if not cell:
+		print("Generation complete!")
+		_finish_generation()
+		return
+	
+	print("\n[Step] Collapsing cell at ", cell.position, " (entropy: ", cell.get_entropy(), ")")
+	
+	# Collapse the cell
+	if not cell.collapse():
+		push_error("WFC: Failed to collapse cell at ", cell.position)
+		_finish_generation()
+		return
+	
+	var variant = cell.get_variant()
+	print("  Selected: ", variant["tile"].name, " at ", variant["rotation_degrees"], "°")
+	
+	# Propagate constraints
+	if not wfc_solver.propagate(cell):
+		push_error("WFC: Propagation failed at ", cell.position)
+		_finish_generation()
+		return
+	
+	# Update visualization
+	_visualize_grid()
+
+
+func _on_solve_button_pressed() -> void:
+	"""Solve the entire WFC generation automatically"""
+	if not is_generating or not wfc_grid or not wfc_solver:
+		return
+	
+	print("\n=== Solving WFC Automatically ===")
+	
+	var success = wfc_solver.solve()
+	
+	if success:
+		print("✓ WFC generation SUCCESSFUL!")
+		_print_grid_summary()
+	else:
+		push_error("✗ WFC generation FAILED!")
+		if wfc_grid.has_contradiction():
+			print("  Reason: Contradiction detected")
+	
+	# Update visualization
+	_visualize_grid()
+	
+	_finish_generation()
+
+
+func _finish_generation() -> void:
+	"""Clean up after generation is complete or failed"""
+	is_generating = false
+	_update_button_states()
+
+
+func _visualize_grid() -> void:
+	"""Visualize the current state of the WFC grid"""
+	if not wfc_grid:
+		return
+	
+	# Clear previous structure
+	clear_structure()
+	
+	# Create preview root
+	preview_root = Node3D.new()
+	preview_root.name = "WfcStructure"
+	add_structure_node(preview_root)
+	
+	# Calculate center offset to center the grid at origin
+	var center_offset = Vector3.ZERO
+	if not wfc_grid.cells.is_empty():
+		# Get a sample tile to determine tile size
+		var sample_cell = wfc_grid.cells.values()[0]
+		var sample_tile: Tile = null
+		if sample_cell.is_collapsed():
+			sample_tile = sample_cell.get_tile()
+		elif sample_cell.possible_tile_variants.size() > 0:
+			sample_tile = sample_cell.possible_tile_variants[0].get("tile")
+		
+		if sample_tile:
+			var tile_size = sample_tile.size
+			# Calculate the center of the grid in world space
+			center_offset = Vector3(
+				(grid_size.x - 1) * tile_size.x * 0.5,
+				(grid_size.y - 1) * tile_size.y * 0.5,
+				(grid_size.z - 1) * tile_size.z * 0.5
+			)
+	
+	# Instantiate all collapsed cells
+	for cell in wfc_grid.cells.values():
+		if not cell.is_collapsed():
+			continue
+		
+		var variant = cell.get_variant()
+		var tile: Tile = variant.get("tile")
+		var rotation: int = variant.get("rotation_degrees", 0)
+		
+		if not tile:
+			continue
+		
+		var instance: Node3D = null
+		if tile.scene != null:
+			instance = tile.scene.instantiate()
+		elif tile.mesh != null:
+			var mesh_instance = MeshInstance3D.new()
+			mesh_instance.mesh = tile.mesh
+			instance = mesh_instance
+		
+		if instance:
+			# Position based on grid position and tile size, centered at origin
+			var world_pos = WfcHelper.grid_to_world(cell.position, tile.size)
+			instance.position = world_pos - center_offset
+			
+			# Apply rotation
+			instance.transform.basis = Basis(Vector3.UP, deg_to_rad(rotation))
+			
+			instance.name = "Cell_%d_%d_%d" % [cell.position.x, cell.position.y, cell.position.z]
+			preview_root.add_child(instance)
+	
+	frame_structure()
+
+
+func _print_grid_summary() -> void:
+	"""Print a summary of the generated grid"""
+	if not wfc_grid:
+		return
+	
+	var collapsed_count = 0
+	var tile_counts = {}
+	
+	for cell in wfc_grid.cells.values():
+		if cell.is_collapsed():
+			collapsed_count += 1
+			var tile = cell.get_tile()
+			if tile:
+				var key = tile.name
+				tile_counts[key] = tile_counts.get(key, 0) + 1
+	
+	print("\nGrid Summary:")
+	print("  Collapsed cells: ", collapsed_count, " / ", wfc_grid.cells.size())
+	print("  Tile distribution:")
+	for tile_name in tile_counts.keys():
+		print("    - ", tile_name, ": ", tile_counts[tile_name])
+
+
+# =============================================================================
+# Grid Size Configuration
+# =============================================================================
+
+func _create_grid_size_dialog() -> void:
+	"""Create the grid size configuration dialog"""
+	grid_size_dialog = AcceptDialog.new()
+	grid_size_dialog.title = "Configure Grid Size"
+	grid_size_dialog.size = Vector2i(300, 200)
+	
+	var vbox = VBoxContainer.new()
+	vbox.name = "GridSizeVBox"
+	vbox.add_theme_constant_override("separation", 8)
+	
+	# X size
+	var x_hbox = HBoxContainer.new()
+	var x_label = Label.new()
+	x_label.text = "Width (X):"
+	x_label.custom_minimum_size.x = 80
+	x_hbox.add_child(x_label)
+	
+	var x_spinbox = SpinBox.new()
+	x_spinbox.name = "XSpinBox"
+	x_spinbox.min_value = 1
+	x_spinbox.max_value = 50
+	x_spinbox.value = grid_size.x
+	x_spinbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	x_hbox.add_child(x_spinbox)
+	vbox.add_child(x_hbox)
+	
+	# Y size
+	var y_hbox = HBoxContainer.new()
+	var y_label = Label.new()
+	y_label.text = "Height (Y):"
+	y_label.custom_minimum_size.x = 80
+	y_hbox.add_child(y_label)
+	
+	var y_spinbox = SpinBox.new()
+	y_spinbox.name = "YSpinBox"
+	y_spinbox.min_value = 1
+	y_spinbox.max_value = 50
+	y_spinbox.value = grid_size.y
+	y_spinbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	y_hbox.add_child(y_spinbox)
+	vbox.add_child(y_hbox)
+	
+	# Z size
+	var z_hbox = HBoxContainer.new()
+	var z_label = Label.new()
+	z_label.text = "Depth (Z):"
+	z_label.custom_minimum_size.x = 80
+	z_hbox.add_child(z_label)
+	
+	var z_spinbox = SpinBox.new()
+	z_spinbox.name = "ZSpinBox"
+	z_spinbox.min_value = 1
+	z_spinbox.max_value = 50
+	z_spinbox.value = grid_size.z
+	z_spinbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	z_hbox.add_child(z_spinbox)
+	vbox.add_child(z_hbox)
+	
+	grid_size_dialog.add_child(vbox)
+	grid_size_dialog.confirmed.connect(_on_grid_size_confirmed)
+	add_child(grid_size_dialog)
+
+
+func _on_top_menu_selected(id: int) -> void:
+	"""Handle top menu bar selections"""
+	match id:
+		2:  # Configure Grid Size
+			if grid_size_dialog:
+				# Update values before showing
+				var vbox = grid_size_dialog.get_node("GridSizeVBox")
+				if vbox:
+					var x_spin = vbox.get_node_or_null("HBoxContainer/XSpinBox") as SpinBox
+					var y_spin = vbox.get_node_or_null("HBoxContainer2/YSpinBox") as SpinBox
+					var z_spin = vbox.get_node_or_null("HBoxContainer3/ZSpinBox") as SpinBox
+					
+					if x_spin: x_spin.value = grid_size.x
+					if y_spin: y_spin.value = grid_size.y
+					if z_spin: z_spin.value = grid_size.z
+				
+				grid_size_dialog.popup_centered()
+
+
+func _on_grid_size_confirmed() -> void:
+	"""Apply grid size changes"""
+	if not grid_size_dialog:
+		return
+	
+	var vbox = grid_size_dialog.get_node("GridSizeVBox")
+	if not vbox:
+		return
+	
+	var x_spin = vbox.get_node_or_null("HBoxContainer/XSpinBox") as SpinBox
+	var y_spin = vbox.get_node_or_null("HBoxContainer2/YSpinBox") as SpinBox
+	var z_spin = vbox.get_node_or_null("HBoxContainer3/ZSpinBox") as SpinBox
+	
+	if x_spin and y_spin and z_spin:
+		grid_size = Vector3i(
+			int(x_spin.value),
+			int(y_spin.value),
+			int(z_spin.value)
+		)
+		print("Grid size updated to: ", grid_size)

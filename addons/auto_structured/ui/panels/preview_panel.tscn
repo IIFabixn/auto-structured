@@ -2,10 +2,10 @@
 
 [ext_resource type="Script" uid="uid://dhawin6ohfkr1" path="res://addons/auto_structured/ui/panels/preview_panel.gd" id="1_qeup7"]
 [ext_resource type="Texture2D" uid="uid://cklj47goa3tag" path="res://addons/auto_structured/assets/add.svg" id="2_8vq50"]
-[ext_resource type="Texture2D" uid="uid://dntpfw4citkar" path="res://addons/auto_structured/assets/icon_GUI_tab_menu.svg" id="2_rgf8d"]
 [ext_resource type="Texture2D" uid="uid://b0edrc0kwyyc8" path="res://addons/auto_structured/assets/step.svg" id="3_8vq50"]
 [ext_resource type="Texture2D" uid="uid://r7yic3lsjybn" path="res://addons/auto_structured/assets/solve.svg" id="3_flumd"]
 [ext_resource type="Texture2D" uid="uid://depdtuwl4wok3" path="res://addons/auto_structured/assets/rotate_left.svg" id="3_qo023"]
+[ext_resource type="Texture2D" uid="uid://bp051udsevt4u" path="res://addons/auto_structured/assets/icon_GUI_tab_menu_hl.svg" id="6_kwnk8"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_qo023"]
 
@@ -68,6 +68,7 @@ layout_mode = 2
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 tooltip_text = "Start new"
+disabled = true
 texture_normal = ExtResource("2_8vq50")
 stretch_mode = 3
 
@@ -80,6 +81,7 @@ theme_override_styles/separator = SubResource("StyleBoxEmpty_qo023")
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 tooltip_text = "Solve to next step."
+disabled = true
 texture_normal = ExtResource("3_8vq50")
 stretch_mode = 3
 
@@ -87,19 +89,24 @@ stretch_mode = 3
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 tooltip_text = "Solve till end"
+disabled = true
 texture_normal = ExtResource("3_flumd")
 stretch_mode = 3
 
 [node name="MenuButton" type="MenuButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
-icon = ExtResource("2_rgf8d")
+icon = ExtResource("6_kwnk8")
 icon_alignment = 1
-item_count = 2
+item_count = 4
 popup/item_0/text = "Add to current Scene"
 popup/item_0/id = 0
 popup/item_1/text = "Save as Scene"
 popup/item_1/id = 1
+popup/item_2/id = -1
+popup/item_2/separator = true
+popup/item_3/text = "Configure Grid Size"
+popup/item_3/id = 2
 
 [node name="Panel" type="Panel" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer"]
 clip_contents = true
@@ -125,7 +132,7 @@ render_target_update_mode = 4
 
 [node name="PreviewCamera" type="Camera3D" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/Panel/SubViewportContainer/PreviewViewport"]
 unique_name_in_owner = true
-transform = Transform3D(-0.82250094, -0.1472069, 0.54938364, 0, 0.9659258, 0.25881904, -0.5687638, 0.21287891, -0.7944749, 5.493836, 2.5881906, -7.944749)
+transform = Transform3D(0.8411686, -0.13999702, 0.5223373, 0, 0.96590865, 0.25888318, -0.540773, -0.21776439, 0.812492, 5.2564692, 2.5881906, 8.100596)
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/Panel/SubViewportContainer/PreviewViewport"]
 transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 5, 0)
@@ -153,10 +160,10 @@ theme_override_constants/margin_bottom = 4
 [node name="ViewportOptions" type="MenuButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/Panel/MarginContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-icon = ExtResource("2_rgf8d")
+icon = ExtResource("6_kwnk8")
 flat = false
 icon_alignment = 1
-item_count = 2
+item_count = 8
 popup/item_0/text = "Auto Rotate"
 popup/item_0/checkable = 1
 popup/item_0/checked = true
@@ -164,3 +171,25 @@ popup/item_0/id = 0
 popup/item_1/text = "Reset Viewport"
 popup/item_1/icon = ExtResource("3_qo023")
 popup/item_1/id = 1
+popup/item_2/id = -1
+popup/item_2/separator = true
+popup/item_3/text = "Show Grid"
+popup/item_3/checkable = 1
+popup/item_3/checked = true
+popup/item_3/id = 2
+popup/item_4/text = "Show Origin"
+popup/item_4/checkable = 1
+popup/item_4/checked = true
+popup/item_4/id = 3
+popup/item_5/id = -1
+popup/item_5/separator = true
+popup/item_6/text = "Show Grid"
+popup/item_6/checkable = 1
+popup/item_6/id = 2
+popup/item_7/text = "Show Origin"
+popup/item_7/checkable = 1
+popup/item_7/id = 3
+
+[connection signal="pressed" from="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar/NewButton" to="." method="_on_new_button_pressed"]
+[connection signal="pressed" from="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar/StepButton" to="." method="_on_step_button_pressed"]
+[connection signal="pressed" from="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar/SolveButton" to="." method="_on_solve_button_pressed"]

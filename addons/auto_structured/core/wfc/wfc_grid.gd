@@ -7,6 +7,7 @@ const Tile = preload("res://addons/auto_structured/core/tile.gd")
 var cells: Dictionary = {}
 var size: Vector3i
 var all_tiles: Array[Tile] = []
+var all_tile_variants: Array[Dictionary] = []  # All possible tile+rotation combinations
 
 static func from_library(grid_size: Vector3i, library: ModuleLibrary) -> WfcGrid:
 	return WfcGrid.new(grid_size, library.tiles)
@@ -14,11 +15,30 @@ static func from_library(grid_size: Vector3i, library: ModuleLibrary) -> WfcGrid
 func _init(grid_size: Vector3i, tiles: Array[Tile]) -> void:
 	size = grid_size
 	all_tiles = tiles
+	
+	# Generate all possible tile+rotation combinations
+	all_tile_variants = generate_all_variants(tiles)
+	
+	# Initialize cells with all possible variants
 	for x in range(size.x):
 		for y in range(size.y):
 			for z in range(size.z):
 				var pos = Vector3i(x, y, z)
-				cells[pos] = WfcCell.new(pos, all_tiles)
+				cells[pos] = WfcCell.new(pos, all_tile_variants)
+
+func generate_all_variants(tiles: Array[Tile]) -> Array[Dictionary]:
+	"""Generate all possible tile+rotation combinations."""
+	var variants: Array[Dictionary] = []
+	var rotations = [0, 90, 180, 270]
+	
+	for tile in tiles:
+		for rotation in rotations:
+			variants.append({
+				"tile": tile,
+				"rotation_degrees": rotation
+			})
+	
+	return variants
 
 
 func get_cell(pos: Vector3i) -> WfcCell:
@@ -112,4 +132,4 @@ func is_valid_position(pos: Vector3i) -> bool:
 func reset() -> void:
 	"""Reset all cells to their initial uncollapsed state."""
 	for cell in cells.values():
-		cell.reset(all_tiles)
+		cell.reset(all_tile_variants)

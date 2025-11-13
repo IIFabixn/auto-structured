@@ -1,9 +1,13 @@
 @tool
 class_name DetailsPanel extends Control
+## Panel for displaying and editing tile properties.
+##
+## Provides a clean API for showing tile details with proper state initialization.
+## Use show_tile(tile, library) to display a tile's properties.
 
 signal closed
 signal tile_modified(tile: Tile)
-signal socket_preview_requested(socket_item: SocketItem)
+signal socket_preview_requested(socket: Socket)
 
 const SocketItem = preload("res://addons/auto_structured/ui/controls/socket_item.tscn")
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
@@ -24,6 +28,9 @@ var add_requirement_menu: PopupMenu
 @onready var tags_container: VBoxContainer = %TagsContainer
 @onready var requirements_container: VBoxContainer = %RequirementsContainer
 @onready var add_requirement_button: Button = %AddRequirementButton
+@onready var spin_box_x: SpinBox = %XSpinBox
+@onready var spin_box_y: SpinBox = %YSpinBox
+@onready var spin_box_z: SpinBox = %ZSpinBox
 
 
 func _ready() -> void:
@@ -32,16 +39,17 @@ func _ready() -> void:
 	add_requirement_button.pressed.connect(_on_add_requirement_pressed)
 	_setup_requirement_menu()
 
-func add_socket_item(socket: Socket) -> void:
+func _add_socket_item(socket: Socket) -> void:
+	"""Internal helper to add a socket item to the UI."""
 	if not socket or not current_tile:
 		return
 	var socket_item: SocketItem = SocketItem.instantiate()
-	socket_item.socket = socket
-	socket_item.library = current_library
-	socket_item.current_tile = current_tile
-	socket_item.changed.connect(_on_socket_changed)
-	socket_item.preview_requested.connect(_on_socket_preview_requested.bind(socket_item))
 	sockets_container.add_child(socket_item)
+	# Initialize after adding to tree so _ready() is called
+	socket_item.initialize(socket, current_library, current_tile)
+	socket_item.changed.connect(_on_socket_changed)
+	socket_item.preview_requested.connect(_on_socket_preview_requested.bind(socket))
+	socket_item.socket_types_changed.connect(_on_socket_types_changed)
 
 
 func clear_sockets() -> void:
@@ -54,9 +62,20 @@ func _on_socket_changed() -> void:
 	# Socket properties were modified, save changes
 	save_tile_changes()
 
-func _on_socket_preview_requested(socket_item: SocketItem) -> void:
+func _on_socket_types_changed() -> void:
+	"""When socket types are added, refresh all socket dropdowns"""
+	_refresh_all_socket_dropdowns()
+
+func _refresh_all_socket_dropdowns() -> void:
+	"""Refresh socket type dropdowns for all socket items"""
+	for child in sockets_container.get_children():
+		if child is SocketItem:
+			child._refresh_socket_type_dropdown()
+
+func _on_socket_preview_requested(socket: Socket) -> void:
 	"""Forward socket preview request with the socket_item reference"""
-	socket_preview_requested.emit(socket_item)
+	socket_preview_requested.emit(socket)
+
 func add_tag(tag: String) -> void:
 	var tag_item: TagControl = TagControl.instantiate()
 	tag_item.tag_name = tag
@@ -121,33 +140,51 @@ func clear_tags() -> void:
 			child.queue_free()
 
 
-func display_tile_details(tile: Tile, library: ModuleLibrary = null) -> void:
-	# Clear previous tile data
+func _clear_all() -> void:
+	"""Clear all UI elements."""
 	name_label.text = "Tile: "
 	clear_sockets()
 	clear_tags()
 	clear_requirements()
 
-	# Set new tile and library
-	current_tile = tile
-	current_library = library
-	name_label.text = "Tile: %s" % tile.name
 
+func _populate_ui(tile: Tile) -> void:
+	"""Populate UI with tile data. Assumes current_tile and current_library are already set."""
+	name_label.text = "Tile: %s" % tile.name
+	spin_box_x.value = tile.size.x
+	spin_box_y.value = tile.size.y
+	spin_box_z.value = tile.size.z
+	
 	# Ensure tile has all 6 sockets
 	tile.ensure_all_sockets()
-
-	# Populate UI with tile data
+	
+	# Add tags
 	for tag in tile.tags:
 		add_tag(tag)
 	
-	# Display requirements
+	# Add requirements
 	for requirement in tile.requirements:
 		add_requirement_item(requirement)
 	
-	# Display sockets in fixed order
+	# Add sockets in fixed order
 	_display_all_sockets_in_order()
 
+
+## Display tile details with proper state initialization.
+## This is the main entry point for showing a tile in the details panel.
+func show_tile(tile: Tile, library: ModuleLibrary = null) -> void:
+	# Clear previous state
+	_clear_all()
+	
+	# Initialize state BEFORE creating dependent UI
+	current_tile = tile
+	current_library = library
+	
+	# Populate UI (depends on current_tile and current_library)
+	_populate_ui(tile)
+	
 	show()
+
 
 func _display_all_sockets_in_order() -> void:
 	"""Display all 6 sockets in a fixed order: Up, Down, Right, Left, Forward, Back"""
@@ -163,7 +200,7 @@ func _display_all_sockets_in_order() -> void:
 	for direction in directions:
 		var socket = current_tile.get_socket_by_direction(direction)
 		if socket:
-			add_socket_item(socket)
+			_add_socket_item(socket)
 
 
 # ============================================================================
@@ -179,6 +216,7 @@ func _setup_requirement_menu() -> void:
 	add_requirement_menu.add_item("Height Range", 1)
 	add_requirement_menu.add_item("Tag Requirement", 2)
 	add_requirement_menu.add_item("Force Position", 3)
+	add_requirement_menu.add_item("Rotation Requirement", 4)
 	
 	add_requirement_menu.id_pressed.connect(_on_requirement_type_selected)
 
@@ -201,6 +239,7 @@ func _on_requirement_type_selected(id: int) -> void:
 	const HeightRequirement = preload("res://addons/auto_structured/core/requirements/height_requirement.gd")
 	const TagRequirement = preload("res://addons/auto_structured/core/requirements/tag_requirement.gd")
 	const PositionRequirement = preload("res://addons/auto_structured/core/requirements/position_requirement.gd")
+	const RotationRequirement = preload("res://addons/auto_structured/core/requirements/rotation_requirement.gd")
 	
 	var new_requirement: Requirement = null
 	
@@ -214,6 +253,9 @@ func _on_requirement_type_selected(id: int) -> void:
 			new_requirement = TagRequirement.new()
 		3:  # Position Requirement
 			new_requirement = PositionRequirement.new()
+		4:  # Rotation Requirement
+			new_requirement = RotationRequirement.new()
+			new_requirement.minimum_rotation_degrees = 90
 	
 	if new_requirement:
 		# Add to tile's requirements array
@@ -226,6 +268,33 @@ func _on_requirement_type_selected(id: int) -> void:
 		add_requirement_item(new_requirement)
 		save_tile_changes()
 
+func set_tile_x_size(new_value: float) -> void:
+	_set_tile_size("x", new_value)
+func set_tile_y_size(new_value: float) -> void:
+	_set_tile_size("y", new_value)
+func set_tile_z_size(new_value: float) -> void:
+	_set_tile_size("z", new_value)
+
+func _set_tile_size(axis: String, new_value: float) -> void:
+	"""Set the size of the current tile along the specified axis."""
+	if not current_tile:
+		return
+
+	var size_copy: Vector3 = current_tile.size
+
+	match axis:
+		"x":
+			size_copy.x = new_value
+		"y":
+			size_copy.y = new_value
+		"z":
+			size_copy.z = new_value
+		_:
+			push_warning("Invalid axis specified for size change: %s" % axis)
+			return
+
+	current_tile.size = size_copy
+	save_tile_changes()
 
 func add_requirement_item(requirement: Requirement) -> void:
 	"""Add a requirement item to the UI"""

@@ -1,9 +1,14 @@
 @tool
 class_name SocketItem extends FoldableContainer
+## UI component for displaying and editing a socket's properties.
+##
+## Use initialize(socket, library, tile) to set up the socket item after adding to tree.
+## This ensures proper initialization order and avoids setter side effects.
 
 signal changed
 signal selected
 signal preview_requested
+signal socket_types_changed  # Emitted when socket types are added/modified
 
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
 const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.gd")
@@ -11,24 +16,14 @@ const ManageSocketsDialog = preload("res://addons/auto_structured/ui/controls/ma
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const RequirementItem = preload("res://addons/auto_structured/ui/controls/requirement_item.tscn")
 const Requirement = preload("res://addons/auto_structured/core/requirements/requirement.gd")
+const WfcHelper = preload("res://addons/auto_structured/core/wfc/wfc_helper.gd")
 
-@export var socket: Socket = null:
-	set(value):
-		socket = value
-		if socket_type_option and socket:
-			_select_socket_type_in_dropdown(socket.socket_id)
-		_update_sockets_button_text()
-		_display_socket_requirements()
-		selected.emit()
-
-var library: ModuleLibrary = null:
-	set(value):
-		library = value
-		_refresh_socket_type_dropdown()
+var socket: Socket = null
+var library: ModuleLibrary = null
+var current_tile: Tile = null
 
 var socket_type_option: OptionButton
 var manage_sockets_dialog: Window
-var current_tile: Tile = null  # The tile this socket belongs to
 var add_socket_requirement_menu: PopupMenu
 
 @onready var manage_sockets_button: Button = $VBoxContainer/ManageSocketsButton
@@ -37,6 +32,7 @@ var add_socket_requirement_menu: PopupMenu
 @onready var add_socket_requirement_button: Button = %AddRequirementButton
 
 const MENU_PREVIEW = 0
+const CLEAR = 1
 
 func _ready() -> void:
 	socket_type_option = get_node_or_null("VBoxContainer/SocketTypeOption")
@@ -46,6 +42,10 @@ func _ready() -> void:
 	
 	if socket_type_option:
 		socket_type_option.item_selected.connect(_on_socket_type_selected)
+		# Refresh dropdown every time it's about to open
+		var popup = socket_type_option.get_popup()
+		if popup:
+			popup.about_to_popup.connect(_refresh_socket_type_dropdown)
 	
 	if add_socket_requirement_button:
 		add_socket_requirement_button.pressed.connect(_on_add_socket_requirement_pressed)
@@ -56,12 +56,33 @@ func _ready() -> void:
 	if context_menu:
 		context_menu.clear()
 		context_menu.add_item("Preview Compatible Tiles", MENU_PREVIEW)
+		context_menu.add_item("Clear Socket Type", CLEAR)
 		context_menu.id_pressed.connect(_on_context_menu_item_selected)
 
+
+## Initialize the socket item with all required data.
+## Call this after adding the socket item to the scene tree.
+## This ensures proper initialization order without setter side effects.
+func initialize(p_socket: Socket, p_library: ModuleLibrary, p_tile: Tile) -> void:
+	# Set state first
+	socket = p_socket
+	library = p_library
+	current_tile = p_tile
+	
+	# Update all UI based on state
+	_update_all_ui()
+
+
+func _update_all_ui() -> void:
+	"""Update all UI elements based on current socket, library, and tile."""
 	_refresh_socket_type_dropdown()
+	if socket and socket_type_option:
+		_select_socket_type_in_dropdown(socket.socket_id)
 	_update_sockets_button_text()
-	_display_socket_requirements()  # Display requirements after container is ready
+	_display_socket_requirements()
 	update_title()
+	selected.emit()
+
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
@@ -119,7 +140,7 @@ func _on_compatible_sockets_changed(socket_ids: Array[String]) -> void:
 		socket.add_compatible_socket(socket_id)
 	
 	_update_sockets_button_text()
-	changed.emit(socket)
+	changed.emit()
 
 func _on_new_type_requested(type_name: String) -> void:
 	"""Handle request to add a new socket type"""
@@ -134,7 +155,7 @@ func _on_new_type_requested(type_name: String) -> void:
 		var available_sockets = library.get_socket_types()
 		manage_sockets_dialog.set_available_sockets(available_sockets, socket.compatible_sockets)
 	
-	# Also refresh the socket type dropdown
+	# Refresh the socket type dropdown (other sockets will refresh when opened)
 	_refresh_socket_type_dropdown()
 
 func _refresh_socket_type_dropdown() -> void:
@@ -178,7 +199,7 @@ func _on_socket_type_selected(index: int) -> void:
 	var selected_type = socket_type_option.get_item_text(index)
 	socket.socket_id = selected_type
 	update_title()
-	changed.emit(socket)
+	changed.emit()
 
 func _show_add_new_type_dialog() -> void:
 	# Create a simple dialog for adding new socket type
@@ -199,7 +220,7 @@ func _show_add_new_type_dialog() -> void:
 			_select_socket_type_in_dropdown(new_type)
 			socket.socket_id = new_type
 			update_title()
-			changed.emit(socket)
+			changed.emit()
 		dialog.queue_free()
 	)
 	
@@ -255,34 +276,16 @@ func _on_context_menu_item_selected(id: int) -> void:
 	match id:
 		MENU_PREVIEW:
 			preview_requested.emit()
-
-func get_compatible_tiles() -> Array[Tile]:
-	"""Get all tiles that have sockets compatible with this socket"""
-	var compatible_tiles: Array[Tile] = []
-	
-	if not library or not socket:
-		return compatible_tiles
-	
-	# Get the opposite direction (where tiles would connect)
-	var opposite_direction = -socket.direction
-	
-	# Check all tiles in the library
-	for tile in library.tiles:
-		# Skip the current tile (don't show itself as compatible)
-		if tile == current_tile:
-			continue
-		
-		# Get the socket on the opposite side
-		var tile_socket = tile.get_socket_by_direction(opposite_direction)
-		if not tile_socket:
-			continue
-		
-		# Check if the sockets are compatible
-		if socket.is_compatible_with(tile_socket) or tile_socket.is_compatible_with(socket):
-			compatible_tiles.append(tile)
-	
-	return compatible_tiles
-
+		CLEAR:
+			if socket:
+				socket.socket_id = ""
+				if socket_type_option:
+					_select_socket_type_in_dropdown("")
+				update_title()
+				for compatible in socket.compatible_sockets:
+					socket.remove_compatible_socket(compatible)
+				_update_sockets_button_text()
+				changed.emit()
 
 # ============================================================================
 # Socket Requirements Management
@@ -296,6 +299,7 @@ func _setup_socket_requirement_menu() -> void:
 	add_socket_requirement_menu.add_item("Tag Requirement", 0)
 	add_socket_requirement_menu.add_item("Height Range", 1)
 	add_socket_requirement_menu.add_item("Ground Level Only", 2)
+	add_socket_requirement_menu.add_item("Rotation Requirement", 3)
 	
 	add_socket_requirement_menu.id_pressed.connect(_on_socket_requirement_type_selected)
 
@@ -317,6 +321,7 @@ func _on_socket_requirement_type_selected(id: int) -> void:
 	const GroundRequirement = preload("res://addons/auto_structured/core/requirements/ground_requirement.gd")
 	const HeightRequirement = preload("res://addons/auto_structured/core/requirements/height_requirement.gd")
 	const TagRequirement = preload("res://addons/auto_structured/core/requirements/tag_requirement.gd")
+	const RotationRequirement = preload("res://addons/auto_structured/core/requirements/rotation_requirement.gd")
 	
 	var new_requirement: Requirement = null
 	
@@ -328,6 +333,9 @@ func _on_socket_requirement_type_selected(id: int) -> void:
 			new_requirement.max_height = 10
 		2:  # Ground Level
 			new_requirement = GroundRequirement.new()
+		3:  # Rotation Requirement
+			new_requirement = RotationRequirement.new()
+			new_requirement.minimum_rotation_degrees = 90
 	
 	if new_requirement:
 		# Add to socket's requirements array

@@ -22,6 +22,7 @@ const Requirement = preload("res://addons/auto_structured/core/requirements/requ
 
 ## Requirements that the neighboring tile must satisfy to connect to this socket
 ## Example: TagRequirement("stone") means only tiles with "stone" tag can connect here
+## Use RotationRequirement to require minimum rotation angles
 @export var requirements: Array[Requirement] = []
 
 static func is_valid_direction(dir: Vector3i) -> bool:

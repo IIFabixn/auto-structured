@@ -7,14 +7,19 @@ class_name StructureViewport extends Control
 
 func _ready() -> void:
 	module_library_control.tile_selected.connect(_on_module_tile_selected)
+	module_library_control.library_loaded.connect(_on_library_loaded)
 	details_panel.closed.connect(_on_details_panel_closed)
 	details_panel.tile_modified.connect(_on_tile_modified)
 	details_panel.socket_preview_requested.connect(_on_socket_preview_requested)
+	
+	# Ensure initial library is passed to preview panel if already loaded
+	if module_library_control.current_library:
+		viewport_panel.set_module_library(module_library_control.current_library)
 
 
 func _on_module_tile_selected(tile: Tile) -> void:
-	details_panel.display_tile_details(tile, module_library_control.current_library)
-	viewport_panel.display_tile_preview(tile)
+	details_panel.show_tile(tile, module_library_control.current_library)
+	viewport_panel.preview_tile(tile)
 
 
 func _on_details_panel_closed() -> void:
@@ -25,12 +30,25 @@ func _on_details_panel_closed() -> void:
 func _on_tile_modified(_tile: Tile) -> void:
 	module_library_control.save_current_library()
 
-func _on_socket_preview_requested(socket_item: SocketItem) -> void:
+func _on_library_loaded(library: ModuleLibrary) -> void:
+	"""Update preview panel when library is loaded"""
+	viewport_panel.set_module_library(library)
+
+
+func _on_socket_preview_requested(socket: Socket) -> void:
 	"""Handle socket preview request - show compatible tiles preview"""
-	var compatible_tiles = socket_item.get_compatible_tiles()
-	if compatible_tiles.size() > 0:
-		# Pass the socket direction so compatible tiles can be positioned correctly
-		viewport_panel.start_compatible_tiles_preview(compatible_tiles, socket_item.socket.direction)
-	else:
-		# Show a brief message if no compatible tiles found
-		push_warning("No compatible tiles found for socket: %s" % socket_item.socket.socket_id)
+	if not module_library_control.current_library:
+		return
+
+	var compatible_results = WfcHelper.find_compatible_tiles(
+		socket,
+		module_library_control.current_library.tiles,
+		details_panel.current_tile
+	)
+	print("StructureViewport: Previewing compatible tiles for tile '%s', socket: %s" % [details_panel.current_tile.name, socket.socket_id])
+	# Use the new preview_socket function with tile, socket, and compatible tiles
+	viewport_panel.preview_socket(
+		details_panel.current_tile,
+		socket,
+		compatible_results
+	)
