@@ -14,6 +14,11 @@ const Socket = preload("res://addons/auto_structured/core/socket.gd")
 const WfcHelper = preload("res://addons/auto_structured/core/wfc/wfc_helper.gd")
 const WfcGrid = preload("res://addons/auto_structured/core/wfc/wfc_grid.gd")
 const WfcSolver = preload("res://addons/auto_structured/core/wfc/wfc_solver.gd")
+const WfcStrategyBase = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_base.gd")
+const WfcStrategyFillAll = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_fill_all.gd")
+const WfcStrategySparse = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_sparse.gd")
+const WfcStrategyPerimeter = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_perimeter.gd")
+const WfcStrategyGroundWalls = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_ground_walls.gd")
 const Viewport3DGrid = preload("res://addons/auto_structured/ui/controls/viewport_3d_grid.gd")
 
 var camera_distance: float = 10.0
@@ -45,8 +50,11 @@ var main_socket: Socket = null  # The socket on the main tile that we're preview
 # WFC generation state
 var wfc_grid: WfcGrid = null
 var wfc_solver: WfcSolver = null
+var wfc_strategy: WfcStrategyBase = null
 var module_library: ModuleLibrary = null
 var grid_size: Vector3i = Vector3i(5, 1, 5)
+var available_strategies: Array[WfcStrategyBase] = []
+var current_strategy_index: int = 0
 var is_generating: bool = false
 
 @onready var viewport: SubViewport = %PreviewViewport
@@ -58,12 +66,13 @@ var viewport_container: SubViewportContainer = $Panel/MarginContainer/ScrollCont
 @onready var step_button: TextureButton = $Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar/StepButton
 @onready var solve_button: TextureButton = $Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar/SolveButton
 @onready var top_bar_menu: MenuButton = $Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar/MenuButton
+@onready var x_spinbox: SpinBox = %XSpinBox
+@onready var y_spinbox: SpinBox = %YSpinBox
+@onready var z_spinbox: SpinBox = %ZSpinBox
+@onready var strategy_option: OptionButton = %StrategyOption
 
 # Grid and origin visualization
 var viewport_grid: Viewport3DGrid = null
-
-# Grid size dialog
-var grid_size_dialog: AcceptDialog = null
 
 
 func _ready() -> void:
@@ -85,14 +94,24 @@ func _ready() -> void:
 	popup.add_check_item("Show Origin", 3)
 	popup.set_item_checked(popup.get_item_index(3), viewport_grid.show_origin if viewport_grid else true)
 	
-	# Connect top bar menu
-	var top_menu_popup = top_bar_menu.get_popup()
-	top_menu_popup.id_pressed.connect(_on_top_menu_selected)
-	top_menu_popup.add_separator()
-	top_menu_popup.add_item("Configure Grid Size", 2)
+	# Discover and initialize available strategies automatically
+	_discover_strategies()
+	current_strategy_index = 0
 	
-	# Create grid size dialog
-	_create_grid_size_dialog()
+	# Initialize grid size spinboxes
+	x_spinbox.value = grid_size.x
+	y_spinbox.value = grid_size.y
+	z_spinbox.value = grid_size.z
+	x_spinbox.value_changed.connect(_on_grid_size_changed)
+	y_spinbox.value_changed.connect(_on_grid_size_changed)
+	z_spinbox.value_changed.connect(_on_grid_size_changed)
+	
+	# Initialize strategy dropdown (clear first to avoid duplicates)
+	strategy_option.clear()
+	for strategy in available_strategies:
+		strategy_option.add_item(strategy.get_name())
+	strategy_option.selected = current_strategy_index
+	strategy_option.item_selected.connect(_on_strategy_selected)
 	
 	# Update button states
 	_update_button_states()
@@ -499,13 +518,17 @@ func _on_new_button_pressed() -> void:
 	print("Grid size: ", grid_size)
 	print("Available tiles: ", module_library.tiles.size())
 	
+	# Get current strategy
+	wfc_strategy = available_strategies[current_strategy_index]
+	print("Strategy: ", wfc_strategy.get_name())
+	
 	# Stop any current preview
 	stop_compatible_tiles_preview()
 	clear_structure()
 	
 	# Create new grid and solver
 	wfc_grid = WfcGrid.from_library(grid_size, module_library)
-	wfc_solver = WfcSolver.new(wfc_grid)
+	wfc_solver = WfcSolver.new(wfc_grid, wfc_strategy)
 	is_generating = true
 	
 	print("Grid created with ", wfc_grid.cells.size(), " cells")
@@ -629,6 +652,11 @@ func _visualize_grid() -> void:
 			continue
 		
 		var variant = cell.get_variant()
+		
+		# Skip empty cells (cells marked as empty by strategy)
+		if variant.is_empty():
+			continue
+		
 		var tile: Tile = variant.get("tile")
 		var rotation: int = variant.get("rotation_degrees", 0)
 		
@@ -681,108 +709,131 @@ func _print_grid_summary() -> void:
 
 
 # =============================================================================
-# Grid Size Configuration
+# Strategy Discovery
 # =============================================================================
 
-func _create_grid_size_dialog() -> void:
-	"""Create the grid size configuration dialog"""
-	grid_size_dialog = AcceptDialog.new()
-	grid_size_dialog.title = "Configure Grid Size"
-	grid_size_dialog.size = Vector2i(300, 200)
+func _discover_strategies() -> void:
+	"""Automatically discover all strategy classes in the strategies folder"""
+	available_strategies.clear()
+	
+	var strategies_path = "res://addons/auto_structured/core/wfc/strategies/"
+	var dir = DirAccess.open(strategies_path)
+	
+	if not dir:
+		push_error("Could not open strategies directory: " + strategies_path)
+		# Fallback to hardcoded strategies
+		available_strategies = [
+			WfcStrategyFillAll.new(),
+			WfcStrategySparse.new(0.5),
+			WfcStrategyPerimeter.new(),
+			WfcStrategyGroundWalls.new()
+		]
+		return
+	
+	# Collect all .gd files (except base class)
+	var strategy_files: Array[String] = []
+	dir.list_dir_begin()
+	var file_name = dir.get_next()
+	
+	while file_name != "":
+		if not dir.current_is_dir() and file_name.ends_with(".gd"):
+			# Skip the base class
+			if file_name != "wfc_strategy_base.gd":
+				strategy_files.append(file_name)
+		file_name = dir.get_next()
+	
+	dir.list_dir_end()
+	
+	# Sort alphabetically for consistent ordering
+	strategy_files.sort()
+	
+	# Instantiate each strategy
+	for strategy_file in strategy_files:
+		var script_path = strategies_path + strategy_file
+		var script = load(script_path)
+		
+		if script and script is GDScript:
+			# Try to instantiate the strategy
+			var strategy_instance = script.new()
+			
+			# Verify it's a valid strategy (has the required methods)
+			if strategy_instance.has_method("should_collapse_cell") and \
+			   strategy_instance.has_method("get_name") and \
+			   strategy_instance.has_method("get_description"):
+				
+				# Special handling for Sparse strategy - set default probability
+				if strategy_instance is WfcStrategySparse:
+					strategy_instance.fill_probability = 0.5
+				
+				available_strategies.append(strategy_instance)
+				print("Discovered strategy: ", strategy_instance.get_name())
+			else:
+				push_warning("Skipped invalid strategy: " + strategy_file)
+	
+	# Ensure we have at least one strategy
+	if available_strategies.is_empty():
+		push_error("No valid strategies found! Using fallback.")
+		available_strategies = [WfcStrategyFillAll.new()]
+
+
+# =============================================================================
+# Toolbar Controls
+# =============================================================================
+
+func _on_grid_size_changed(_value: float) -> void:
+	"""Handle grid size spinbox changes"""
+	grid_size = Vector3i(
+		int(x_spinbox.value),
+		int(y_spinbox.value),
+		int(z_spinbox.value)
+	)
+	print("Grid size changed to: ", grid_size)
+
+
+func _on_strategy_selected(index: int) -> void:
+	"""Handle strategy dropdown selection"""
+	if index >= 0 and index < available_strategies.size():
+		current_strategy_index = index
+		var strategy = available_strategies[index]
+		print("Strategy changed to: ", strategy.get_name())
+		
+		# Show config popup for strategies that need it (like Sparse)
+		if strategy is WfcStrategySparse:
+			_show_sparse_probability_dialog(strategy)
+
+
+func _show_sparse_probability_dialog(strategy: WfcStrategySparse) -> void:
+	"""Show a simple dialog to configure sparse probability"""
+	var dialog = AcceptDialog.new()
+	dialog.title = "Configure Sparse Strategy"
+	dialog.size = Vector2i(300, 150)
 	
 	var vbox = VBoxContainer.new()
-	vbox.name = "GridSizeVBox"
 	vbox.add_theme_constant_override("separation", 8)
 	
-	# X size
-	var x_hbox = HBoxContainer.new()
-	var x_label = Label.new()
-	x_label.text = "Width (X):"
-	x_label.custom_minimum_size.x = 80
-	x_hbox.add_child(x_label)
+	var label = Label.new()
+	label.text = "Fill Probability:"
+	vbox.add_child(label)
 	
-	var x_spinbox = SpinBox.new()
-	x_spinbox.name = "XSpinBox"
-	x_spinbox.min_value = 1
-	x_spinbox.max_value = 50
-	x_spinbox.value = grid_size.x
-	x_spinbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	x_hbox.add_child(x_spinbox)
-	vbox.add_child(x_hbox)
+	var spinbox = SpinBox.new()
+	spinbox.name = "ProbabilitySpinBox"
+	spinbox.min_value = 0
+	spinbox.max_value = 100
+	spinbox.step = 5
+	spinbox.value = strategy.fill_probability * 100.0
+	spinbox.suffix = "%"
+	vbox.add_child(spinbox)
 	
-	# Y size
-	var y_hbox = HBoxContainer.new()
-	var y_label = Label.new()
-	y_label.text = "Height (Y):"
-	y_label.custom_minimum_size.x = 80
-	y_hbox.add_child(y_label)
-	
-	var y_spinbox = SpinBox.new()
-	y_spinbox.name = "YSpinBox"
-	y_spinbox.min_value = 1
-	y_spinbox.max_value = 50
-	y_spinbox.value = grid_size.y
-	y_spinbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	y_hbox.add_child(y_spinbox)
-	vbox.add_child(y_hbox)
-	
-	# Z size
-	var z_hbox = HBoxContainer.new()
-	var z_label = Label.new()
-	z_label.text = "Depth (Z):"
-	z_label.custom_minimum_size.x = 80
-	z_hbox.add_child(z_label)
-	
-	var z_spinbox = SpinBox.new()
-	z_spinbox.name = "ZSpinBox"
-	z_spinbox.min_value = 1
-	z_spinbox.max_value = 50
-	z_spinbox.value = grid_size.z
-	z_spinbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	z_hbox.add_child(z_spinbox)
-	vbox.add_child(z_hbox)
-	
-	grid_size_dialog.add_child(vbox)
-	grid_size_dialog.confirmed.connect(_on_grid_size_confirmed)
-	add_child(grid_size_dialog)
+	dialog.add_child(vbox)
+	dialog.confirmed.connect(func():
+		strategy.fill_probability = spinbox.value / 100.0
+		print("Sparse probability set to: ", strategy.fill_probability)
+		# Update the strategy name in dropdown to show percentage
+		strategy_option.set_item_text(current_strategy_index, strategy.get_name())
+		dialog.queue_free()
+	)
+	dialog.canceled.connect(func(): dialog.queue_free())
+	add_child(dialog)
+	dialog.popup_centered()
 
 
-func _on_top_menu_selected(id: int) -> void:
-	"""Handle top menu bar selections"""
-	match id:
-		2:  # Configure Grid Size
-			if grid_size_dialog:
-				# Update values before showing
-				var vbox = grid_size_dialog.get_node("GridSizeVBox")
-				if vbox:
-					var x_spin = vbox.get_node_or_null("HBoxContainer/XSpinBox") as SpinBox
-					var y_spin = vbox.get_node_or_null("HBoxContainer2/YSpinBox") as SpinBox
-					var z_spin = vbox.get_node_or_null("HBoxContainer3/ZSpinBox") as SpinBox
-					
-					if x_spin: x_spin.value = grid_size.x
-					if y_spin: y_spin.value = grid_size.y
-					if z_spin: z_spin.value = grid_size.z
-				
-				grid_size_dialog.popup_centered()
-
-
-func _on_grid_size_confirmed() -> void:
-	"""Apply grid size changes"""
-	if not grid_size_dialog:
-		return
-	
-	var vbox = grid_size_dialog.get_node("GridSizeVBox")
-	if not vbox:
-		return
-	
-	var x_spin = vbox.get_node_or_null("HBoxContainer/XSpinBox") as SpinBox
-	var y_spin = vbox.get_node_or_null("HBoxContainer2/YSpinBox") as SpinBox
-	var z_spin = vbox.get_node_or_null("HBoxContainer3/ZSpinBox") as SpinBox
-	
-	if x_spin and y_spin and z_spin:
-		grid_size = Vector3i(
-			int(x_spin.value),
-			int(y_spin.value),
-			int(z_spin.value)
-		)
-		print("Grid size updated to: ", grid_size)

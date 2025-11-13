@@ -67,12 +67,78 @@ layout_mode = 2
 [node name="NewButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
-tooltip_text = "Start new"
+tooltip_text = "Start new generation"
 disabled = true
 texture_normal = ExtResource("2_8vq50")
 stretch_mode = 3
 
-[node name="VSeparator" type="VSeparator" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
+[node name="GridSizeLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
+layout_mode = 2
+text = "Grid:"
+vertical_alignment = 1
+
+[node name="XLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
+layout_mode = 2
+text = "X"
+vertical_alignment = 1
+
+[node name="XSpinBox" type="SpinBox" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+tooltip_text = "Grid width (X)"
+min_value = 1.0
+max_value = 50.0
+value = 5.0
+update_on_text_changed = true
+
+[node name="YLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
+layout_mode = 2
+text = "Y"
+vertical_alignment = 1
+
+[node name="YSpinBox" type="SpinBox" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+tooltip_text = "Grid height (Y)"
+min_value = 1.0
+max_value = 50.0
+value = 1.0
+update_on_text_changed = true
+
+[node name="ZLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
+layout_mode = 2
+text = "Z"
+vertical_alignment = 1
+
+[node name="ZSpinBox" type="SpinBox" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+tooltip_text = "Grid depth (Z)"
+min_value = 1.0
+max_value = 50.0
+value = 5.0
+update_on_text_changed = true
+
+[node name="StrategyOption" type="OptionButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+tooltip_text = "Generation strategy"
+selected = 0
+item_count = 4
+popup/item_0/text = "Fill All"
+popup/item_0/id = 0
+popup/item_1/text = "Sparse (50%)"
+popup/item_1/id = 1
+popup/item_2/text = "Perimeter Only"
+popup/item_2/id = 2
+popup/item_3/text = "Ground + Walls"
+popup/item_3/id = 3
+
+[node name="VSeparator3" type="VSeparator" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/separator = SubResource("StyleBoxEmpty_qo023")
@@ -80,7 +146,7 @@ theme_override_styles/separator = SubResource("StyleBoxEmpty_qo023")
 [node name="StepButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
-tooltip_text = "Solve to next step."
+tooltip_text = "Step: Collapse one cell"
 disabled = true
 texture_normal = ExtResource("3_8vq50")
 stretch_mode = 3
@@ -88,7 +154,7 @@ stretch_mode = 3
 [node name="SolveButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
-tooltip_text = "Solve till end"
+tooltip_text = "Solve: Generate until complete"
 disabled = true
 texture_normal = ExtResource("3_flumd")
 stretch_mode = 3
@@ -96,17 +162,14 @@ stretch_mode = 3
 [node name="MenuButton" type="MenuButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
+tooltip_text = "Additional options"
 icon = ExtResource("6_kwnk8")
 icon_alignment = 1
-item_count = 4
+item_count = 2
 popup/item_0/text = "Add to current Scene"
 popup/item_0/id = 0
 popup/item_1/text = "Save as Scene"
 popup/item_1/id = 1
-popup/item_2/id = -1
-popup/item_2/separator = true
-popup/item_3/text = "Configure Grid Size"
-popup/item_3/id = 2
 
 [node name="Panel" type="Panel" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer"]
 clip_contents = true
@@ -132,7 +195,7 @@ render_target_update_mode = 4
 
 [node name="PreviewCamera" type="Camera3D" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/Panel/SubViewportContainer/PreviewViewport"]
 unique_name_in_owner = true
-transform = Transform3D(0.8411686, -0.13999702, 0.5223373, 0, 0.96590865, 0.25888318, -0.540773, -0.21776439, 0.812492, 5.2564692, 2.5881906, 8.100596)
+transform = Transform3D(0.5819473, 0.2105293, -0.78550285, 0, 0.9659091, 0.2588815, 0.8132265, -0.1506554, 0.5621082, -7.808901, 2.5881906, 5.6807237)
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/Panel/SubViewportContainer/PreviewViewport"]
 transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 5, 0)
@@ -163,7 +226,7 @@ layout_mode = 2
 icon = ExtResource("6_kwnk8")
 flat = false
 icon_alignment = 1
-item_count = 8
+item_count = 11
 popup/item_0/text = "Auto Rotate"
 popup/item_0/checkable = 1
 popup/item_0/checked = true
@@ -189,6 +252,14 @@ popup/item_6/id = 2
 popup/item_7/text = "Show Origin"
 popup/item_7/checkable = 1
 popup/item_7/id = 3
+popup/item_8/id = -1
+popup/item_8/separator = true
+popup/item_9/text = "Show Grid"
+popup/item_9/checkable = 1
+popup/item_9/id = 2
+popup/item_10/text = "Show Origin"
+popup/item_10/checkable = 1
+popup/item_10/id = 3
 
 [connection signal="pressed" from="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar/NewButton" to="." method="_on_new_button_pressed"]
 [connection signal="pressed" from="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar/StepButton" to="." method="_on_step_button_pressed"]
