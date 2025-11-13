@@ -6,17 +6,17 @@
 offset_top = 125.0
 offset_right = 1152.0
 offset_bottom = 157.0
-folded = true
 script = ExtResource("1_5yc8y")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
-visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0
 
 [node name="SocketTypeOption" type="OptionButton" parent="VBoxContainer"]
 layout_mode = 2
+tooltip_text = "What type of socket this is (e.g., 'wall', 'door_frame', 'corner').
+This identifies this socket to other tiles looking to connect."
 selected = 0
 item_count = 1
 popup/item_0/text = "-- Select Socket Type --"
@@ -25,8 +25,26 @@ popup/item_0/disabled = true
 
 [node name="ManageSocketsButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
+tooltip_text = "Which socket types this socket can connect to.
+Example: A 'wall_brick' socket might accept other 'wall_brick', 'door_frame', or 'corner' sockets.
+Right-click the socket for preview options."
 text = "Compatible Sockets: None"
 alignment = 0
+
+[node name="RequirementsFoldable" type="FoldableContainer" parent="VBoxContainer"]
+layout_mode = 2
+folded = true
+title = "Requirements (Neighbor must have...)"
+
+[node name="RequirementsContainer" type="VBoxContainer" parent="VBoxContainer/RequirementsFoldable"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+
+[node name="AddRequirementButton" type="Button" parent="VBoxContainer/RequirementsFoldable/RequirementsContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "+ Add Requirement"
 
 [node name="PopupMenu" type="PopupMenu" parent="."]
 oversampling_override = 1.0

@@ -1,6 +1,8 @@
 @tool
 class_name Socket extends Resource
 
+const Requirement = preload("res://addons/auto_structured/core/requirements/requirement.gd")
+
 ## Unique identifier for this socket type
 @export var socket_id: String = "":
 	set(value):
@@ -17,6 +19,10 @@ class_name Socket extends Resource
 
 ## List of socket IDs that are compatible with this socket
 @export var compatible_sockets: Array[String] = []
+
+## Requirements that the neighboring tile must satisfy to connect to this socket
+## Example: TagRequirement("stone") means only tiles with "stone" tag can connect here
+@export var requirements: Array[Requirement] = []
 
 static func is_valid_direction(dir: Vector3i) -> bool:
 	"""Check if direction is one of the 6 cardinal directions."""

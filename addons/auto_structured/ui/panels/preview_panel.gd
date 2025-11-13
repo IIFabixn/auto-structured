@@ -14,8 +14,12 @@ var is_panning: bool = false
 var last_mouse_pos: Vector2
 var viewport_rect: Rect2
 
+# Camera smoothing
+var target_camera_position: Vector3 = Vector3.ZERO
+var camera_lerp_speed: float = 10.0  # Higher = snappier, lower = smoother
+
 # Viewport options
-var auto_rotate: bool = true
+@export var auto_rotate: bool = true
 var auto_rotate_paused: bool = false
 var resume_timer: float = 0.0
 
@@ -75,6 +79,10 @@ func _process(delta: float) -> void:
 	if auto_rotate and not auto_rotate_paused and not is_rotating and not is_panning:
 		camera_rotation.y += delta * 15.0  # Rotate 15 degrees per second
 		update_camera_transform()
+	
+	# Smooth camera movement
+	if camera and target_camera_position != Vector3.ZERO:
+		camera.global_position = camera.global_position.lerp(target_camera_position, delta * camera_lerp_speed)
 	
 	# Handle compatible tiles cycling
 	if is_cycling and compatible_tiles.size() > 0:
@@ -201,7 +209,14 @@ func update_camera_transform() -> void:
 		* camera_distance
 	)
 
-	camera.global_position = camera_target + offset
+	# Set target position for smooth interpolation
+	target_camera_position = camera_target + offset
+	
+	# For immediate updates (like mouse drag), skip interpolation
+	if is_rotating or is_panning:
+		camera.global_position = target_camera_position
+	
+	# Always update look_at immediately for smooth rotation
 	camera.look_at(camera_target, Vector3.UP)
 
 
@@ -358,19 +373,27 @@ func _make_translucent(node: Node3D) -> void:
 	if node is MeshInstance3D:
 		var mesh_instance = node as MeshInstance3D
 		
-		# Create or duplicate material to make it translucent
-		var material: Material = mesh_instance.get_active_material(0)
-		if material:
-			# Duplicate the material to avoid modifying the original
-			material = material.duplicate()
-		else:
-			material = StandardMaterial3D.new()
+		# Process all surface materials for this mesh
+		var surface_count = mesh_instance.get_surface_override_material_count()
+		if surface_count == 0 and mesh_instance.mesh:
+			surface_count = mesh_instance.mesh.get_surface_count()
 		
-		if material is StandardMaterial3D:
-			var std_mat = material as StandardMaterial3D
-			std_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-			std_mat.albedo_color.a = 0.4  # 40% opacity
-			mesh_instance.set_surface_override_material(0, std_mat)
+		for surface_idx in range(surface_count):
+			var material: Material = mesh_instance.get_surface_override_material(surface_idx)
+			if not material:
+				material = mesh_instance.get_active_material(surface_idx)
+			
+			if material:
+				# Duplicate the material to avoid modifying the original
+				material = material.duplicate()
+			else:
+				material = StandardMaterial3D.new()
+			
+			if material is StandardMaterial3D:
+				var std_mat = material as StandardMaterial3D
+				std_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+				std_mat.albedo_color.a = 0.4  # 40% opacity
+				mesh_instance.set_surface_override_material(surface_idx, std_mat)
 	
 	# Recursively apply to children
 	for child in node.get_children():

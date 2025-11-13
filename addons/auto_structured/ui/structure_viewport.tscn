@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://bjo2lbgm65hug"]
 
 [ext_resource type="Script" uid="uid://c5a4li530gq31" path="res://addons/auto_structured/ui/structure_viewport.gd" id="1_y2fyh"]
-[ext_resource type="PackedScene" uid="uid://c7ady62any2b0" path="res://addons/auto_structured/ui/panels/module_library.tscn" id="2_gntdh"]
+[ext_resource type="PackedScene" uid="uid://c7ady62any2b0" path="res://addons/auto_structured/ui/panels/module_library_panel.tscn" id="2_gntdh"]
 [ext_resource type="PackedScene" uid="uid://c42yn8m3jhp6p" path="res://addons/auto_structured/ui/panels/preview_panel.tscn" id="3_2gguc"]
 [ext_resource type="PackedScene" uid="uid://b2e8dr8sqw65c" path="res://addons/auto_structured/ui/panels/details_panel.tscn" id="4_55lkt"]
 
@@ -39,7 +39,7 @@ size_flags_horizontal = 3
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="ModuleLibraryControl" parent="ScrollContainer/HBoxContainer/HSplitContainer/HBoxContainer/HSplitContainer" instance=ExtResource("2_gntdh")]
+[node name="ModuleLibraryPanel" parent="ScrollContainer/HBoxContainer/HSplitContainer/HBoxContainer/HSplitContainer" instance=ExtResource("2_gntdh")]
 unique_name_in_owner = true
 layout_mode = 2
 
@@ -53,3 +53,4 @@ size_flags_horizontal = 3
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
+auto_rotate = false

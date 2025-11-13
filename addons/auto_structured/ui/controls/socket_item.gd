@@ -9,6 +9,8 @@ const Socket = preload("res://addons/auto_structured/core/socket.gd")
 const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.gd")
 const ManageSocketsDialog = preload("res://addons/auto_structured/ui/controls/manage_sockets_dialog.tscn")
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
+const RequirementItem = preload("res://addons/auto_structured/ui/controls/requirement_item.tscn")
+const Requirement = preload("res://addons/auto_structured/core/requirements/requirement.gd")
 
 @export var socket: Socket = null:
 	set(value):
@@ -16,6 +18,7 @@ const Tile = preload("res://addons/auto_structured/core/tile.gd")
 		if socket_type_option and socket:
 			_select_socket_type_in_dropdown(socket.socket_id)
 		_update_sockets_button_text()
+		_display_socket_requirements()
 		selected.emit()
 
 var library: ModuleLibrary = null:
@@ -26,9 +29,12 @@ var library: ModuleLibrary = null:
 var socket_type_option: OptionButton
 var manage_sockets_dialog: Window
 var current_tile: Tile = null  # The tile this socket belongs to
+var add_socket_requirement_menu: PopupMenu
 
 @onready var manage_sockets_button: Button = $VBoxContainer/ManageSocketsButton
 @onready var context_menu: PopupMenu = $PopupMenu
+@onready var socket_requirements_container: VBoxContainer = %RequirementsContainer
+@onready var add_socket_requirement_button: Button = %AddRequirementButton
 
 const MENU_PREVIEW = 0
 
@@ -41,6 +47,11 @@ func _ready() -> void:
 	if socket_type_option:
 		socket_type_option.item_selected.connect(_on_socket_type_selected)
 	
+	if add_socket_requirement_button:
+		add_socket_requirement_button.pressed.connect(_on_add_socket_requirement_pressed)
+	
+	_setup_socket_requirement_menu()
+	
 	# Setup context menu
 	if context_menu:
 		context_menu.clear()
@@ -49,6 +60,7 @@ func _ready() -> void:
 
 	_refresh_socket_type_dropdown()
 	_update_sockets_button_text()
+	_display_socket_requirements()  # Display requirements after container is ready
 	update_title()
 
 func _gui_input(event: InputEvent) -> void:
@@ -270,3 +282,117 @@ func get_compatible_tiles() -> Array[Tile]:
 			compatible_tiles.append(tile)
 	
 	return compatible_tiles
+
+
+# ============================================================================
+# Socket Requirements Management
+# ============================================================================
+
+func _setup_socket_requirement_menu() -> void:
+	"""Setup popup menu for adding different requirement types to sockets"""
+	add_socket_requirement_menu = PopupMenu.new()
+	add_child(add_socket_requirement_menu)
+	
+	add_socket_requirement_menu.add_item("Tag Requirement", 0)
+	add_socket_requirement_menu.add_item("Height Range", 1)
+	add_socket_requirement_menu.add_item("Ground Level Only", 2)
+	
+	add_socket_requirement_menu.id_pressed.connect(_on_socket_requirement_type_selected)
+
+
+func _on_add_socket_requirement_pressed() -> void:
+	"""Show menu to select requirement type for socket"""
+	if add_socket_requirement_menu and add_socket_requirement_button:
+		var button_pos = add_socket_requirement_button.global_position
+		var button_size = add_socket_requirement_button.size
+		add_socket_requirement_menu.position = Vector2i(button_pos.x, button_pos.y + button_size.y)
+		add_socket_requirement_menu.popup()
+
+
+func _on_socket_requirement_type_selected(id: int) -> void:
+	"""Create a new requirement for this socket"""
+	if not socket:
+		return
+	
+	const GroundRequirement = preload("res://addons/auto_structured/core/requirements/ground_requirement.gd")
+	const HeightRequirement = preload("res://addons/auto_structured/core/requirements/height_requirement.gd")
+	const TagRequirement = preload("res://addons/auto_structured/core/requirements/tag_requirement.gd")
+	
+	var new_requirement: Requirement = null
+	
+	match id:
+		0:  # Tag Requirement (most common for sockets)
+			new_requirement = TagRequirement.new()
+		1:  # Height Range
+			new_requirement = HeightRequirement.new()
+			new_requirement.max_height = 10
+		2:  # Ground Level
+			new_requirement = GroundRequirement.new()
+	
+	if new_requirement:
+		# Add to socket's requirements array
+		var reqs_copy: Array[Requirement] = []
+		reqs_copy.assign(socket.requirements)
+		reqs_copy.append(new_requirement)
+		socket.requirements = reqs_copy
+		
+		print("Socket requirement added. Socket now has %d requirements" % socket.requirements.size())
+		
+		# Add to UI
+		_add_socket_requirement_item(new_requirement)
+		changed.emit()
+
+
+func _add_socket_requirement_item(requirement: Requirement) -> void:
+	"""Add a requirement item to the socket's requirement container"""
+	if not requirement or not socket_requirements_container:
+		return
+	
+	var req_item = RequirementItem.instantiate()
+	socket_requirements_container.add_child(req_item)
+	# Set properties after adding to tree so _ready() is called
+	req_item.requirement = requirement
+	req_item.library = library
+	req_item.changed.connect(_on_socket_requirement_changed)
+	req_item.deleted.connect(_on_socket_requirement_deleted)
+
+
+func _display_socket_requirements() -> void:
+	"""Display all requirements for this socket"""
+	if not socket or not socket_requirements_container:
+		return
+	
+	print("Displaying socket requirements. Socket has %d requirements" % socket.requirements.size())
+	
+	# Clear existing requirement items (but not the add button)
+	for child in socket_requirements_container.get_children():
+		if child is RequirementItem:
+			child.queue_free()
+	
+	# Add requirement items for each requirement
+	for requirement in socket.requirements:
+		_add_socket_requirement_item(requirement)
+
+
+func _on_socket_requirement_changed(_requirement: Requirement) -> void:
+	"""Handle socket requirement property changes"""
+	changed.emit()
+
+
+func _on_socket_requirement_deleted(requirement: Requirement) -> void:
+	"""Remove requirement from socket and UI"""
+	if not socket:
+		return
+	
+	var reqs_copy: Array[Requirement] = []
+	reqs_copy.assign(socket.requirements)
+	reqs_copy.erase(requirement)
+	socket.requirements = reqs_copy
+	
+	# Remove from UI
+	for child in socket_requirements_container.get_children():
+		if child is RequirementItem and child.requirement == requirement:
+			child.queue_free()
+			break
+	
+	changed.emit()

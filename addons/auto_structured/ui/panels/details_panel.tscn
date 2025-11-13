@@ -148,9 +148,27 @@ emoji_menu_enabled = false
 virtual_keyboard_type = 2
 caret_blink = true
 
-[node name="Sockets" type="ScrollContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer"]
+[node name="Requirements" type="ScrollContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer"]
+visible = false
 layout_mode = 2
 metadata/_tab_index = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Requirements"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RequirementsContainer" type="VBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Requirements/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="AddRequirementButton" type="Button" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Requirements/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "+ Add Requirement"
+
+[node name="Sockets" type="ScrollContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer"]
+layout_mode = 2
+metadata/_tab_index = 2
 
 [node name="SocketsContainer" type="VBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Sockets"]
 unique_name_in_owner = true

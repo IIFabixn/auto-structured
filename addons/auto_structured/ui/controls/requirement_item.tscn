@@ -1,0 +1,30 @@
+[gd_scene load_steps=2 format=3 uid="uid://kn67hho7jkls"]
+
+[ext_resource type="Script" uid="uid://53tsiin0s6dn" path="res://addons/auto_structured/ui/controls/requirement_item.gd" id="1_requirement"]
+
+[node name="RequirementItem" type="VBoxContainer"]
+offset_right = 800.0
+offset_bottom = 97.0
+script = ExtResource("1_requirement")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="TypeLabel" type="Label" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Ground Level"
+vertical_alignment = 1
+
+[node name="EnabledCheck" type="CheckBox" parent="HBoxContainer"]
+layout_mode = 2
+button_pressed = true
+text = "Enabled"
+
+[node name="DeleteButton" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+text = "×"
+
+[node name="ConfigContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
