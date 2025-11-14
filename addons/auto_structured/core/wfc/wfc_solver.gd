@@ -447,16 +447,16 @@ func are_variants_compatible(source_tile: Tile, source_rotation: int, neighbor_t
 	if cached != null:
 		return cached
 	
-	# Use pre-computed rotation bases
-	var source_rotation_basis = _rotation_basis_cache[source_rotation]
-	var local_direction = WfcHelper.rotate_direction(direction, source_rotation_basis)
+	# Use pre-computed rotation bases (convert world direction into tile's local space)
+	var source_rotation_basis: Basis = _rotation_basis_cache[source_rotation]
+	var local_direction = WfcHelper.rotate_direction(direction, source_rotation_basis.inverse())
 
 	# Get sockets on source tile that face toward neighbor (in local space)
 	var source_sockets = source_tile.get_sockets_in_direction(local_direction)
 
 	# Rotate the opposite direction by the neighbor tile's rotation
-	var neighbor_rotation_basis = _rotation_basis_cache[neighbor_rotation]
-	var neighbor_local_direction = WfcHelper.rotate_direction(-direction, neighbor_rotation_basis)
+	var neighbor_rotation_basis: Basis = _rotation_basis_cache[neighbor_rotation]
+	var neighbor_local_direction = WfcHelper.rotate_direction(-direction, neighbor_rotation_basis.inverse())
 
 	# Get sockets on neighbor tile that face back toward source (in local space)
 	var neighbor_sockets = neighbor_tile.get_sockets_in_direction(neighbor_local_direction)
@@ -494,11 +494,19 @@ func are_variants_compatible(source_tile: Tile, source_rotation: int, neighbor_t
 					result = true
 					break
 				
-				# If one side is "none" but not the other, incompatible
-				if source_socket.socket_id == "none" or neighbor_socket.socket_id == "none":
+				# Allow sockets that explicitly list "none" as compatible to face empty space
+				if source_socket.socket_id == "none":
+					if "none" in neighbor_socket.compatible_sockets:
+						result = true
+						break
 					continue
-					
-				if source_socket.is_compatible_with(neighbor_socket):
+				if neighbor_socket.socket_id == "none":
+					if "none" in source_socket.compatible_sockets:
+						result = true
+						break
+					continue
+				
+				if source_socket.is_compatible_with(neighbor_socket) and neighbor_socket.is_compatible_with(source_socket):
 					result = true
 					break
 			
