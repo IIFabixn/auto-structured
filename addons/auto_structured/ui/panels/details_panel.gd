@@ -23,6 +23,7 @@ var add_requirement_menu: PopupMenu
 
 @onready var sockets_container = %SocketsContainer
 @onready var name_label = $Panel/MarginContainer/ScrollContainer/VBoxContainer/NameLabel
+@onready var symmetry_option_button: OptionButton = %SymmetryOptionButton
 @onready var add_tag_edit: LineEdit = %AddTagEdit
 @onready var add_tag_button: TextureButton = %AddTagButton
 @onready var tags_container: VBoxContainer = %TagsContainer
@@ -34,6 +35,15 @@ var add_requirement_menu: PopupMenu
 
 
 func _ready() -> void:
+	symmetry_option_button.add_item("None", Tile.Symmetry.NONE)
+	symmetry_option_button.add_item("Rotation 180°", Tile.Symmetry.ROTATION_180)
+	symmetry_option_button.add_item("Rotation 90°", Tile.Symmetry.ROTATION_90)
+	symmetry_option_button.item_selected.connect(func(index: int) -> void:
+		if not current_tile:
+			return
+		current_tile.symmetry = Tile.Symmetry.values()[index]
+		save_tile_changes()
+	)
 	add_tag_button.pressed.connect(_on_add_tag)
 	add_tag_edit.text_submitted.connect(func(new_tag: String) -> void: _on_add_tag())
 	add_requirement_button.pressed.connect(_on_add_requirement_pressed)
@@ -143,6 +153,7 @@ func clear_tags() -> void:
 func _clear_all() -> void:
 	"""Clear all UI elements."""
 	name_label.text = "Tile: "
+	clear_symetry()
 	clear_sockets()
 	clear_tags()
 	clear_requirements()
@@ -151,6 +162,9 @@ func _clear_all() -> void:
 func _populate_ui(tile: Tile) -> void:
 	"""Populate UI with tile data. Assumes current_tile and current_library are already set."""
 	name_label.text = "Tile: %s" % tile.name
+
+	symmetry_option_button.selected = int(tile.symmetry)
+
 	spin_box_x.value = tile.size.x
 	spin_box_y.value = tile.size.y
 	spin_box_z.value = tile.size.z
@@ -309,6 +323,9 @@ func add_requirement_item(requirement: Requirement) -> void:
 	req_item.changed.connect(_on_requirement_changed)
 	req_item.deleted.connect(_on_requirement_deleted)
 
+func clear_symetry() -> void:
+	"""Clear symmetry selection"""
+	symmetry_option_button.selected = 0
 
 func clear_requirements() -> void:
 	"""Clear all requirement items from UI"""

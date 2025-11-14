@@ -50,6 +50,7 @@ script = ExtResource("2_f08mx")
 name = "floor"
 scene = ExtResource("4_ybimf")
 tags = Array[String](["floor", "interior"])
+symmetry = 2
 sockets = Array[ExtResource("5_ybimf")]([SubResource("Resource_7pgw0"), SubResource("Resource_4nsv4"), SubResource("Resource_wjay0"), SubResource("Resource_4d2ao"), SubResource("Resource_22vab"), SubResource("Resource_vv34b")])
 
 [sub_resource type="Resource" id="Resource_bdy81"]

@@ -12,6 +12,9 @@ var grid: WfcGrid
 var strategy: WfcStrategyBase
 var max_iterations: int = 10000
 
+## Logging control: disable to run silently
+var logging_enabled: bool = true
+
 ## Performance tuning: How often to yield (ms), 0 = disabled
 var yield_interval_ms: int = 16
 
@@ -50,6 +53,7 @@ var _visited_flags: PackedByteArray
 
 ## Performance optimization: Scratch array for valid variants (reusable)
 var _scratch_variants: Array[Dictionary] = []
+var _virtual_none_socket_cache: Dictionary = {}
 
 func _init(wfc_grid: WfcGrid, wfc_strategy: WfcStrategyBase = null, prewarm_cache: bool = true) -> void:
 	grid = wfc_grid
@@ -187,26 +191,26 @@ func _propagate_empty_cells() -> void:
 	pass
 
 func solve(run_synchronously: bool = false) -> bool:
-	print("[WFC Solver] Starting solve...")
-	print("  Grid size: ", grid.size)
-	print("  Total cells: ", grid.get_cell_count())
-	print("  Cells to collapse: ", _remaining_cells)
-	print("  Max iterations: ", max_iterations)
+	_log(["[WFC Solver] Starting solve..."])
+	_log(["  Grid size: ", grid.size])
+	_log(["  Total cells: ", grid.get_cell_count()])
+	_log(["  Cells to collapse: ", _remaining_cells])
+	_log(["  Max iterations: ", max_iterations])
 	
 	# Configure yielding
 	_enable_yielding = not run_synchronously
 	if run_synchronously:
-		print("  Running SYNCHRONOUSLY (no yielding) for maximum speed")
+		_log(["  Running SYNCHRONOUSLY (no yielding) for maximum speed"])
 	else:
-		print("  Yield interval: ", yield_interval_ms, "ms")
-		print("  Propagation batch size: ", propagation_batch_size)
+		_log(["  Yield interval: ", yield_interval_ms, "ms"])
+		_log(["  Propagation batch size: ", propagation_batch_size])
 	
 	# CRITICAL: Initialize entropy heap for O(log N) cell selection
-	print("  Initializing entropy heap...")
+	_log(["  Initializing entropy heap..."])
 	var heap_start = Time.get_ticks_msec()
 	grid.initialize_heap()
 	var heap_time = Time.get_ticks_msec() - heap_start
-	print("  Heap initialized in ", heap_time, "ms")
+	_log(["  Heap initialized in ", heap_time, "ms"])
 	
 	var iterations = 0
 	var last_yield_time = Time.get_ticks_msec()
@@ -231,7 +235,7 @@ func solve(run_synchronously: bool = false) -> bool:
 		var cell_selection_start = Time.get_ticks_msec()
 		var cell = grid.get_lowest_entropy_cell()
 		if not cell:
-			print("[WFC Solver] No more cells to collapse (fully collapsed)")
+			_log(["[WFC Solver] No more cells to collapse (fully collapsed)"])
 			break
 
 		if not cell.collapse():
@@ -245,7 +249,7 @@ func solve(run_synchronously: bool = false) -> bool:
 		
 		# Log slow propagations
 		if propagate_time > 1000:
-			print("  [WARNING] Iteration ", iterations + 1, " propagation took ", propagate_time, "ms")
+			_log(["  [WARNING] Iteration ", iterations + 1, " propagation took ", propagate_time, "ms"])
 		
 		if not propagate_result:
 			push_error("WFC: Propagation failed at ", cell.position)
@@ -264,15 +268,15 @@ func solve(run_synchronously: bool = false) -> bool:
 				var collapsed_cells = total_cells - _remaining_cells
 				var progress = (collapsed_cells / float(total_cells)) * 100.0
 				var elapsed_seconds = (current_time - start_time) / 1000.0
-				print("[%.1fs] WFC Progress: %.2f%% (%d/%d cells, %d iterations)" % 
-					[elapsed_seconds, progress, collapsed_cells, total_cells, iterations])
+				var progress_message = "[%.1fs] WFC Progress: %.2f%% (%d/%d cells, %d iterations)" % [elapsed_seconds, progress, collapsed_cells, total_cells, iterations]
+				_log([progress_message])
 				last_progress_time = current_time
 
 	var elapsed_seconds = (Time.get_ticks_msec() - start_time) / 1000.0
-	print("[WFC Solver] Solve completed successfully!")
-	print("  Total iterations: ", iterations)
-	print("  Time elapsed: %.2f seconds" % elapsed_seconds)
-	print("  Avg iterations/sec: %.0f" % (iterations / max(elapsed_seconds, 0.001)))
+	_log(["[WFC Solver] Solve completed successfully!"])
+	_log(["  Total iterations: ", iterations])
+	_log(["  Time elapsed: %.2f seconds" % elapsed_seconds])
+	_log(["  Avg iterations/sec: %.0f" % (iterations / max(elapsed_seconds, 0.001))])
 	
 	strategy.finalize()
 	return true
@@ -363,7 +367,7 @@ func propagate(start_cell: WfcCell) -> bool:
 
 	# Log propagation stats only for very large cascades (reduce spam)
 	if cells_processed > 500 or max_queue_size > 200:
-		print("    [Propagation] Processed ", cells_processed, " cells, max queue: ", max_queue_size)
+		_log(["    [Propagation] Processed ", cells_processed, " cells, max queue: ", max_queue_size])
 	
 	return true
 
@@ -416,13 +420,13 @@ func get_valid_variants_for_neighbor(source_cell: WfcCell, neighbor_cell: WfcCel
 			var source_tile = source_variant["tile"]
 			var source_rotation = source_variant["rotation_degrees"]
 
-			if are_variants_compatible(source_tile, source_rotation, neighbor_tile, neighbor_rotation, direction):
+			if are_variants_compatible(source_tile, source_rotation, neighbor_tile, neighbor_rotation, direction, source_cell.position, neighbor_cell.position):
 				_scratch_variants.append(neighbor_variant)
 				break  # Found compatible match, move to next neighbor variant
 
 	return _scratch_variants
 
-func are_variants_compatible(source_tile: Tile, source_rotation: int, neighbor_tile: Tile, neighbor_rotation: int, direction: Vector3i) -> bool:
+func are_variants_compatible(source_tile: Tile, source_rotation: int, neighbor_tile: Tile, neighbor_rotation: int, direction: Vector3i, source_position: Vector3i = Vector3i.ZERO, neighbor_position: Vector3i = Vector3i.ZERO) -> bool:
 	"""
 	Check if two tile+rotation variants can be placed adjacent to each other.
 	Uses fast array-based caching for O(1) lookups.
@@ -433,6 +437,8 @@ func are_variants_compatible(source_tile: Tile, source_rotation: int, neighbor_t
 		neighbor_tile: The neighboring tile
 		neighbor_rotation: Rotation of neighbor tile in degrees
 		direction: Direction from source to neighbor
+		source_position: Grid position of source cell (optional)
+		neighbor_position: Grid position of neighbor cell (optional)
 	
 	Returns:
 		true if the variants are compatible, false otherwise
@@ -442,79 +448,46 @@ func are_variants_compatible(source_tile: Tile, source_rotation: int, neighbor_t
 	var neigh_id = _get_variant_id(neighbor_tile, neighbor_rotation)
 	var dir_index = WfcHelper.get_direction_index(direction)
 	
-	# Check cache first (O(1) array access)
-	var cached = _compatibility_cache[src_id][neigh_id][dir_index]
-	if cached != null:
-		return cached
-	
 	# Use pre-computed rotation bases (convert world direction into tile's local space)
 	var source_rotation_basis: Basis = _rotation_basis_cache[source_rotation]
 	var local_direction = WfcHelper.rotate_direction(direction, source_rotation_basis.inverse())
 
 	# Get sockets on source tile that face toward neighbor (in local space)
-	var source_sockets = source_tile.get_sockets_in_direction(local_direction)
+	var source_sockets = _get_sockets_or_none(source_tile, local_direction)
 
 	# Rotate the opposite direction by the neighbor tile's rotation
 	var neighbor_rotation_basis: Basis = _rotation_basis_cache[neighbor_rotation]
 	var neighbor_local_direction = WfcHelper.rotate_direction(-direction, neighbor_rotation_basis.inverse())
 
 	# Get sockets on neighbor tile that face back toward source (in local space)
-	var neighbor_sockets = neighbor_tile.get_sockets_in_direction(neighbor_local_direction)
+	var neighbor_sockets = _get_sockets_or_none(neighbor_tile, neighbor_local_direction)
+
+	var has_socket_requirements = _sockets_have_requirements(source_sockets) or _sockets_have_requirements(neighbor_sockets)
+
+	if not has_socket_requirements:
+		# Check cache first (O(1) array access)
+		var cached = _compatibility_cache[src_id][neigh_id][dir_index]
+		if cached != null:
+			return cached
 	
 	var result = false
-	
-	# Socket compatibility rules:
-	# - Both empty (no sockets): compatible (both have open/flat edges)
-	# - Both have sockets: check socket compatibility
-	# - One empty, one has "none" socket: compatible (no socket = "none" socket)
-	# - One empty, one has real socket: incompatible
-	
-	if source_sockets.is_empty() and neighbor_sockets.is_empty():
-		result = true  # Both have no sockets - compatible
-	elif source_sockets.is_empty():
-		# Source has no sockets - only compatible if neighbor has "none" sockets
-		result = true
+
+	for source_socket in source_sockets:
 		for neighbor_socket in neighbor_sockets:
-			if neighbor_socket.socket_id != "none":
-				result = false
-				break
-	elif neighbor_sockets.is_empty():
-		# Neighbor has no sockets - only compatible if source has "none" sockets
-		result = true
-		for source_socket in source_sockets:
-			if source_socket.socket_id != "none":
-				result = false
-				break
-	else:
-		# Both sides have sockets - check compatibility
-		for source_socket in source_sockets:
-			for neighbor_socket in neighbor_sockets:
-				# "none" sockets mean no connection - both sides must be "none"
-				if source_socket.socket_id == "none" and neighbor_socket.socket_id == "none":
-					result = true
-					break
-				
-				# Allow sockets that explicitly list "none" as compatible to face empty space
-				if source_socket.socket_id == "none":
-					if "none" in neighbor_socket.compatible_sockets:
-						result = true
-						break
-					continue
-				if neighbor_socket.socket_id == "none":
-					if "none" in source_socket.compatible_sockets:
-						result = true
-						break
-					continue
-				
-				if source_socket.is_compatible_with(neighbor_socket) and neighbor_socket.is_compatible_with(source_socket):
-					result = true
-					break
-			
-			if result:
-				break
+			if not _sockets_are_compatible(source_socket, neighbor_socket):
+				continue
+			if not _socket_requirements_pass(source_socket, source_tile, source_rotation, source_position, neighbor_tile, neighbor_rotation, neighbor_position, direction):
+				continue
+			if not _socket_requirements_pass(neighbor_socket, neighbor_tile, neighbor_rotation, neighbor_position, source_tile, source_rotation, source_position, -direction):
+				continue
+			result = true
+			break
+		if result:
+			break
 	
-	# Cache the result (fast array write)
-	_compatibility_cache[src_id][neigh_id][dir_index] = result
+	# Cache the result (fast array write) when no per-socket requirements influence compatibility
+	if not has_socket_requirements:
+		_compatibility_cache[src_id][neigh_id][dir_index] = result
 	return result
 
 func reset() -> void:
@@ -530,6 +503,77 @@ func get_cache_stats() -> Dictionary:
 		"estimated_memory_kb": cache_entries * 0.001  # 1 byte per bool entry
 	}
 
+func set_logging_enabled(enabled: bool) -> void:
+	logging_enabled = enabled
+
+func _log(parts: Array) -> void:
+	if not logging_enabled:
+		return
+	var text := ""
+	for part in parts:
+		text += str(part)
+	print(text)
+
+func _sockets_have_requirements(sockets: Array[Socket]) -> bool:
+	for socket in sockets:
+		if socket != null and not socket.requirements.is_empty():
+			return true
+	return false
+
+func _socket_requirements_pass(socket: Socket, host_tile: Tile, host_rotation: int, host_position: Vector3i, other_tile: Tile, other_rotation: int, other_position: Vector3i, direction: Vector3i) -> bool:
+	if socket == null or socket.requirements.is_empty():
+		return true
+
+	var context: Dictionary = {
+		"module": other_tile,
+		"tags": other_tile.tags,
+		"rotation_degrees": other_rotation,
+		"grid": grid,
+		"neighbor_position": other_position,
+		"direction": direction,
+		"self_module": host_tile,
+		"self_rotation_degrees": host_rotation,
+		"self_position": host_position
+	}
+
+	for requirement in socket.requirements:
+		if requirement == null:
+			continue
+		if not requirement.evaluate(host_position, context):
+			return false
+	return true
+
+func _get_sockets_or_none(tile: Tile, local_direction: Vector3i) -> Array[Socket]:
+	var sockets := tile.get_sockets_in_direction(local_direction)
+	if sockets.is_empty():
+		var fallback: Array[Socket] = []
+		fallback.append(_get_virtual_none_socket(local_direction))
+		return fallback
+	return sockets
+
+func _get_virtual_none_socket(direction: Vector3i) -> Socket:
+	var key := str(direction)
+	if not _virtual_none_socket_cache.has(key):
+		var socket := Socket.new()
+		socket.direction = direction
+		socket.socket_id = "none"
+		var compat: Array[String] = []
+		compat.append("none")
+		socket.compatible_sockets = compat
+		_virtual_none_socket_cache[key] = socket
+	return _virtual_none_socket_cache[key]
+
+func _sockets_are_compatible(source_socket: Socket, neighbor_socket: Socket) -> bool:
+	if source_socket == null or neighbor_socket == null:
+		return false
+	if source_socket.socket_id == "none" and neighbor_socket.socket_id == "none":
+		return true
+	if source_socket.socket_id == "none":
+		return "none" in neighbor_socket.compatible_sockets
+	if neighbor_socket.socket_id == "none":
+		return "none" in source_socket.compatible_sockets
+	return source_socket.is_compatible_with(neighbor_socket) and neighbor_socket.is_compatible_with(source_socket)
+
 func _prewarm_compatibility_cache() -> void:
 	"""Pre-compute compatibility for all tile variant pairs in all directions.
 	This trades initialization time for faster solve time on large grids."""
@@ -537,7 +581,7 @@ func _prewarm_compatibility_cache() -> void:
 	var variants = grid.all_tile_variants
 	var total_checks = 0
 	
-	print("Pre-warming compatibility cache...")
+	_log(["Pre-warming compatibility cache..."])
 	var start_time = Time.get_ticks_msec()
 	
 	# Check all variant pairs in all directions
@@ -553,8 +597,8 @@ func _prewarm_compatibility_cache() -> void:
 	
 	var elapsed = Time.get_ticks_msec() - start_time
 	var n = variants.size()
-	print("Pre-warmed ", total_checks, " compatibility checks in ", elapsed, "ms")
-	print("Cache: ", n, "x", n, "x6 array (", n * n * 6, " entries)")
+	_log(["Pre-warmed ", total_checks, " compatibility checks in ", elapsed, "ms"])
+	_log(["Cache: ", n, "x", n, "x6 array (", n * n * 6, " entries)"])
 
 func _validate_tile_compatibility() -> void:
 	"""Validate that at least one tile can fit anywhere (prevents impossible puzzles)."""
@@ -575,10 +619,10 @@ func _validate_tile_compatibility() -> void:
 			has_universal_variant = true
 			universal_count += 1
 			if universal_count == 1:
-				print("✓ Universal tile found: ", variant["tile"].name, " @ ", variant["rotation_degrees"], "° (can connect to itself)")
+				_log(["✓ Universal tile found: ", variant["tile"].name, " @ ", variant["rotation_degrees"], "° (can connect to itself)"])
 	
 	if universal_count > 1:
-		print("  (", universal_count, " total universal variants)")
+		_log(["  (", universal_count, " total universal variants)"])
 	
 	if not has_universal_variant:
 		push_warning("⚠ No universal tile found! This may cause contradictions.")

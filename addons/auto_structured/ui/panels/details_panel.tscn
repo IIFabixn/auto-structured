@@ -78,6 +78,15 @@ metadata/_tab_index = 0
 layout_mode = 2
 size_flags_horizontal = 3
 
+[node name="SymmetryLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Symmetry"
+
+[node name="SymmetryOptionButton" type="OptionButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+
 [node name="Tags" type="FoldableContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer"]
 layout_mode = 2
 folded = true

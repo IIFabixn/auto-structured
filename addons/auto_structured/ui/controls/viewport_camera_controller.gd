@@ -8,6 +8,9 @@ const MOVEMENT_SPEED_FAST: float = 30.0 # units per second with shift
 const MOVEMENT_SPEED_SLOW: float = 3.0 # units per second with alt
 const TRANSITION_DURATION: float = 2.0 # seconds to transition to orbit mode
 const ORBIT_LERP_SPEED: float = 2.0 # smoothing factor for orbit transition
+const SETTINGS_FILE_PATH := "user://auto_structured_settings.cfg"
+const SETTINGS_SECTION_CAMERA := "viewport_camera"
+const SETTINGS_KEY_AUTO_ROTATE := "auto_rotate_enabled"
 
 # Camera state
 var orbit_target: Vector3 = Vector3.ZERO # Point to orbit around during auto-rotation
@@ -34,6 +37,7 @@ func _init(p_camera: Camera3D, p_viewport_container: Control) -> void:
 
 	transition_start_basis = camera.global_transform.basis
 	transition_start_position = camera.global_position
+	_load_auto_rotate_setting()
 
 ## Call this from the parent's _process function
 func process(delta: float) -> void:
@@ -197,15 +201,44 @@ func frame_structure() -> void:
 	orbit_target = Vector3.ZERO
 	camera.look_at(orbit_target, Vector3.UP)
 
+func _load_auto_rotate_setting() -> void:
+	var config := ConfigFile.new()
+	var load_err := config.load(SETTINGS_FILE_PATH)
+	if load_err == OK:
+		var stored_value = config.get_value(SETTINGS_SECTION_CAMERA, SETTINGS_KEY_AUTO_ROTATE, auto_rotate)
+		auto_rotate = bool(stored_value)
+		auto_rotate_manually_disabled = not auto_rotate
+		if auto_rotate:
+			resume_timer = 0.0
+		else:
+			resume_timer = 0.0
+			transition_timer = 0.0
+	elif load_err != ERR_FILE_NOT_FOUND and load_err != ERR_DOES_NOT_EXIST:
+		push_warning("ViewportCameraController: Failed to load camera settings (%s)" % error_string(load_err))
+
+func _save_auto_rotate_setting() -> void:
+	var config := ConfigFile.new()
+	var load_err := config.load(SETTINGS_FILE_PATH)
+	if load_err != OK and load_err != ERR_FILE_NOT_FOUND and load_err != ERR_DOES_NOT_EXIST:
+		push_warning("ViewportCameraController: Failed to read existing camera settings (%s)" % error_string(load_err))
+	config.set_value(SETTINGS_SECTION_CAMERA, SETTINGS_KEY_AUTO_ROTATE, auto_rotate)
+	var save_err := config.save(SETTINGS_FILE_PATH)
+	if save_err != OK:
+		push_warning("ViewportCameraController: Failed to save camera settings (%s)" % error_string(save_err))
+
 ## Enable or disable auto-rotation
 func set_auto_rotate(enabled: bool) -> void:
 	auto_rotate = enabled
 	auto_rotate_manually_disabled = not enabled
+	resume_timer = 0.0
 	if enabled:
 		# If manually enabled, start transition
 		transition_timer = 0.0
 		transition_start_basis = camera.global_transform.basis
 		transition_start_position = camera.global_position
+	else:
+		transition_timer = 0.0
+	_save_auto_rotate_setting()
 
 ## Get the current auto-rotate state
 func get_auto_rotate() -> bool:

@@ -10,6 +10,14 @@ const Requirement = preload("res://addons/auto_structured/core/requirements/requ
 @export var size: Vector3i = Vector3i.ONE  ## Size of the tile in grid units (default 1x1x1). Must be integer.
 @export var tags: Array[String] = []
 @export var requirements: Array[Requirement] = []
+
+enum Symmetry {
+	NONE,
+	ROTATION_180,
+	ROTATION_90
+}
+
+@export var symmetry: Symmetry = Symmetry.NONE
 @export var sockets: Array[Socket] = []:
 	set(value):
 		sockets = value
@@ -169,6 +177,17 @@ func ensure_all_sockets() -> void:
 			new_socket.direction = direction
 			new_socket.socket_id = "none"
 			add_socket(new_socket)
+
+func get_unique_rotations() -> Array[int]:
+	"""Return the list of unique Y-axis rotations for this tile based on symmetry."""
+	match symmetry:
+		Symmetry.NONE:
+			return [0, 90, 180, 270]
+		Symmetry.ROTATION_180:
+			return [0, 90]
+		Symmetry.ROTATION_90:
+			return [0]
+	return [0, 90, 180, 270]
 
 func get_socket_by_direction(direction: Vector3i) -> Socket:
 	"""

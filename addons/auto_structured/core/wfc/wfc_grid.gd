@@ -50,9 +50,8 @@ func _init(grid_size: Vector3i, tiles: Array[Tile]) -> void:
 func generate_all_variants(tiles: Array[Tile]) -> Array[Dictionary]:
 	"""Generate all possible tile+rotation combinations."""
 	var variants: Array[Dictionary] = []
-	var rotations = [0, 90, 180, 270]
-	
 	for tile in tiles:
+		var rotations = tile.get_unique_rotations()
 		for rotation in rotations:
 			variants.append({
 				"tile": tile,

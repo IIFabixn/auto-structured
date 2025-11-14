@@ -2,7 +2,7 @@ extends SceneTree
 
 const WfcSolverTests := preload("res://addons/auto_structured/tests/test_wfc_solver.gd")
 
-func _run() -> void:
+func _initialize() -> void:
 	print("Running auto_structured test suite...\n")
 	var suite := WfcSolverTests.new()
 	var results := suite.run_all()

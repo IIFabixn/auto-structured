@@ -4,6 +4,8 @@ const WfcGrid := preload("res://addons/auto_structured/core/wfc/wfc_grid.gd")
 const WfcSolver := preload("res://addons/auto_structured/core/wfc/wfc_solver.gd")
 const Tile := preload("res://addons/auto_structured/core/tile.gd")
 const Socket := preload("res://addons/auto_structured/core/socket.gd")
+const Requirement := preload("res://addons/auto_structured/core/requirements/requirement.gd")
+const TagRequirement := preload("res://addons/auto_structured/core/requirements/tag_requirement.gd")
 
 func run_all() -> Dictionary:
 	var results := {
@@ -12,8 +14,10 @@ func run_all() -> Dictionary:
 	}
 
 	_run_test(results, "Rotation compatibility respects tile orientation", test_rotation_compatibility)
+	_run_test(results, "Tile symmetry reduces redundant variants", test_tile_symmetry_variant_generation)
 	_run_test(results, "\"None\" sockets interact correctly with empty neighbors", test_none_socket_behavior)
 	_run_test(results, "Neighbor variant filtering removes incompatible options", test_neighbor_variant_filtering)
+	_run_test(results, "Socket requirements constrain neighbors", test_socket_requirements)
 
 	return results
 
@@ -39,6 +43,11 @@ func test_rotation_compatibility() -> Variant:
 			"direction": Vector3i.LEFT,
 			"id": "socket_b",
 			"compatible": ["socket_a"]
+		},
+		{
+			"direction": Vector3i.BACK,
+			"id": "socket_b",
+			"compatible": ["socket_a"]
 		}
 	])
 
@@ -52,6 +61,31 @@ func test_rotation_compatibility() -> Variant:
 
 	if solver.are_variants_compatible(tile_a, 90, tile_b, 0, Vector3i.RIGHT):
 		return "Rotated tile must not incorrectly report compatibility on its original right face"
+
+	return null
+
+func test_tile_symmetry_variant_generation() -> Variant:
+	var tile_none := _create_tile("Asym", [], Tile.Symmetry.NONE)
+	var tile_half_turn := _create_tile("HalfTurn", [], Tile.Symmetry.ROTATION_180)
+	var tile_quarter_turn := _create_tile("QuarterTurn", [], Tile.Symmetry.ROTATION_90)
+
+	var solver := _create_solver(Vector3i.ONE, [tile_none, tile_half_turn, tile_quarter_turn])
+	var variants := solver.grid.all_tile_variants
+
+	var asym_rotations := _get_rotations_for_tile(variants, tile_none)
+	if asym_rotations != [0, 90, 180, 270]:
+		return "Expected four unique rotations for asymmetrical tile but got %s" % [asym_rotations]
+
+	var half_turn_rotations := _get_rotations_for_tile(variants, tile_half_turn)
+	if half_turn_rotations != [0, 90]:
+		return "Expected two unique rotations for 180° symmetric tile but got %s" % [half_turn_rotations]
+
+	var quarter_turn_rotations := _get_rotations_for_tile(variants, tile_quarter_turn)
+	if quarter_turn_rotations != [0]:
+		return "Expected single rotation for 90° symmetric tile but got %s" % [quarter_turn_rotations]
+
+	if variants.size() != 7:
+		return "Expected 7 total variants but got %d" % variants.size()
 
 	return null
 
@@ -138,9 +172,59 @@ func test_neighbor_variant_filtering() -> Variant:
 
 	return null
 
-func _create_tile(name: String, socket_defs: Array) -> Tile:
+func test_socket_requirements() -> Variant:
+	var tag_requirement := TagRequirement.new()
+	tag_requirement.required_tag = "friendly"
+
+	var source_tile := _create_tile("SourceReq", [
+		{
+			"direction": Vector3i.RIGHT,
+			"id": "male",
+			"compatible": ["female"],
+			"requirements": [tag_requirement]
+		}
+	])
+
+	var friendly_tile := _create_tile("Friendly", [
+		{
+			"direction": Vector3i.LEFT,
+			"id": "female",
+			"compatible": ["male"]
+		}
+	])
+	friendly_tile.tags = ["friendly"]
+
+	var enemy_tile := _create_tile("Enemy", [
+		{
+			"direction": Vector3i.LEFT,
+			"id": "female",
+			"compatible": ["male"]
+		}
+	])
+
+	var solver := _create_solver(Vector3i.ONE, [source_tile, friendly_tile, enemy_tile])
+
+	if not solver.are_variants_compatible(source_tile, 0, friendly_tile, 0, Vector3i.RIGHT):
+		return "Requirement should allow tile with matching tag"
+
+	if solver.are_variants_compatible(source_tile, 0, enemy_tile, 0, Vector3i.RIGHT):
+		return "Requirement should block tile missing required tag"
+
+	return null
+
+func _get_rotations_for_tile(variants: Array[Dictionary], tile: Tile) -> Array[int]:
+	var rotations: Array[int] = []
+	for variant in variants:
+		if variant["tile"] == tile:
+			rotations.append(int(variant["rotation_degrees"]))
+	rotations.sort()
+	return rotations
+
+
+func _create_tile(name: String, socket_defs: Array, symmetry: int = Tile.Symmetry.NONE) -> Tile:
 	var tile := Tile.new()
 	tile.name = name
+	tile.symmetry = symmetry
 	var sockets: Array[Socket] = []
 	for def in socket_defs:
 		var socket := Socket.new()
@@ -151,12 +235,21 @@ func _create_tile(name: String, socket_defs: Array) -> Tile:
 		for id in raw_compat:
 			compat.append(str(id))
 		socket.compatible_sockets = compat
+		var reqs_raw = def.get("requirements", [])
+		if not reqs_raw.is_empty():
+			var reqs: Array[Requirement] = []
+			for req in reqs_raw:
+				reqs.append(req)
+			socket.requirements = reqs
 		sockets.append(socket)
 	tile.sockets = sockets
 	return tile
 
 func _create_solver(grid_size: Vector3i, tiles: Array) -> WfcSolver:
-	var grid := WfcGrid.new(grid_size, tiles)
+	var typed_tiles: Array[Tile] = []
+	for tile in tiles:
+		typed_tiles.append(tile)
+	var grid := WfcGrid.new(grid_size, typed_tiles)
 	return WfcSolver.new(grid, null, false)
 
 func _find_variant(grid: WfcGrid, tile: Tile, rotation: int) -> Dictionary:
