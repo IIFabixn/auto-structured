@@ -17,6 +17,7 @@ const WfcStrategyBase = preload("res://addons/auto_structured/core/wfc/strategie
 const Viewport3DGrid = preload("res://addons/auto_structured/ui/controls/viewport_3d_grid.gd")
 const ViewportCameraController = preload("res://addons/auto_structured/ui/controls/viewport_camera_controller.gd")
 const PreviewSettingsDialog = preload("res://addons/auto_structured/ui/dialogs/preview_settings_dialog.tscn")
+
 const DEFAULT_CELL_WORLD_SIZE: Vector3 = Vector3(2, 3, 2)
 
 # Camera controller

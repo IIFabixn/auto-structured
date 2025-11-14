@@ -2,22 +2,24 @@
 
 [ext_resource type="Script" uid="uid://n5qundf42kiu" path="res://addons/auto_structured/core/module_library.gd" id="1_g2r0m"]
 [ext_resource type="Script" uid="uid://c7f03neubtkf3" path="res://addons/auto_structured/core/tile.gd" id="2_f08mx"]
-[ext_resource type="Script" path="res://addons/auto_structured/core/requirements/requirement.gd" id="3_peua7"]
+[ext_resource type="Script" uid="uid://cj5irb5up18v1" path="res://addons/auto_structured/core/requirements/requirement.gd" id="3_peua7"]
 [ext_resource type="PackedScene" uid="uid://brrawbb8qli2o" path="res://sample/modules/floor.tscn" id="4_ybimf"]
 [ext_resource type="Script" uid="uid://bddgr0flhmhcl" path="res://addons/auto_structured/core/socket.gd" id="5_ybimf"]
 [ext_resource type="PackedScene" uid="uid://dvmtflhjehotm" path="res://sample/modules/wall.tscn" id="6_ocyvf"]
 [ext_resource type="PackedScene" uid="uid://khrtlct1n2sc" path="res://sample/modules/wall_corner.tscn" id="7_7pgw0"]
-[ext_resource type="Script" path="res://addons/auto_structured/core/requirements/ground_requirement.gd" id="8_7pgw0"]
+[ext_resource type="Script" uid="uid://bj35d48w37cx5" path="res://addons/auto_structured/core/requirements/ground_requirement.gd" id="8_7pgw0"]
 [ext_resource type="PackedScene" uid="uid://cvdf8f47a4oa1" path="res://sample/modules/door.tscn" id="8_ocyvf"]
 
 [sub_resource type="Resource" id="Resource_7pgw0"]
 script = ExtResource("5_ybimf")
-socket_id = "none"
+socket_id = "floor"
+compatible_sockets = Array[String](["floor"])
 
 [sub_resource type="Resource" id="Resource_4nsv4"]
 script = ExtResource("5_ybimf")
-socket_id = "none"
+socket_id = "floor"
 direction = Vector3i(0, -1, 0)
+compatible_sockets = Array[String](["floor"])
 
 [sub_resource type="Resource" id="Resource_wjay0"]
 script = ExtResource("5_ybimf")
@@ -52,12 +54,14 @@ sockets = Array[ExtResource("5_ybimf")]([SubResource("Resource_7pgw0"), SubResou
 
 [sub_resource type="Resource" id="Resource_bdy81"]
 script = ExtResource("5_ybimf")
-socket_id = "none"
+socket_id = "wall"
+compatible_sockets = Array[String](["wall"])
 
 [sub_resource type="Resource" id="Resource_dki7u"]
 script = ExtResource("5_ybimf")
-socket_id = "none"
+socket_id = "wall"
 direction = Vector3i(0, -1, 0)
+compatible_sockets = Array[String](["wall", "door"])
 
 [sub_resource type="Resource" id="Resource_nf2n2"]
 script = ExtResource("5_ybimf")
@@ -91,12 +95,14 @@ sockets = Array[ExtResource("5_ybimf")]([SubResource("Resource_bdy81"), SubResou
 
 [sub_resource type="Resource" id="Resource_0xusw"]
 script = ExtResource("5_ybimf")
-socket_id = "none"
+socket_id = "wall_corner"
+compatible_sockets = Array[String](["wall_corner"])
 
 [sub_resource type="Resource" id="Resource_k3twb"]
 script = ExtResource("5_ybimf")
-socket_id = "none"
+socket_id = "wall_corner"
 direction = Vector3i(0, -1, 0)
+compatible_sockets = Array[String](["wall_corner"])
 
 [sub_resource type="Resource" id="Resource_c10hc"]
 script = ExtResource("5_ybimf")
@@ -132,12 +138,14 @@ script = ExtResource("8_7pgw0")
 
 [sub_resource type="Resource" id="Resource_p21c7"]
 script = ExtResource("5_ybimf")
-socket_id = "none"
+socket_id = "door"
+compatible_sockets = Array[String](["wall"])
 
 [sub_resource type="Resource" id="Resource_tvb0s"]
 script = ExtResource("5_ybimf")
-socket_id = "none"
+socket_id = "door"
 direction = Vector3i(0, -1, 0)
+compatible_sockets = Array[String](["wall"])
 
 [sub_resource type="Resource" id="Resource_nnu2s"]
 script = ExtResource("5_ybimf")

@@ -12,7 +12,7 @@ signal socket_types_changed  # Emitted when socket types are added/modified
 
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
 const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.gd")
-const ManageSocketsDialog = preload("res://addons/auto_structured/ui/controls/manage_sockets_dialog.tscn")
+const ManageSocketsDialog = preload("res://addons/auto_structured/ui/dialogs/manage_sockets_dialog.tscn")
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const RequirementItem = preload("res://addons/auto_structured/ui/controls/requirement_item.tscn")
 const Requirement = preload("res://addons/auto_structured/core/requirements/requirement.gd")

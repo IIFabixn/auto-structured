@@ -3,7 +3,6 @@ class_name PreviewSettingsDialog extends Control
 
 const WfcStrategyBase = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_base.gd")
 const WfcStrategyFillAll = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_fill_all.gd")
-const WfcStrategySparse = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_sparse.gd")
 const WfcStrategyGroundWalls = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_ground_walls.gd")
 
 @onready var x_spinbox: SpinBox = %XSpinBox
@@ -116,7 +115,6 @@ func _discover_strategies() -> void:
 		# Fallback to hardcoded strategies
 		available_strategies = [
 			WfcStrategyFillAll.new(),
-			WfcStrategySparse.new(0.5),
 			WfcStrategyGroundWalls.new()
 		]
 		return
@@ -149,12 +147,8 @@ func _discover_strategies() -> void:
 			
 			# Verify it's a valid strategy (has the required methods)
 			if strategy_instance.has_method("should_collapse_cell") and \
-			   strategy_instance.has_method("get_name") and \
-			   strategy_instance.has_method("get_description"):
-				
-				# Special handling for Sparse strategy - set default probability
-				if strategy_instance is WfcStrategySparse:
-					strategy_instance.fill_probability = 0.5
+				strategy_instance.has_method("get_name") and \
+				strategy_instance.has_method("get_description"):
 				
 				available_strategies.append(strategy_instance)
 				print("Discovered strategy: ", strategy_instance.get_name())

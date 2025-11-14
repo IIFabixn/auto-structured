@@ -333,12 +333,7 @@ func propagate(start_cell: WfcCell) -> bool:
 
 			# Store original count for debugging
 			var original_count = neighbor.possible_tile_variants.size()
-			
-			# Optimization: Skip neighbors that still have all variants (can't be further constrained)
-			# This is especially important in early iterations
-			if original_count >= grid.all_tile_variants.size():
-				continue
-			
+		
 			# Calculate which tile+rotation variants are valid for this neighbor based on current cell
 			var valid_variants = get_valid_variants_for_neighbor(current_cell, neighbor, direction)
 
@@ -393,8 +388,19 @@ func get_valid_variants_for_neighbor(source_cell: WfcCell, neighbor_cell: WfcCel
 	_scratch_variants.clear()
 	
 	# Pre-fetch to avoid repeated access
-	var source_variants = source_cell.possible_tile_variants
-	var source_count = source_variants.size()
+	var source_variants: Array[Dictionary] = []
+	var source_count: int = 0
+	if source_cell.is_collapsed():
+		var collapsed_variant := source_cell.get_variant()
+		if collapsed_variant.is_empty():
+			return neighbor_cell.possible_tile_variants
+		source_variants.append(collapsed_variant)
+		source_count = 1
+	else:
+		source_variants = source_cell.possible_tile_variants
+		source_count = source_variants.size()
+		if source_count == 0:
+			return neighbor_cell.possible_tile_variants
 	var neighbor_variants = neighbor_cell.possible_tile_variants
 	var neighbor_count = neighbor_variants.size()
 
