@@ -33,7 +33,6 @@ size_flags_horizontal = 3
 
 [node name="HBoxContainer" type="HBoxContainer" parent="ScrollContainer/HBoxContainer/HSplitContainer"]
 layout_mode = 2
-size_flags_horizontal = 3
 
 [node name="HSplitContainer" type="HSplitContainer" parent="ScrollContainer/HBoxContainer/HSplitContainer/HBoxContainer"]
 layout_mode = 2
@@ -41,11 +40,13 @@ size_flags_horizontal = 3
 
 [node name="ModuleLibraryPanel" parent="ScrollContainer/HBoxContainer/HSplitContainer/HBoxContainer/HSplitContainer" instance=ExtResource("2_gntdh")]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(250, 0)
 layout_mode = 2
 
 [node name="DetailsPanel" parent="ScrollContainer/HBoxContainer/HSplitContainer/HBoxContainer/HSplitContainer" instance=ExtResource("4_55lkt")]
 unique_name_in_owner = true
 visible = false
+custom_minimum_size = Vector2(250, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 
@@ -53,4 +54,3 @@ size_flags_horizontal = 3
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-auto_rotate = false

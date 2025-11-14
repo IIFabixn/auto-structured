@@ -10,44 +10,44 @@
 [ext_resource type="PackedScene" uid="uid://dj7n1geqo8rjc" path="res://sample/assets/Wall_Plaster_Straight_Base.gltf" id="9_7pgw0"]
 [ext_resource type="PackedScene" uid="uid://cwt24ydlhidjd" path="res://sample/assets/Corner_Exterior_Wood.gltf" id="10_4nsv4"]
 
-[sub_resource type="Resource" id="Resource_ybimf"]
+[sub_resource type="Resource" id="Resource_7pgw0"]
 script = ExtResource("5_ybimf")
 socket_id = "none"
 
-[sub_resource type="Resource" id="Resource_ocyvf"]
+[sub_resource type="Resource" id="Resource_4nsv4"]
 script = ExtResource("5_ybimf")
 socket_id = "none"
 direction = Vector3i(0, -1, 0)
 
-[sub_resource type="Resource" id="Resource_7pgw0"]
+[sub_resource type="Resource" id="Resource_wjay0"]
 script = ExtResource("5_ybimf")
 socket_id = "none"
 direction = Vector3i(1, 0, 0)
 
-[sub_resource type="Resource" id="Resource_4nsv4"]
+[sub_resource type="Resource" id="Resource_4d2ao"]
 script = ExtResource("5_ybimf")
 socket_id = "balcony_corner_right"
 direction = Vector3i(-1, 0, 0)
 compatible_sockets = Array[String](["balcony_corner_right", "balcony_corner_left", "balcony_left"])
 
-[sub_resource type="Resource" id="Resource_wjay0"]
+[sub_resource type="Resource" id="Resource_22vab"]
 script = ExtResource("5_ybimf")
 socket_id = "none"
 direction = Vector3i(0, 0, -1)
 
-[sub_resource type="Resource" id="Resource_4d2ao"]
+[sub_resource type="Resource" id="Resource_a6yk7"]
 script = ExtResource("5_ybimf")
 socket_id = "balcony_corner_left"
 direction = Vector3i(0, 0, 1)
 compatible_sockets = Array[String](["balcony_corner_left", "balcony_corner_right", "balcony_right"])
 
-[sub_resource type="Resource" id="Resource_22vab"]
+[sub_resource type="Resource" id="Resource_2menp"]
 script = ExtResource("2_f08mx")
 name = "Balcony_Cross_Corner"
 scene = ExtResource("4_e70lh")
 size = Vector3(2, 2, 2)
 tags = Array[String](["wood"])
-sockets = Array[ExtResource("5_ybimf")]([SubResource("Resource_ybimf"), SubResource("Resource_ocyvf"), SubResource("Resource_7pgw0"), SubResource("Resource_4nsv4"), SubResource("Resource_wjay0"), SubResource("Resource_4d2ao")])
+sockets = Array[ExtResource("5_ybimf")]([SubResource("Resource_7pgw0"), SubResource("Resource_4nsv4"), SubResource("Resource_wjay0"), SubResource("Resource_4d2ao"), SubResource("Resource_22vab"), SubResource("Resource_a6yk7")])
 
 [sub_resource type="Resource" id="Resource_vv34b"]
 script = ExtResource("5_ybimf")
@@ -80,7 +80,7 @@ script = ExtResource("5_ybimf")
 socket_id = "none"
 direction = Vector3i(0, 0, 1)
 
-[sub_resource type="Resource" id="Resource_a6yk7"]
+[sub_resource type="Resource" id="Resource_47lmb"]
 script = ExtResource("2_f08mx")
 name = "Balcony_Cross_Straight"
 scene = ExtResource("6_e70lh")
@@ -210,5 +210,5 @@ sockets = Array[ExtResource("5_ybimf")]([SubResource("Resource_2thg0"), SubResou
 [resource]
 script = ExtResource("1_g2r0m")
 library_name = "Test"
-tiles = Array[ExtResource("2_f08mx")]([SubResource("Resource_22vab"), SubResource("Resource_a6yk7"), SubResource("Resource_fpgar"), SubResource("Resource_nnu2s"), SubResource("Resource_432t1")])
+tiles = Array[ExtResource("2_f08mx")]([SubResource("Resource_2menp"), SubResource("Resource_47lmb"), SubResource("Resource_fpgar"), SubResource("Resource_nnu2s"), SubResource("Resource_432t1")])
 socket_types = Array[String](["any", "balcony", "balcony_corner", "balcony_corner_left", "balcony_corner_right", "balcony_left", "balcony_right", "floor", "none", "wall", "wall_corner"])

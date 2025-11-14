@@ -6,7 +6,6 @@ class_name PreviewPanel extends Control
 ##   - preview_tile(tile): Show a single tile preview
 ##   - preview_socket(tile, socket, compatible_tiles): Show tile with compatible tiles for a socket
 
-const RESUME_DELAY: float = 2.0  # seconds before auto-rotate resumes
 const CYCLE_DELAY: float = 3.0  # seconds between cycling compatible tiles
 
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
@@ -20,23 +19,10 @@ const WfcStrategySparse = preload("res://addons/auto_structured/core/wfc/strateg
 const WfcStrategyPerimeter = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_perimeter.gd")
 const WfcStrategyGroundWalls = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_ground_walls.gd")
 const Viewport3DGrid = preload("res://addons/auto_structured/ui/controls/viewport_3d_grid.gd")
+const ViewportCameraController = preload("res://addons/auto_structured/ui/controls/viewport_camera_controller.gd")
 
-var camera_distance: float = 10.0
-var camera_rotation: Vector2 = Vector2(15, 45)  # pitch, yaw in degrees
-var camera_target: Vector3 = Vector3.ZERO
-var is_rotating: bool = false
-var is_panning: bool = false
-var last_mouse_pos: Vector2
-var viewport_rect: Rect2
-
-# Camera smoothing
-var target_camera_position: Vector3 = Vector3.ZERO
-var camera_lerp_speed: float = 10.0  # Higher = snappier, lower = smoother
-
-# Viewport options
-@export var auto_rotate: bool = true
-var auto_rotate_paused: bool = false
-var resume_timer: float = 0.0
+# Camera controller
+var camera_controller: ViewportCameraController = null
 
 # Compatible tiles cycling
 var compatible_results: Array[Dictionary] = []  # Array of {tile: Tile, socket: Socket} dictionaries
@@ -76,9 +62,10 @@ var viewport_grid: Viewport3DGrid = null
 
 
 func _ready() -> void:
-	update_camera_transform()
+	# Initialize camera controller
+	camera_controller = ViewportCameraController.new(camera, viewport_container)
+	camera_controller.frame_structure()  # Initialize camera position
 	viewport_container.gui_input.connect(_on_viewport_gui_input)
-	viewport_rect = viewport_container.get_global_rect()
 	
 	# Create grid and origin
 	viewport_grid = Viewport3DGrid.new()
@@ -87,7 +74,7 @@ func _ready() -> void:
 	# Connect viewport options menu
 	var popup = viewport_options.get_popup()
 	popup.id_pressed.connect(_on_viewport_option_selected)
-	popup.set_item_checked(0, auto_rotate)
+	popup.set_item_checked(0, camera_controller.get_auto_rotate())
 	popup.add_separator()
 	popup.add_check_item("Show Grid", 2)
 	popup.set_item_checked(popup.get_item_index(2), viewport_grid.show_grid if viewport_grid else true)
@@ -118,20 +105,9 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	# Handle auto-rotate resume timer
-	if auto_rotate_paused:
-		resume_timer -= delta
-		if resume_timer <= 0.0:
-			auto_rotate_paused = false
-
-	# Apply auto-rotation
-	if auto_rotate and not auto_rotate_paused and not is_rotating and not is_panning:
-		camera_rotation.y += delta * 15.0  # Rotate 15 degrees per second
-		update_camera_transform()
-	
-	# Smooth camera movement
-	if camera and target_camera_position != Vector3.ZERO:
-		camera.global_position = camera.global_position.lerp(target_camera_position, delta * camera_lerp_speed)
+	# Update camera controller
+	if camera_controller:
+		camera_controller.process(delta)
 	
 	# Handle compatible tiles cycling
 	if is_cycling and compatible_results.size() > 0:
@@ -145,8 +121,9 @@ func _on_viewport_option_selected(id: int) -> void:
 	var popup = viewport_options.get_popup()
 	match id:
 		0:  # Auto Rotate
-			auto_rotate = !auto_rotate
-			popup.set_item_checked(0, auto_rotate)
+			if camera_controller:
+				camera_controller.set_auto_rotate(!camera_controller.get_auto_rotate())
+				popup.set_item_checked(0, camera_controller.get_auto_rotate())
 		1:  # Reset Camera
 			stop_compatible_tiles_preview()
 			frame_structure()
@@ -161,119 +138,16 @@ func _on_viewport_option_selected(id: int) -> void:
 
 
 func _on_viewport_gui_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_RIGHT:
-			if event.pressed:
-				viewport_rect = viewport_container.get_global_rect()
-				# Pause auto-rotation during interaction
-				auto_rotate_paused = true
-				# Check shift directly from Input singleton
-				if Input.is_key_pressed(KEY_SHIFT):
-					is_panning = true
-				else:
-					is_rotating = true
-				last_mouse_pos = get_global_mouse_position()
-				viewport_container.mouse_filter = Control.MOUSE_FILTER_STOP
-				Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
-			else:
-				is_rotating = false
-				is_panning = false
-				viewport_container.mouse_filter = Control.MOUSE_FILTER_PASS
-				Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-				# Start resume timer
-				resume_timer = RESUME_DELAY
-
-		# Zoom with scroll wheel
-		elif event.button_index == MOUSE_BUTTON_WHEEL_UP:
-			camera_distance = max(2.0, camera_distance - 1.0)
-			update_camera_transform()
-		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			camera_distance = min(50.0, camera_distance + 1.0)
-			update_camera_transform()
-
-	elif event is InputEventMouseMotion:
-		if is_rotating or is_panning:
-			# Update mode based on current shift state
-			var shift_now = Input.is_key_pressed(KEY_SHIFT)
-			if shift_now and not is_panning:
-				is_panning = true
-				is_rotating = false
-			elif not shift_now and not is_rotating:
-				is_rotating = true
-				is_panning = false
-
-			var current_mouse = get_global_mouse_position()
-			var delta = current_mouse - last_mouse_pos
-
-			if is_rotating:
-				camera_rotation.y -= delta.x * 0.5
-				camera_rotation.x = clamp(camera_rotation.x - delta.y * 0.5, -89, 89)
-				update_camera_transform()
-
-			elif is_panning:
-				delta *= 0.01
-				var right = camera.global_transform.basis.x
-				var up = Vector3.UP
-				camera_target -= right * delta.x * camera_distance * 0.1
-				camera_target += up * delta.y * camera_distance * 0.1
-				update_camera_transform()
-
-			# Wrap cursor at viewport edges
-			var wrapped_pos = current_mouse
-			var wrapped = false
-
-			if current_mouse.x <= viewport_rect.position.x:
-				wrapped_pos.x = viewport_rect.end.x - 2
-				wrapped = true
-			elif current_mouse.x >= viewport_rect.end.x:
-				wrapped_pos.x = viewport_rect.position.x + 2
-				wrapped = true
-
-			if current_mouse.y <= viewport_rect.position.y:
-				wrapped_pos.y = viewport_rect.end.y - 2
-				wrapped = true
-			elif current_mouse.y >= viewport_rect.end.y:
-				wrapped_pos.y = viewport_rect.position.y + 2
-				wrapped = true
-
-			if wrapped:
-				get_viewport().warp_mouse(wrapped_pos)
-				last_mouse_pos = wrapped_pos
-			else:
-				last_mouse_pos = current_mouse
-
-
-func update_camera_transform() -> void:
-	"""Update camera position based on orbit controls"""
-	if not camera:
-		return
-
-	var pitch_rad = deg_to_rad(camera_rotation.x)
-	var yaw_rad = deg_to_rad(camera_rotation.y)
-
-	var offset = (
-		Vector3(cos(pitch_rad) * sin(yaw_rad), sin(pitch_rad), cos(pitch_rad) * cos(yaw_rad))
-		* camera_distance
-	)
-
-	# Set target position for smooth interpolation
-	target_camera_position = camera_target + offset
-	
-	# For immediate updates (like mouse drag), skip interpolation
-	if is_rotating or is_panning:
-		camera.global_position = target_camera_position
-	
-	# Always update look_at immediately for smooth rotation
-	camera.look_at(camera_target, Vector3.UP)
+	"""Delegate input events to the camera controller"""
+	if camera_controller:
+		camera_controller.handle_input(event)
 
 
 func frame_structure() -> void:
 	"""Frame the camera to show the entire structure"""
 	# TODO: Calculate bounds of all structure nodes and adjust camera
-	camera_target = Vector3.ZERO
-	camera_distance = 10.0
-	camera_rotation = Vector2(15, 45)  # Reset to default pitch and yaw
-	update_camera_transform()
+	if camera_controller:
+		camera_controller.frame_structure()
 
 
 func add_structure_node(node: Node3D) -> void:

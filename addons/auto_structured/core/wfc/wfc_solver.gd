@@ -191,18 +191,31 @@ func are_variants_compatible(source_tile: Tile, source_rotation: int, neighbor_t
 	# Socket compatibility rules:
 	# - Both empty (no sockets): compatible (both have open/flat edges)
 	# - Both have sockets: check socket compatibility
-	# - One empty, one has sockets: incompatible (can't connect socket to flat edge)
+	# - One empty, one has "none" socket: compatible (no socket = "none" socket)
+	# - One empty, one has real socket: incompatible
 	
 	if source_sockets.is_empty() and neighbor_sockets.is_empty():
 		return true  # Both have no sockets - compatible
 	
-	if source_sockets.is_empty() or neighbor_sockets.is_empty():
-		return false  # Mismatch - one needs connection, other doesn't provide it
+	# Special handling for when one side has no sockets
+	if source_sockets.is_empty():
+		# Source has no sockets - only compatible if neighbor has "none" sockets
+		for neighbor_socket in neighbor_sockets:
+			if neighbor_socket.socket_id != "none":
+				return false
+		return true
+	
+	if neighbor_sockets.is_empty():
+		# Neighbor has no sockets - only compatible if source has "none" sockets
+		for source_socket in source_sockets:
+			if source_socket.socket_id != "none":
+				return false
+		return true
 
-	# Check if any socket pair is compatible (unidirectional from source perspective)
+	# Both sides have sockets - check compatibility
 	for source_socket in source_sockets:
 		for neighbor_socket in neighbor_sockets:
-			# "none" sockets mean no connection allowed - both sides must be "none"
+			# "none" sockets mean no connection - both sides must be "none"
 			if source_socket.socket_id == "none" and neighbor_socket.socket_id == "none":
 				return true
 			
