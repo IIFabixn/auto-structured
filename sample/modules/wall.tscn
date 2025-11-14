@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3 uid="uid://dvmtflhjehotm"]
+
+[ext_resource type="PackedScene" uid="uid://dj7n1geqo8rjc" path="res://sample/assets/Wall_Plaster_Straight_Base.gltf" id="2_1x3fw"]
+[ext_resource type="PackedScene" uid="uid://bgvrapkmi4xoh" path="res://sample/assets/Floor_WoodDark.gltf" id="2_ln3ec"]
+
+[node name="wall" type="Node3D"]
+
+[node name="Wall_Plaster_Straight_Base" parent="." instance=ExtResource("2_1x3fw")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -1.1987839, 0, 9.1478476e-05)
+
+[node name="Floor_WoodDark" parent="." instance=ExtResource("2_ln3ec")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0012160841, 0, 9.1478476e-05)

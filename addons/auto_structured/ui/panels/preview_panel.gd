@@ -14,12 +14,10 @@ const WfcHelper = preload("res://addons/auto_structured/core/wfc/wfc_helper.gd")
 const WfcGrid = preload("res://addons/auto_structured/core/wfc/wfc_grid.gd")
 const WfcSolver = preload("res://addons/auto_structured/core/wfc/wfc_solver.gd")
 const WfcStrategyBase = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_base.gd")
-const WfcStrategyFillAll = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_fill_all.gd")
-const WfcStrategySparse = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_sparse.gd")
-const WfcStrategyPerimeter = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_perimeter.gd")
-const WfcStrategyGroundWalls = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_ground_walls.gd")
 const Viewport3DGrid = preload("res://addons/auto_structured/ui/controls/viewport_3d_grid.gd")
 const ViewportCameraController = preload("res://addons/auto_structured/ui/controls/viewport_camera_controller.gd")
+const PreviewSettingsDialog = preload("res://addons/auto_structured/ui/dialogs/preview_settings_dialog.tscn")
+const DEFAULT_CELL_WORLD_SIZE: Vector3 = Vector3(2, 3, 2)
 
 # Camera controller
 var camera_controller: ViewportCameraController = null
@@ -32,16 +30,19 @@ var is_cycling: bool = false
 var preview_root: Node3D = null  # Root node containing the main tile and compatible tiles
 var main_tile: Tile = null  # The main tile being previewed
 var main_socket: Socket = null  # The socket on the main tile that we're previewing from
+var current_cell_world_size: Vector3 = DEFAULT_CELL_WORLD_SIZE
+var current_tile_instance: Node3D = null
+var library_cell_world_size: Vector3 = DEFAULT_CELL_WORLD_SIZE
 
 # WFC generation state
 var wfc_grid: WfcGrid = null
 var wfc_solver: WfcSolver = null
 var wfc_strategy: WfcStrategyBase = null
 var module_library: ModuleLibrary = null
-var grid_size: Vector3i = Vector3i(5, 1, 5)
-var available_strategies: Array[WfcStrategyBase] = []
-var current_strategy_index: int = 0
 var is_generating: bool = false
+
+# Settings dialog
+var settings_dialog: Control = null
 
 @onready var viewport: SubViewport = %PreviewViewport
 @onready var camera: Camera3D = %PreviewCamera
@@ -52,10 +53,6 @@ var viewport_container: SubViewportContainer = $Panel/MarginContainer/ScrollCont
 @onready var step_button: TextureButton = $Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar/StepButton
 @onready var solve_button: TextureButton = $Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar/SolveButton
 @onready var top_bar_menu: MenuButton = $Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar/MenuButton
-@onready var x_spinbox: SpinBox = %XSpinBox
-@onready var y_spinbox: SpinBox = %YSpinBox
-@onready var z_spinbox: SpinBox = %ZSpinBox
-@onready var strategy_option: OptionButton = %StrategyOption
 
 # Grid and origin visualization
 var viewport_grid: Viewport3DGrid = null
@@ -81,27 +78,21 @@ func _ready() -> void:
 	popup.add_check_item("Show Origin", 3)
 	popup.set_item_checked(popup.get_item_index(3), viewport_grid.show_origin if viewport_grid else true)
 	
-	# Discover and initialize available strategies automatically
-	_discover_strategies()
-	current_strategy_index = 0
-	
-	# Initialize grid size spinboxes
-	x_spinbox.value = grid_size.x
-	y_spinbox.value = grid_size.y
-	z_spinbox.value = grid_size.z
-	x_spinbox.value_changed.connect(_on_grid_size_changed)
-	y_spinbox.value_changed.connect(_on_grid_size_changed)
-	z_spinbox.value_changed.connect(_on_grid_size_changed)
-	
-	# Initialize strategy dropdown (clear first to avoid duplicates)
-	strategy_option.clear()
-	for strategy in available_strategies:
-		strategy_option.add_item(strategy.get_name())
-	strategy_option.selected = current_strategy_index
-	strategy_option.item_selected.connect(_on_strategy_selected)
+	# Initialize settings dialog immediately
+	_initialize_settings_dialog()
 	
 	# Update button states
 	_update_button_states()
+
+
+func _initialize_settings_dialog() -> void:
+	"""Initialize the settings dialog"""
+	if not settings_dialog:
+		# Instantiate settings UI
+		settings_dialog = PreviewSettingsDialog.instantiate()
+		# Add to scene tree (hidden) so _ready() gets called and it initializes properly
+		add_child(settings_dialog)
+		settings_dialog.hide()
 
 
 func _process(delta: float) -> void:
@@ -116,6 +107,39 @@ func _process(delta: float) -> void:
 			cycle_timer = CYCLE_DELAY
 			_show_next_compatible_tile()
 
+func on_edit_preview_settings_pressed():
+	"""Show the preview settings dialog"""
+	if not settings_dialog:
+		_initialize_settings_dialog()
+	
+	# Check if dialog is already in a popup window
+	var parent = settings_dialog.get_parent()
+	if parent is AcceptDialog:
+		# Just show the existing dialog
+		parent.popup_centered()
+	else:
+		# Create dialog wrapper for first time showing
+		var dialog = AcceptDialog.new()
+		dialog.title = "Preview Settings"
+		dialog.min_size = Vector2i(400, 300)
+		
+		# Remove from current parent and add to dialog
+		if parent:
+			parent.remove_child(settings_dialog)
+		dialog.add_child(settings_dialog)
+		settings_dialog.show()
+		
+		# Handle dialog close (hide instead of destroy)
+		dialog.confirmed.connect(func():
+			dialog.hide()
+		)
+		dialog.canceled.connect(func():
+			dialog.hide()
+		)
+		
+		# Add to scene and show
+		add_child(dialog)
+		dialog.popup_centered()
 
 func _on_viewport_option_selected(id: int) -> void:
 	var popup = viewport_options.get_popup()
@@ -159,6 +183,7 @@ func preview_tile(tile: Tile) -> void:
 	"""Display a preview of a tile (no socket preview)"""
 	# Stop any socket preview
 	stop_compatible_tiles_preview()
+	current_cell_world_size = library_cell_world_size
 	
 	# Clear and recreate the preview
 	clear_structure()
@@ -181,6 +206,7 @@ func preview_socket(tile: Tile, socket: Socket, compatible_tiles: Array[Dictiona
 	"""
 	# Clear previous preview
 	stop_compatible_tiles_preview()
+	current_cell_world_size = library_cell_world_size
 	clear_structure()
 	
 	# Create the main tile instance
@@ -230,6 +256,34 @@ func _create_tile_instance(tile: Tile) -> void:
 	# Add the main tile as a child of the root
 	instance.name = "MainTile"
 	preview_root.add_child(instance)
+	current_tile_instance = instance
+	current_cell_world_size = library_cell_world_size
+
+
+func _get_effective_cell_size() -> Vector3:
+	var size := current_cell_world_size
+	if size.x <= 0.0001:
+		size.x = DEFAULT_CELL_WORLD_SIZE.x
+	if size.y <= 0.0001:
+		size.y = DEFAULT_CELL_WORLD_SIZE.y
+	if size.z <= 0.0001:
+		size.z = DEFAULT_CELL_WORLD_SIZE.z
+	return size
+
+func _get_rotated_cell_counts(cell_counts: Vector3, rotation_degrees: float) -> Vector3:
+	var normalized := int(round(rotation_degrees)) % 360
+	if normalized < 0:
+		normalized += 360
+	if normalized == 90 or normalized == 270:
+		return Vector3(cell_counts.z, cell_counts.y, cell_counts.x)
+	return cell_counts
+
+func _ensure_cell_world_size_from_library() -> void:
+	current_cell_world_size = library_cell_world_size
+
+func _refresh_library_cell_size() -> void:
+	library_cell_world_size = DEFAULT_CELL_WORLD_SIZE
+	current_cell_world_size = library_cell_world_size
 
 func clear_structure() -> void:
 	"""Remove all structure nodes from the viewport"""
@@ -238,6 +292,9 @@ func clear_structure() -> void:
 			child.queue_free()
 	preview_root = null
 	main_tile = null
+	main_socket = null
+	current_tile_instance = null
+	current_cell_world_size = library_cell_world_size
 
 
 func get_viewport_world() -> World3D:
@@ -253,6 +310,7 @@ func stop_compatible_tiles_preview() -> void:
 	main_socket = null
 	# Note: main_tile is not cleared here as it's still being previewed
 	_remove_compatible_tile_preview()
+	current_cell_world_size = library_cell_world_size
 
 func _show_next_compatible_tile() -> void:
 	"""Show the next tile in the compatible tiles list"""
@@ -285,7 +343,6 @@ func _show_compatible_tile(index: int) -> void:
 	
 	var result = compatible_results[index]
 	var tile: Tile = result["tile"]
-	var connecting_socket: Socket = result["socket"]
 	var predetermined_rotation: float = result.get("rotation_degrees", 0.0)
 	var instance: Node3D = null
 	
@@ -300,20 +357,26 @@ func _show_compatible_tile(index: int) -> void:
 	if instance:
 		instance.name = "CompatibleTile"
 		
+		# Apply rotation first (this affects the tile's socket directions)
+		instance.transform.basis = Basis(Vector3.UP, deg_to_rad(predetermined_rotation))
+		
 		# Get tile sizes
-		var main_tile_size = main_tile.size if main_tile else Vector3.ONE
-		var compatible_tile_size = tile.size
+		var main_tile_cells: Vector3i = main_tile.size if main_tile else Vector3i.ONE
+		var compatible_tile_cells: Vector3i = tile.size
+		var main_tile_size = Vector3(float(main_tile_cells.x), float(main_tile_cells.y), float(main_tile_cells.z))
+		var compatible_tile_size = Vector3(float(compatible_tile_cells.x), float(compatible_tile_cells.y), float(compatible_tile_cells.z))
+		var rotated_compatible_size = _get_rotated_cell_counts(compatible_tile_size, predetermined_rotation)
 		
 		# Position the compatible tile adjacent to the main tile
 		var main_direction = main_socket.direction
-		instance.position = WfcHelper.calculate_adjacent_tile_position(
+		var cell_size = _get_effective_cell_size()
+		var calculated_position = WfcHelper.calculate_adjacent_tile_position(
 			main_tile_size,
-			compatible_tile_size,
-			main_direction
+			rotated_compatible_size,
+			main_direction,
+			cell_size
 		)
-		
-		# Use the rotation that was determined in find_compatible_tiles
-		instance.transform.basis = Basis(Vector3.UP, deg_to_rad(predetermined_rotation))
+		instance.position = calculated_position
 		
 		# Make the preview translucent
 		_make_translucent(instance)
@@ -361,13 +424,15 @@ func _make_translucent(node: Node3D) -> void:
 func set_module_library(library: ModuleLibrary) -> void:
 	"""Set the module library to use for generation"""
 	module_library = library
+	_refresh_library_cell_size()
 	_update_button_states()
 
 
 func set_grid_size(size: Vector3i) -> void:
 	"""Set the grid size for generation"""
-	grid_size = size
-	print("WFC grid size set to: ", grid_size)
+	if settings_dialog:
+		settings_dialog.set_grid_size(size)
+	print("WFC grid size set to: ", size)
 
 
 func _update_button_states() -> void:
@@ -384,28 +449,43 @@ func _update_button_states() -> void:
 func _on_new_button_pressed() -> void:
 	"""Start a new WFC generation"""
 	print("\n=== Initiating WFC Generation ===")
+	
+	# Clean up any existing generation first
+	if is_generating:
+		print("Stopping previous generation...")
+		_finish_generation()
+	
 	if not module_library or module_library.tiles.is_empty():
 		push_warning("No module library or tiles available")
+		return
+	
+	if not settings_dialog:
+		push_error("Settings dialog not initialized")
+		return
+	
+	# Get settings from dialog
+	var grid_size = settings_dialog.get_grid_size()
+	wfc_strategy = settings_dialog.get_current_strategy()
+	
+	if not wfc_strategy:
+		push_error("No strategy selected")
 		return
 	
 	print("\n=== Starting New WFC Generation ===")
 	print("Grid size: ", grid_size)
 	print("Available tiles: ", module_library.tiles.size())
-	
-	# Get current strategy
-	wfc_strategy = available_strategies[current_strategy_index]
 	print("Strategy: ", wfc_strategy.get_name())
 	
 	# Stop any current preview
 	stop_compatible_tiles_preview()
 	clear_structure()
 	
-	# Create new grid and solver
+	# Create new grid and solver with fresh state
 	wfc_grid = WfcGrid.from_library(grid_size, module_library)
 	wfc_solver = WfcSolver.new(wfc_grid, wfc_strategy)
 	is_generating = true
 	
-	print("Grid created with ", wfc_grid.cells.size(), " cells")
+	print("Grid created with ", wfc_grid.get_cell_count(), " cells")
 	print("Waiting for user to step through or solve...")
 	
 	# Visualize the initial empty grid
@@ -448,8 +528,9 @@ func _on_step_button_pressed() -> void:
 	var variant = cell.get_variant()
 	print("  Selected: ", variant["tile"].name, " at ", variant["rotation_degrees"], "°")
 	
-	# Propagate constraints
-	if not wfc_solver.propagate(cell):
+	# Propagate constraints (now async)
+	var propagate_success = await wfc_solver.propagate(cell)
+	if not propagate_success:
 		push_error("WFC: Propagation failed at ", cell.position)
 		_finish_generation()
 		return
@@ -461,19 +542,35 @@ func _on_step_button_pressed() -> void:
 func _on_solve_button_pressed() -> void:
 	"""Solve the entire WFC generation automatically"""
 	if not is_generating or not wfc_grid or not wfc_solver:
+		print("⚠ Cannot solve: not generating or missing grid/solver")
 		return
 	
 	print("\n=== Solving WFC Automatically ===")
+	print("Starting solve with ", wfc_grid.get_cell_count(), " cells...")
 	
-	var success = wfc_solver.solve()
+	var success = false
+	var error_message = ""
 	
+	# Wrap in try-catch equivalent to handle any errors
+	var solve_result = await wfc_solver.solve()
+	
+	if solve_result == null:
+		error_message = "Solver returned null (unexpected error)"
+	elif typeof(solve_result) == TYPE_BOOL:
+		success = solve_result
+	else:
+		error_message = "Solver returned unexpected type: " + str(typeof(solve_result))
+	
+	print("\n=== Solve Complete ===")
 	if success:
 		print("✓ WFC generation SUCCESSFUL!")
 		_print_grid_summary()
 	else:
 		push_error("✗ WFC generation FAILED!")
-		if wfc_grid.has_contradiction():
-			print("  Reason: Contradiction detected")
+		if error_message:
+			push_error("  Error: ", error_message)
+		if wfc_grid and wfc_grid.has_contradiction():
+			push_error("  Reason: Contradiction detected")
 	
 	# Update visualization
 	_visualize_grid()
@@ -494,6 +591,8 @@ func _visualize_grid() -> void:
 	
 	# Clear previous structure
 	clear_structure()
+	_ensure_cell_world_size_from_library()
+	var cell_size = _get_effective_cell_size()
 	
 	# Create preview root
 	preview_root = Node3D.new()
@@ -502,26 +601,16 @@ func _visualize_grid() -> void:
 	
 	# Calculate center offset to center the grid at origin
 	var center_offset = Vector3.ZERO
-	if not wfc_grid.cells.is_empty():
-		# Get a sample tile to determine tile size
-		var sample_cell = wfc_grid.cells.values()[0]
-		var sample_tile: Tile = null
-		if sample_cell.is_collapsed():
-			sample_tile = sample_cell.get_tile()
-		elif sample_cell.possible_tile_variants.size() > 0:
-			sample_tile = sample_cell.possible_tile_variants[0].get("tile")
-		
-		if sample_tile:
-			var tile_size = sample_tile.size
-			# Calculate the center of the grid in world space
-			center_offset = Vector3(
-				(grid_size.x - 1) * tile_size.x * 0.5,
-				(grid_size.y - 1) * tile_size.y * 0.5,
-				(grid_size.z - 1) * tile_size.z * 0.5
-			)
+	if wfc_grid.get_cell_count() > 0 and settings_dialog:
+		var grid_size = settings_dialog.get_grid_size()
+		center_offset = Vector3(
+			(grid_size.x - 1) * cell_size.x * 0.5,
+			(grid_size.y - 1) * cell_size.y * 0.5,
+			(grid_size.z - 1) * cell_size.z * 0.5
+		)
 	
 	# Instantiate all collapsed cells
-	for cell in wfc_grid.cells.values():
+	for cell in wfc_grid.get_all_cells():
 		if not cell.is_collapsed():
 			continue
 		
@@ -546,12 +635,12 @@ func _visualize_grid() -> void:
 			instance = mesh_instance
 		
 		if instance:
-			# Position based on grid position and tile size, centered at origin
-			var world_pos = WfcHelper.grid_to_world(cell.position, tile.size)
-			instance.position = world_pos - center_offset
-			
-			# Apply rotation
+			# Apply rotation and keep tiles anchored to their grid cell origin
 			instance.transform.basis = Basis(Vector3.UP, deg_to_rad(rotation))
+			
+			# Position based on grid position and cell size, centered at origin
+			var world_pos = WfcHelper.grid_to_world(cell.position, cell_size)
+			instance.position = world_pos - center_offset
 			
 			instance.name = "Cell_%d_%d_%d" % [cell.position.x, cell.position.y, cell.position.z]
 			preview_root.add_child(instance)
@@ -567,7 +656,7 @@ func _print_grid_summary() -> void:
 	var collapsed_count = 0
 	var tile_counts = {}
 	
-	for cell in wfc_grid.cells.values():
+	for cell in wfc_grid.get_all_cells():
 		if cell.is_collapsed():
 			collapsed_count += 1
 			var tile = cell.get_tile()
@@ -576,138 +665,9 @@ func _print_grid_summary() -> void:
 				tile_counts[key] = tile_counts.get(key, 0) + 1
 	
 	print("\nGrid Summary:")
-	print("  Collapsed cells: ", collapsed_count, " / ", wfc_grid.cells.size())
+	print("  Collapsed cells: ", collapsed_count, " / ", wfc_grid.get_cell_count())
 	print("  Tile distribution:")
 	for tile_name in tile_counts.keys():
 		print("    - ", tile_name, ": ", tile_counts[tile_name])
-
-
-# =============================================================================
-# Strategy Discovery
-# =============================================================================
-
-func _discover_strategies() -> void:
-	"""Automatically discover all strategy classes in the strategies folder"""
-	available_strategies.clear()
-	
-	var strategies_path = "res://addons/auto_structured/core/wfc/strategies/"
-	var dir = DirAccess.open(strategies_path)
-	
-	if not dir:
-		push_error("Could not open strategies directory: " + strategies_path)
-		# Fallback to hardcoded strategies
-		available_strategies = [
-			WfcStrategyFillAll.new(),
-			WfcStrategySparse.new(0.5),
-			WfcStrategyPerimeter.new(),
-			WfcStrategyGroundWalls.new()
-		]
-		return
-	
-	# Collect all .gd files (except base class)
-	var strategy_files: Array[String] = []
-	dir.list_dir_begin()
-	var file_name = dir.get_next()
-	
-	while file_name != "":
-		if not dir.current_is_dir() and file_name.ends_with(".gd"):
-			# Skip the base class
-			if file_name != "wfc_strategy_base.gd":
-				strategy_files.append(file_name)
-		file_name = dir.get_next()
-	
-	dir.list_dir_end()
-	
-	# Sort alphabetically for consistent ordering
-	strategy_files.sort()
-	
-	# Instantiate each strategy
-	for strategy_file in strategy_files:
-		var script_path = strategies_path + strategy_file
-		var script = load(script_path)
-		
-		if script and script is GDScript:
-			# Try to instantiate the strategy
-			var strategy_instance = script.new()
-			
-			# Verify it's a valid strategy (has the required methods)
-			if strategy_instance.has_method("should_collapse_cell") and \
-			   strategy_instance.has_method("get_name") and \
-			   strategy_instance.has_method("get_description"):
-				
-				# Special handling for Sparse strategy - set default probability
-				if strategy_instance is WfcStrategySparse:
-					strategy_instance.fill_probability = 0.5
-				
-				available_strategies.append(strategy_instance)
-				print("Discovered strategy: ", strategy_instance.get_name())
-			else:
-				push_warning("Skipped invalid strategy: " + strategy_file)
-	
-	# Ensure we have at least one strategy
-	if available_strategies.is_empty():
-		push_error("No valid strategies found! Using fallback.")
-		available_strategies = [WfcStrategyFillAll.new()]
-
-
-# =============================================================================
-# Toolbar Controls
-# =============================================================================
-
-func _on_grid_size_changed(_value: float) -> void:
-	"""Handle grid size spinbox changes"""
-	grid_size = Vector3i(
-		int(x_spinbox.value),
-		int(y_spinbox.value),
-		int(z_spinbox.value)
-	)
-	print("Grid size changed to: ", grid_size)
-
-
-func _on_strategy_selected(index: int) -> void:
-	"""Handle strategy dropdown selection"""
-	if index >= 0 and index < available_strategies.size():
-		current_strategy_index = index
-		var strategy = available_strategies[index]
-		print("Strategy changed to: ", strategy.get_name())
-		
-		# Show config popup for strategies that need it (like Sparse)
-		if strategy is WfcStrategySparse:
-			_show_sparse_probability_dialog(strategy)
-
-
-func _show_sparse_probability_dialog(strategy: WfcStrategySparse) -> void:
-	"""Show a simple dialog to configure sparse probability"""
-	var dialog = AcceptDialog.new()
-	dialog.title = "Configure Sparse Strategy"
-	dialog.size = Vector2i(300, 150)
-	
-	var vbox = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 8)
-	
-	var label = Label.new()
-	label.text = "Fill Probability:"
-	vbox.add_child(label)
-	
-	var spinbox = SpinBox.new()
-	spinbox.name = "ProbabilitySpinBox"
-	spinbox.min_value = 0
-	spinbox.max_value = 100
-	spinbox.step = 5
-	spinbox.value = strategy.fill_probability * 100.0
-	spinbox.suffix = "%"
-	vbox.add_child(spinbox)
-	
-	dialog.add_child(vbox)
-	dialog.confirmed.connect(func():
-		strategy.fill_probability = spinbox.value / 100.0
-		print("Sparse probability set to: ", strategy.fill_probability)
-		# Update the strategy name in dropdown to show percentage
-		strategy_option.set_item_text(current_strategy_index, strategy.get_name())
-		dialog.queue_free()
-	)
-	dialog.canceled.connect(func(): dialog.queue_free())
-	add_child(dialog)
-	dialog.popup_centered()
 
 

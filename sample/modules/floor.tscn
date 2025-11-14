@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://brrawbb8qli2o"]
+
+[ext_resource type="PackedScene" uid="uid://bgvrapkmi4xoh" path="res://sample/assets/Floor_WoodDark.gltf" id="1_mxcm8"]
+
+[node name="Floor" type="Node3D"]
+
+[node name="Floor_WoodDark" parent="." instance=ExtResource("1_mxcm8")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00977267, 0, 0.008975041)

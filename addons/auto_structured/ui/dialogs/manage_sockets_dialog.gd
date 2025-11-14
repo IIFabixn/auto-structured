@@ -1,5 +1,5 @@
 @tool
-class_name ManageSocketsDialog extends Window
+class_name ManageSocketsDialog extends AcceptDialog
 
 signal sockets_changed(socket_ids: Array[String])
 signal new_type_requested(type_name: String)

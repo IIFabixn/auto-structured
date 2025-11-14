@@ -18,6 +18,7 @@ var is_right_clicking: bool = false
 
 # Auto-rotation
 var auto_rotate: bool = true
+var auto_rotate_manually_disabled: bool = false # Track if user manually disabled auto-rotate
 var resume_timer: float = 0.0
 var transition_timer: float = 0.0 # tracks transition progress
 var transition_start_basis: Basis # Camera orientation at start of transition
@@ -74,7 +75,7 @@ func process(delta: float) -> void:
 		# Handle resume timer and auto-rotation
 		if resume_timer > 0.0:
 			resume_timer -= delta
-			if resume_timer <= 0.0:
+			if resume_timer <= 0.0 and not auto_rotate_manually_disabled:
 				auto_rotate = true
 				transition_timer = 0.0 # Start transition
 				transition_start_basis = camera.global_transform.basis # Store starting orientation
@@ -147,6 +148,7 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 		if event.pressed:
 			is_right_clicking = true
 			auto_rotate = false
+			# Don't set manually_disabled flag when right-clicking (temporary pause)
 			
 			viewport_container.mouse_filter = Control.MOUSE_FILTER_STOP
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -158,8 +160,9 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 			# Calculate orbit distance based on current camera position
 			var offset = camera.global_position - orbit_target
 			orbit_distance = offset.length()
-			# Start resume timer
-			resume_timer = RESUME_DELAY
+			# Start resume timer only if not manually disabled
+			if not auto_rotate_manually_disabled:
+				resume_timer = RESUME_DELAY
 
 	# Zoom with scroll wheel (move camera forward/backward)
 	elif event.button_index == MOUSE_BUTTON_WHEEL_UP:
@@ -197,6 +200,12 @@ func frame_structure() -> void:
 ## Enable or disable auto-rotation
 func set_auto_rotate(enabled: bool) -> void:
 	auto_rotate = enabled
+	auto_rotate_manually_disabled = not enabled
+	if enabled:
+		# If manually enabled, start transition
+		transition_timer = 0.0
+		transition_start_basis = camera.global_transform.basis
+		transition_start_position = camera.global_position
 
 ## Get the current auto-rotate state
 func get_auto_rotate() -> bool:

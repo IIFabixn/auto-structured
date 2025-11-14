@@ -59,18 +59,32 @@ static func calculate_socket_alignment_rotation(connecting_socket: Socket, main_
 ##   main_tile_size: Size of the main tile (Vector3)
 ##   compatible_tile_size: Size of the compatible tile (Vector3)
 ##   direction: Direction from main tile to compatible tile (Vector3i)
+##   cell_size: World-space size of a single grid cell (Vector3)
 ##
 ## Returns:
 ##   The position offset as Vector3
-static func calculate_adjacent_tile_position(main_tile_size: Vector3, compatible_tile_size: Vector3, direction: Vector3i) -> Vector3:
-	# Distance = half of main tile + half of compatible tile in the direction
-	var offset_distance = (
-		abs(direction.x) * (main_tile_size.x + compatible_tile_size.x) / 2.0 +
-		abs(direction.y) * (main_tile_size.y + compatible_tile_size.y) / 2.0 +
-		abs(direction.z) * (main_tile_size.z + compatible_tile_size.z) / 2.0
+static func calculate_adjacent_tile_position(main_tile_size: Vector3, compatible_tile_size: Vector3, direction: Vector3i, cell_size: Vector3 = Vector3.ONE) -> Vector3:
+	"""Calculate world-space offset for placing a neighbor tile edge-to-edge."""
+	var main_extent = Vector3(
+		(main_tile_size.x * cell_size.x) * 0.5,
+		(main_tile_size.y * cell_size.y) * 0.5,
+		(main_tile_size.z * cell_size.z) * 0.5
 	)
-	
-	return Vector3(direction) * offset_distance
+	var neighbor_extent = Vector3(
+		(compatible_tile_size.x * cell_size.x) * 0.5,
+		(compatible_tile_size.y * cell_size.y) * 0.5,
+		(compatible_tile_size.z * cell_size.z) * 0.5
+	)
+
+	var offset = Vector3.ZERO
+	if direction.x != 0:
+		offset.x = direction.x * (main_extent.x + neighbor_extent.x)
+	if direction.y != 0:
+		offset.y = direction.y * (main_extent.y + neighbor_extent.y)
+	if direction.z != 0:
+		offset.z = direction.z * (main_extent.z + neighbor_extent.z)
+
+	return offset
 
 
 ## Get the opposite direction for socket matching.
@@ -175,8 +189,8 @@ static func find_compatible_tiles(source_socket: Socket, all_tiles: Array[Tile],
 			if tile == source_tile and tile_socket == source_socket:
 				continue
 			
-			# Check if sockets are compatible by ID (only from source socket's perspective)
-			var is_compatible = source_socket.is_compatible_with(tile_socket)
+			# Check if sockets are compatible by ID (bidirectional check)
+			var is_compatible = source_socket.is_compatible_with(tile_socket) and tile_socket.is_compatible_with(source_socket)
 			if not is_compatible:
 				continue
 			
@@ -274,12 +288,18 @@ static func world_to_grid(world_position: Vector3, grid_cell_size: Vector3 = Vec
 ##   grid_cell_size: Size of each grid cell (default Vector3.ONE)
 ##
 ## Returns:
-##   World position as Vector3 (centered on grid cell)
+##   World position as Vector3
+##
+## NOTE: This positions tiles at the grid origin without centering offsets.
+## Tiles are expected to be modeled with their local origin at the bottom-left-back corner.
+## This ensures proper stacking on the Y-axis (no gaps between floors).
 static func grid_to_world(grid_position: Vector3i, grid_cell_size: Vector3 = Vector3.ONE) -> Vector3:
+	# Position tiles directly at grid coordinates without centering offset
+	# This prevents gaps when stacking tiles vertically
 	return Vector3(
-		grid_position.x * grid_cell_size.x + grid_cell_size.x / 2.0,
-		grid_position.y * grid_cell_size.y + grid_cell_size.y / 2.0,
-		grid_position.z * grid_cell_size.z + grid_cell_size.z / 2.0
+		grid_position.x * grid_cell_size.x,
+		grid_position.y * grid_cell_size.y,
+		grid_position.z * grid_cell_size.z
 	)
 
 
@@ -289,13 +309,34 @@ static func grid_to_world(grid_position: Vector3i, grid_cell_size: Vector3 = Vec
 ##   Array of Vector3i representing the 6 directions
 static func get_cardinal_directions() -> Array[Vector3i]:
 	return [
-		Vector3i.RIGHT,   # (1, 0, 0)
-		Vector3i.LEFT,    # (-1, 0, 0)
-		Vector3i.UP,      # (0, 1, 0)
-		Vector3i.DOWN,    # (0, -1, 0)
-		Vector3i.BACK,    # (0, 0, 1)
-		Vector3i.FORWARD  # (0, 0, -1)
+		Vector3i.RIGHT,   # (1, 0, 0)  - index 0
+		Vector3i.LEFT,    # (-1, 0, 0) - index 1
+		Vector3i.UP,      # (0, 1, 0)  - index 2
+		Vector3i.DOWN,    # (0, -1, 0) - index 3
+		Vector3i.BACK,    # (0, 0, 1)  - index 4
+		Vector3i.FORWARD  # (0, 0, -1) - index 5
 	]
+
+
+## Get the index (0-5) for a cardinal direction.
+## Used for fast array lookups.
+##
+## Returns:
+##   Integer index 0-5, or -1 if not a cardinal direction
+static func get_direction_index(direction: Vector3i) -> int:
+	if direction == Vector3i.RIGHT:
+		return 0
+	elif direction == Vector3i.LEFT:
+		return 1
+	elif direction == Vector3i.UP:
+		return 2
+	elif direction == Vector3i.DOWN:
+		return 3
+	elif direction == Vector3i.BACK:
+		return 4
+	elif direction == Vector3i.FORWARD:
+		return 5
+	return -1
 
 
 ## Get a human-readable name for a direction.

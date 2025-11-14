@@ -1,9 +1,0 @@
-[gd_scene load_steps=2 format=3 uid="uid://ca3iik7l5tgmd"]
-
-[ext_resource type="Script" path="res://addons/auto_structured/ui/controls/manage_sockets_dialog.gd" id="1_manage"]
-
-[node name="ManageSocketsDialog" type="Window"]
-title = "Manage Compatible Sockets"
-size = Vector2i(400, 300)
-min_size = Vector2i(300, 200)
-script = ExtResource("1_manage")

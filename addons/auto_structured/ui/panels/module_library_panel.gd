@@ -6,7 +6,7 @@ signal library_loaded(library: ModuleLibrary)
 
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.gd")
-const ManageSocketsDialog = preload("res://addons/auto_structured/ui/controls/manage_sockets_dialog.tscn")
+const ManageSocketsDialog = preload("res://addons/auto_structured/ui/dialogs/manage_sockets_dialog.tscn")
 
 var libraries: Array[ModuleLibrary] = []
 var current_library: ModuleLibrary
@@ -113,6 +113,7 @@ func _scan_directory_for_libraries(path: String) -> Array[ModuleLibrary]:
 			if file_name.ends_with(".tres") or file_name.ends_with(".res"):
 				var resource = load(full_path)
 				if resource is ModuleLibrary:
+					resource.ensure_defaults()  # Ensure default socket types are set up
 					found_libraries.append(resource)
 
 		file_name = dir.get_next()
@@ -270,14 +271,14 @@ func _delete_library() -> void:
 	if current_library.resource_path != "":
 		DirAccess.remove_absolute(current_library.resource_path)
 
-	# Select first library if available
+	# Select first library if available, or create a new empty one if none exist
 	if not libraries.is_empty():
 		current_library = libraries[0]
 		library_option.selected = 0
 		_refresh_tile_list()
 	else:
-		current_library = null
-		tile_list.clear()
+		# No libraries left, create a new empty one
+		create_new_library()
 
 
 func _save_library() -> void:
@@ -304,6 +305,7 @@ func save_current_library() -> void:
 func create_new_library() -> void:
 	var new_library = ModuleLibrary.new()
 	new_library.library_name = "New Library"
+	new_library.ensure_defaults()  # Set up default socket types
 	
 	# Find a unique filename
 	var base_path = "res://module_library"
@@ -521,7 +523,7 @@ func _manage_library_sockets() -> void:
 	
 	# Create dialog if it doesn't exist
 	if not manage_sockets_dialog:
-		manage_sockets_dialog = ManageSocketsDialog.instantiate()
+		manage_sockets_dialog = ManageSocketsDialog.instanciate()
 		manage_sockets_dialog.socket_renamed.connect(_on_socket_renamed)
 		manage_sockets_dialog.socket_deleted.connect(_on_socket_deleted)
 		add_child(manage_sockets_dialog)

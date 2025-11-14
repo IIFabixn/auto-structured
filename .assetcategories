@@ -1,0 +1,493 @@
+{
+	"recently_used": [
+		"window",
+		"wall",
+		"stair",
+		"roof",
+		"prop",
+		"overhang",
+		"floor",
+		"door",
+		"doorframe",
+		"balcony"
+	],
+	"tag_usage": {
+		"balcony": 4,
+		"door": 8,
+		"doorframe": 4,
+		"floor": 12,
+		"overhang": 20,
+		"prop": 23,
+		"roof": 39,
+		"stair": 19,
+		"wall": 20,
+		"window": 6
+	},
+	"tags": {
+		"Balcony_Cross_Corner": [
+			"balcony"
+		],
+		"Balcony_Cross_Straight": [
+			"balcony"
+		],
+		"Balcony_Simple_Corner": [
+			"balcony"
+		],
+		"Balcony_Simple_Straight": [
+			"balcony"
+		],
+		"DoorFrame_Flat_Brick": [
+			"doorframe"
+		],
+		"DoorFrame_Flat_WoodDark": [
+			"doorframe"
+		],
+		"DoorFrame_Round_Brick": [
+			"doorframe"
+		],
+		"DoorFrame_Round_WoodDark": [
+			"doorframe"
+		],
+		"Door_1_Flat": [
+			"door"
+		],
+		"Door_1_Round": [
+			"door"
+		],
+		"Door_2_Flat": [
+			"door"
+		],
+		"Door_2_Round": [
+			"door"
+		],
+		"Door_4_Flat": [
+			"door"
+		],
+		"Door_4_Round": [
+			"door"
+		],
+		"Door_8_Flat": [
+			"door"
+		],
+		"Door_8_Round": [
+			"door"
+		],
+		"Floor_Brick": [
+			"floor"
+		],
+		"Floor_RedBrick": [
+			"floor"
+		],
+		"Floor_UnevenBrick": [
+			"floor"
+		],
+		"Floor_WoodDark": [
+			"floor"
+		],
+		"Floor_WoodDark_Half1": [
+			"floor"
+		],
+		"Floor_WoodDark_Half2": [
+			"floor"
+		],
+		"Floor_WoodDark_Half3": [
+			"floor"
+		],
+		"Floor_WoodDark_OverhangCorner": [
+			"floor"
+		],
+		"Floor_WoodDark_OverhangCorner2": [
+			"floor"
+		],
+		"Floor_WoodLight": [
+			"floor"
+		],
+		"Floor_WoodLight_OverhangCorner": [
+			"floor"
+		],
+		"Floor_WoodLight_OverhangCorner2": [
+			"floor"
+		],
+		"Overhang_Plaster_Corner": [
+			"overhang"
+		],
+		"Overhang_Plaster_Corner_Front": [
+			"overhang"
+		],
+		"Overhang_Plaster_Long": [
+			"overhang"
+		],
+		"Overhang_Plaster_Short": [
+			"overhang"
+		],
+		"Overhang_RoofIncline_Plaster": [
+			"overhang"
+		],
+		"Overhang_RoofIncline_UnevenBricks": [
+			"overhang"
+		],
+		"Overhang_Roof_Plaster": [
+			"overhang"
+		],
+		"Overhang_Roof_UnevenBricks": [
+			"overhang"
+		],
+		"Overhang_Side_Plaster_Long_L": [
+			"overhang"
+		],
+		"Overhang_Side_Plaster_Long_R": [
+			"overhang"
+		],
+		"Overhang_Side_Plaster_Short_L": [
+			"overhang"
+		],
+		"Overhang_Side_Plaster_Short_R": [
+			"overhang"
+		],
+		"Overhang_Side_UnevenBrick_Long_L": [
+			"overhang"
+		],
+		"Overhang_Side_UnevenBrick_Long_R": [
+			"overhang"
+		],
+		"Overhang_Side_UnevenBrick_Short_L": [
+			"overhang"
+		],
+		"Overhang_Side_UnevenBrick_Short_R": [
+			"overhang"
+		],
+		"Overhang_UnevenBrick_Corner": [
+			"overhang"
+		],
+		"Overhang_UnevenBrick_Corner_Front": [
+			"overhang"
+		],
+		"Overhang_UnevenBrick_Long": [
+			"overhang"
+		],
+		"Overhang_UnevenBrick_Short": [
+			"overhang"
+		],
+		"Prop_Brick1": [
+			"prop"
+		],
+		"Prop_Brick2": [
+			"prop"
+		],
+		"Prop_Brick3": [
+			"prop"
+		],
+		"Prop_Brick4": [
+			"prop"
+		],
+		"Prop_Chimney": [
+			"prop"
+		],
+		"Prop_Chimney2": [
+			"prop"
+		],
+		"Prop_Crate": [
+			"prop"
+		],
+		"Prop_ExteriorBorder_Corner": [
+			"prop"
+		],
+		"Prop_ExteriorBorder_Straight1": [
+			"prop"
+		],
+		"Prop_ExteriorBorder_Straight2": [
+			"prop"
+		],
+		"Prop_MetalFence_Ornament": [
+			"prop"
+		],
+		"Prop_MetalFence_Simple": [
+			"prop"
+		],
+		"Prop_Support": [
+			"prop"
+		],
+		"Prop_Vine1": [
+			"prop"
+		],
+		"Prop_Vine2": [
+			"prop"
+		],
+		"Prop_Vine4": [
+			"prop"
+		],
+		"Prop_Vine5": [
+			"prop"
+		],
+		"Prop_Vine6": [
+			"prop"
+		],
+		"Prop_Vine9": [
+			"prop"
+		],
+		"Prop_Wagon": [
+			"prop"
+		],
+		"Prop_WoodenFence_Extension1": [
+			"prop"
+		],
+		"Prop_WoodenFence_Extension2": [
+			"prop"
+		],
+		"Prop_WoodenFence_Single": [
+			"prop"
+		],
+		"Roof_2x4_RoundTile": [
+			"roof"
+		],
+		"Roof_Dormer_RoundTile": [
+			"roof"
+		],
+		"Roof_FrontSupports": [
+			"roof"
+		],
+		"Roof_Front_Brick2": [
+			"roof"
+		],
+		"Roof_Front_Brick4": [
+			"roof"
+		],
+		"Roof_Front_Brick4_Half_L": [
+			"roof"
+		],
+		"Roof_Front_Brick4_Half_R": [
+			"roof"
+		],
+		"Roof_Front_Brick6": [
+			"roof"
+		],
+		"Roof_Front_Brick6_Half_L": [
+			"roof"
+		],
+		"Roof_Front_Brick6_Half_R": [
+			"roof"
+		],
+		"Roof_Front_Brick8": [
+			"roof"
+		],
+		"Roof_Front_Brick8_Half_L": [
+			"roof"
+		],
+		"Roof_Front_Brick8_Half_R": [
+			"roof"
+		],
+		"Roof_Log": [
+			"roof"
+		],
+		"Roof_Modular_RoundTiles": [
+			"roof"
+		],
+		"Roof_RoundTile_2x1": [
+			"roof"
+		],
+		"Roof_RoundTile_2x1_Long": [
+			"roof"
+		],
+		"Roof_RoundTiles_4x4": [
+			"roof"
+		],
+		"Roof_RoundTiles_4x6": [
+			"roof"
+		],
+		"Roof_RoundTiles_4x8": [
+			"roof"
+		],
+		"Roof_RoundTiles_6x10": [
+			"roof"
+		],
+		"Roof_RoundTiles_6x12": [
+			"roof"
+		],
+		"Roof_RoundTiles_6x14": [
+			"roof"
+		],
+		"Roof_RoundTiles_6x4": [
+			"roof"
+		],
+		"Roof_RoundTiles_6x6": [
+			"roof"
+		],
+		"Roof_RoundTiles_6x8": [
+			"roof"
+		],
+		"Roof_RoundTiles_8x10": [
+			"roof"
+		],
+		"Roof_RoundTiles_8x12": [
+			"roof"
+		],
+		"Roof_RoundTiles_8x14": [
+			"roof"
+		],
+		"Roof_RoundTiles_8x8": [
+			"roof"
+		],
+		"Roof_Support2": [
+			"roof"
+		],
+		"Roof_Tower_RoundTiles": [
+			"roof"
+		],
+		"Roof_Wooden_2x1": [
+			"roof"
+		],
+		"Roof_Wooden_2x1_Center": [
+			"roof"
+		],
+		"Roof_Wooden_2x1_Center_Mirror": [
+			"roof"
+		],
+		"Roof_Wooden_2x1_Corner": [
+			"roof"
+		],
+		"Roof_Wooden_2x1_L": [
+			"roof"
+		],
+		"Roof_Wooden_2x1_Middle": [
+			"roof"
+		],
+		"Roof_Wooden_2x1_R": [
+			"roof"
+		],
+		"Stair_Interior_Rails": [
+			"stair"
+		],
+		"Stair_Interior_Simple": [
+			"stair"
+		],
+		"Stair_Interior_Solid": [
+			"stair"
+		],
+		"Stair_Interior_SolidExtended": [
+			"stair"
+		],
+		"Stairs_Exterior_NoFirstStep": [
+			"stair"
+		],
+		"Stairs_Exterior_Platform": [
+			"stair"
+		],
+		"Stairs_Exterior_Platform45": [
+			"stair"
+		],
+		"Stairs_Exterior_Platform45Clean": [
+			"stair"
+		],
+		"Stairs_Exterior_PlatformU": [
+			"stair"
+		],
+		"Stairs_Exterior_SidePlatform": [
+			"stair"
+		],
+		"Stairs_Exterior_Sides": [
+			"stair"
+		],
+		"Stairs_Exterior_Sides45": [
+			"stair"
+		],
+		"Stairs_Exterior_SidesU": [
+			"stair"
+		],
+		"Stairs_Exterior_SingleSide": [
+			"stair"
+		],
+		"Stairs_Exterior_SingleSideThick": [
+			"stair"
+		],
+		"Stairs_Exterior_Straight": [
+			"stair"
+		],
+		"Stairs_Exterior_Straight_Center": [
+			"stair"
+		],
+		"Stairs_Exterior_Straight_L": [
+			"stair"
+		],
+		"Stairs_Exterior_Straight_R": [
+			"stair"
+		],
+		"Wall_Arch": [
+			"wall"
+		],
+		"Wall_BottomCover": [
+			"wall"
+		],
+		"Wall_Plaster_Door_Flat": [
+			"wall"
+		],
+		"Wall_Plaster_Door_Round": [
+			"wall"
+		],
+		"Wall_Plaster_Door_RoundInset": [
+			"wall"
+		],
+		"Wall_Plaster_Straight": [
+			"wall"
+		],
+		"Wall_Plaster_Straight_Base": [
+			"wall"
+		],
+		"Wall_Plaster_Straight_L": [
+			"wall"
+		],
+		"Wall_Plaster_Straight_R": [
+			"wall"
+		],
+		"Wall_Plaster_Window_Thin_Round": [
+			"wall"
+		],
+		"Wall_Plaster_Window_Wide_Flat": [
+			"wall"
+		],
+		"Wall_Plaster_Window_Wide_Flat2": [
+			"wall"
+		],
+		"Wall_Plaster_Window_Wide_Round": [
+			"wall"
+		],
+		"Wall_Plaster_WoodGrid": [
+			"wall"
+		],
+		"Wall_UnevenBrick_Door_Flat": [
+			"wall"
+		],
+		"Wall_UnevenBrick_Door_Round": [
+			"wall"
+		],
+		"Wall_UnevenBrick_Straight": [
+			"wall"
+		],
+		"Wall_UnevenBrick_Window_Thin_Round": [
+			"wall"
+		],
+		"Wall_UnevenBrick_Window_Wide_Flat": [
+			"wall"
+		],
+		"Wall_UnevenBrick_Window_Wide_Round": [
+			"wall"
+		],
+		"Window_Roof_Thin": [
+			"window"
+		],
+		"Window_Roof_Wide": [
+			"window"
+		],
+		"Window_Thin_Flat1": [
+			"window"
+		],
+		"Window_Thin_Round1": [
+			"window"
+		],
+		"Window_Wide_Flat1": [
+			"window"
+		],
+		"Window_Wide_Round1": [
+			"window"
+		]
+	}
+}

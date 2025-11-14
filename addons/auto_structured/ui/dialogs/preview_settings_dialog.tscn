@@ -1,0 +1,111 @@
+[gd_scene load_steps=2 format=3 uid="uid://ceuqlc6frad1t"]
+
+[ext_resource type="Script" uid="uid://cebcvx8j7yukx" path="res://addons/auto_structured/ui/dialogs/preview_settings_dialog.gd" id="1_g46le"]
+
+[node name="PreviewSettingsDialog" type="Control"]
+custom_minimum_size = Vector2(420, 360)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+script = ExtResource("1_g46le")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="GridSizeLabel" type="Label" parent="ScrollContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+text = "Grid"
+vertical_alignment = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="ScrollContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="XLabel" type="Label" parent="ScrollContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "X"
+vertical_alignment = 1
+
+[node name="XSpinBox" type="SpinBox" parent="ScrollContainer/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "Grid width (X)"
+min_value = 1.0
+max_value = 50.0
+value = 5.0
+update_on_text_changed = true
+
+[node name="YLabel" type="Label" parent="ScrollContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Y"
+vertical_alignment = 1
+
+[node name="YSpinBox" type="SpinBox" parent="ScrollContainer/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "Grid height (Y)"
+min_value = 1.0
+max_value = 50.0
+value = 5.0
+update_on_text_changed = true
+
+[node name="ZLabel" type="Label" parent="ScrollContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Z"
+vertical_alignment = 1
+
+[node name="ZSpinBox" type="SpinBox" parent="ScrollContainer/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "Grid depth (Z)"
+min_value = 1.0
+max_value = 50.0
+value = 5.0
+update_on_text_changed = true
+
+[node name="StrategyLabel" type="Label" parent="ScrollContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+text = "Strategy"
+vertical_alignment = 1
+
+[node name="StrategyOption" type="OptionButton" parent="ScrollContainer/VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+tooltip_text = "Generation strategy"
+selected = 0
+item_count = 5
+popup/item_0/text = "Fill All"
+popup/item_0/id = 0
+popup/item_1/text = "Ground + Walls"
+popup/item_1/id = 1
+popup/item_2/text = "Organic (Noise-Based)"
+popup/item_2/id = 2
+popup/item_3/text = "Perimeter Only"
+popup/item_3/id = 3
+popup/item_4/text = "Sparse (50%)"
+popup/item_4/id = 4
+
+[node name="StrategyOptionsContainer" type="VBoxContainer" parent="ScrollContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2

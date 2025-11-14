@@ -66,3 +66,45 @@ func initialize(_grid_size: Vector3i) -> void:
 ## Override to perform any cleanup needed.
 func finalize() -> void:
 	pass
+
+func get_options() -> Control:
+	return null
+
+
+## Get semantic tags for a cell to filter which tile types can be placed.
+## Override to assign semantic meaning (e.g., "road", "wall", "roof", "floor").
+##
+## Args:
+##   position: Grid position of the cell (Vector3i)
+##   grid_size: Total size of the grid (Vector3i)
+##
+## Returns:
+##   Array of tag strings that the cell should have. Empty array means no filtering.
+##
+## Example:
+##   func get_cell_tags(position: Vector3i, grid_size: Vector3i) -> Array[String]:
+##       if position.y == 0:
+##           return ["floor"]
+##       elif position.y == grid_size.y - 1:
+##           return ["roof"]
+##       return []
+func get_cell_tags(_position: Vector3i, _grid_size: Vector3i) -> Array[String]:
+	return []
+
+
+## Get weight/priority for collapsing this cell.
+## Higher weights = higher priority. Can be used for custom collapse ordering.
+##
+## Args:
+##   position: Grid position of the cell (Vector3i)
+##   grid_size: Total size of the grid (Vector3i)
+##
+## Returns:
+##   Weight value (default 1.0). Higher = more likely to be collapsed first.
+##
+## Example:
+##   func get_cell_weight(position: Vector3i, grid_size: Vector3i) -> float:
+##       # Prioritize collapsing from bottom up
+##       return float(position.y)
+func get_cell_weight(_position: Vector3i, _grid_size: Vector3i) -> float:
+	return 1.0

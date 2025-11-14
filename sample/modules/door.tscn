@@ -1,0 +1,15 @@
+[gd_scene load_steps=4 format=3 uid="uid://cvdf8f47a4oa1"]
+
+[ext_resource type="PackedScene" uid="uid://bgvrapkmi4xoh" path="res://sample/assets/Floor_WoodDark.gltf" id="1_oqy3n"]
+[ext_resource type="PackedScene" uid="uid://b4o0gvhhuhrch" path="res://sample/assets/Wall_Plaster_Door_Flat.gltf" id="2_bxle0"]
+[ext_resource type="PackedScene" uid="uid://cxuv6odp2k0d8" path="res://sample/assets/DoorFrame_Round_WoodDark.gltf" id="3_0xteo"]
+
+[node name="Door" type="Node3D"]
+
+[node name="Floor_WoodDark" type="Node3D" parent="." instance=ExtResource("1_oqy3n")]
+
+[node name="Wall_Plaster_Door_Flat" type="Node3D" parent="." instance=ExtResource("2_bxle0")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -1.2, 0, 0)
+
+[node name="DoorFrame_Round_WoodDark" type="Node3D" parent="." instance=ExtResource("3_0xteo")]
+transform = Transform3D(-7.5896696e-07, 0, -0.99999976, 0, 1, 0, 0.99999976, 0, -7.5896696e-07, -1.199609, 0, -1.5952507e-11)

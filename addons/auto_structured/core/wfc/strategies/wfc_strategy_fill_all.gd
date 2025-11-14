@@ -16,3 +16,11 @@ func get_name() -> String:
 
 func get_description() -> String:
 	return "Fill every cell in the grid"
+
+
+func get_options() -> Control:
+	"""Fill All has no configurable options"""
+	var label = Label.new()
+	label.text = "No configuration needed.\nThis strategy fills all cells."
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	return label
