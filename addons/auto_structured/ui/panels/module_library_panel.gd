@@ -14,6 +14,8 @@ const SocketSuggestionBuilder = preload("res://addons/auto_structured/core/analy
 const SocketWizardDialogScene = preload("res://addons/auto_structured/ui/dialogs/socket_wizard.tscn")
 const NO_LIBRARY_ITEM_ID = -1
 const NO_LIBRARY_PLACEHOLDER = "- None -"
+const DEFAULT_LIBRARY_DIR := "res://module_libraries"
+const DEFAULT_LIBRARY_BASENAME := "module_library"
 
 var libraries: Array[ModuleLibrary] = []
 var current_library: ModuleLibrary
@@ -31,6 +33,7 @@ var socket_suggestion_dialog: SocketSuggestionDialog
 var _pending_suggestion_queue: Array = []
 var _active_wizard: SocketWizardDialog
 var _show_next_after_wizard: bool = false
+var library_save_dialog: EditorFileDialog
 
 @onready
 var library_option: OptionButton = $Panel/MarginContainer/VBoxContainer/VBoxContainer/LibrarySelectorBar/OptionButton
@@ -62,6 +65,7 @@ func _ready() -> void:
 	_setup_rename_dialog()
 	_setup_tile_context_menu()
 	_setup_socket_suggestion_dialog()
+	_setup_library_save_dialog()
 
 func _exit_tree() -> void:
 	# Clear thumbnail cache
@@ -73,10 +77,11 @@ func _exit_tree() -> void:
 		rename_dialog.queue_free()
 
 func _is_showing_no_library_placeholder() -> bool:
-	return (
-		library_option.get_item_count() == 1
-		and library_option.get_item_id(0) == NO_LIBRARY_ITEM_ID
-	)
+	if library_option.get_item_count() != 1:
+		return false
+	if library_option.get_item_id(0) == NO_LIBRARY_ITEM_ID:
+		return true
+	return library_option.get_item_text(0) == NO_LIBRARY_PLACEHOLDER
 
 func _clear_library_placeholder_if_needed() -> void:
 	if _is_showing_no_library_placeholder():
@@ -182,6 +187,15 @@ func _setup_file_dialog() -> void:
 
 func _setup_menu_button() -> void:
 	var popup = library_menu_button.get_popup()
+	popup.clear()
+	popup.add_item("Rename", 0)
+	popup.add_item("Delete", 1)
+	popup.add_separator()
+	popup.add_item("New", 2)
+	popup.add_item("Save", 3)
+	popup.add_item("Relocate Save Path...", 4)
+	popup.add_separator()
+	popup.add_item("Manage Sockets", 5)
 	popup.id_pressed.connect(_on_library_menu_item_selected)
 
 
@@ -218,6 +232,16 @@ func _setup_tile_context_menu() -> void:
 	tile_list.item_clicked.connect(_on_tile_list_item_clicked)
 
 
+func _setup_library_save_dialog() -> void:
+	library_save_dialog = EditorFileDialog.new()
+	add_child(library_save_dialog)
+	library_save_dialog.file_mode = EditorFileDialog.FILE_MODE_SAVE_FILE
+	library_save_dialog.access = EditorFileDialog.ACCESS_RESOURCES
+	library_save_dialog.add_filter("*.tres", "Text Resource")
+	library_save_dialog.add_filter("*.res", "Binary Resource")
+	library_save_dialog.file_selected.connect(_on_library_save_path_selected)
+
+
 func _on_tile_list_item_clicked(index: int, at_position: Vector2, mouse_button_index: int) -> void:
 	if mouse_button_index == MOUSE_BUTTON_RIGHT:
 		# Select the item that was right-clicked
@@ -240,16 +264,33 @@ func _on_tile_context_menu_item_selected(id: int) -> void:
 			_reset_selected_tile()
 
 
+func _ensure_directory(dir_path: String) -> int:
+	var trimmed := dir_path.strip_edges()
+	if trimmed == "":
+		return ERR_INVALID_PARAMETER
+	var absolute := ProjectSettings.globalize_path(trimmed)
+	return DirAccess.make_dir_recursive_absolute(absolute)
+
+
+func _ensure_directory_for_path(resource_path: String) -> int:
+	var dir := resource_path.get_base_dir()
+	if dir == "":
+		return OK
+	return _ensure_directory(dir)
+
+
 func _delete_selected_tile() -> void:
 	if not current_library or not selected_tile:
 		return
 	
-	var index = current_library.tiles.find(selected_tile)
+	var removed_tile := selected_tile
+	var index = current_library.tiles.find(removed_tile)
 	if index >= 0:
 		current_library.tiles.remove_at(index)
 		_save_library()
 		_refresh_tile_list()
 		selected_tile = null
+		tile_selected.emit(null)
 
 
 func _reset_selected_tile() -> void:
@@ -297,7 +338,9 @@ func _on_library_menu_item_selected(id: int) -> void:
 			create_new_library()
 		3:  # Save
 			_save_library()
-		4:  # Manage Sockets
+		4:
+			_change_library_save_location()
+		5:  # Manage Sockets
 			_manage_library_sockets()
 
 
@@ -342,7 +385,10 @@ func _delete_library() -> void:
 		libraries.remove_at(index)
 
 	if removed_library.resource_path != "":
-		DirAccess.remove_absolute(removed_library.resource_path)
+		var absolute_path := ProjectSettings.globalize_path(removed_library.resource_path)
+		var err := DirAccess.remove_absolute(absolute_path)
+		if err != OK:
+			push_warning("Failed to delete library resource '%s' (error %d)" % [removed_library.resource_path, err])
 
 	selected_tile = null
 
@@ -355,10 +401,10 @@ func _delete_library() -> void:
 	library_option.disabled = false
 	for i in range(libraries.size()):
 		library_option.add_item(libraries[i].library_name, i)
-	library_option.set_block_signals(false)
-
 	var new_index = clampi(previous_index, 0, libraries.size() - 1)
 	library_option.select(new_index)
+	library_option.set_block_signals(false)
+	_on_library_selected(new_index)
 
 
 func _save_library() -> void:
@@ -370,10 +416,19 @@ func _save_library() -> void:
 		push_warning("Library has no save path")
 		return
 
-	print("Saving library: %s" % current_library.resource_path)
-	var err = ResourceSaver.save(current_library, current_library.resource_path)
+	var library_path := current_library.resource_path
+	var dir_err := _ensure_directory_for_path(library_path)
+	if dir_err != OK and dir_err != ERR_ALREADY_EXISTS:
+		push_error("Failed to ensure directory for library save (%s): %d" % [library_path, dir_err])
+		return
+	var file_missing := not FileAccess.file_exists(library_path)
+	if file_missing:
+		push_warning("Library file was missing. Recreating at %s" % library_path)
+
+	print("Saving library: %s" % library_path)
+	var err = ResourceSaver.save(current_library, library_path)
 	if err != OK:
-		push_error("Failed to save library: ", err)
+		push_error("Failed to save library: %s (error %d)" % [library_path, err])
 	else:
 		print("Library saved successfully")
 
@@ -389,8 +444,13 @@ func create_new_library() -> void:
 	
 	_clear_library_placeholder_if_needed()
 
+	var base_dir_err := _ensure_directory(DEFAULT_LIBRARY_DIR)
+	if base_dir_err != OK and base_dir_err != ERR_ALREADY_EXISTS:
+		push_error("Failed to prepare default library directory: %d" % base_dir_err)
+		return
+
 	# Find a unique filename
-	var base_path = "res://module_library"
+	var base_path = DEFAULT_LIBRARY_DIR.path_join(DEFAULT_LIBRARY_BASENAME)
 	var save_path = base_path + ".tres"
 	var counter = 1
 	
@@ -401,8 +461,13 @@ func create_new_library() -> void:
 	var err = ResourceSaver.save(new_library, save_path)
 
 	if err == OK:
+		# Persist the path on the in-memory resource so subsequent saves work
+		new_library.take_over_path(save_path)
 		libraries.append(new_library)
+		current_library = new_library
 		selected_tile = null
+		_refresh_tile_list()
+		library_loaded.emit(current_library)
 		library_option.set_block_signals(true)
 		library_option.add_item(new_library.library_name, libraries.size() - 1)
 		library_option.set_block_signals(false)
@@ -457,12 +522,61 @@ func _on_files_selected(paths: PackedStringArray) -> void:
 	current_library.tiles = tiles_copy
 
 	# Save the library resource
-	ResourceSaver.save(current_library, current_library.resource_path)
+	_save_library()
 
 	# Refresh the tile list display
 	_refresh_tile_list()
 	if not new_tiles.is_empty():
 		_handle_import_suggestions(new_tiles)
+
+
+func _change_library_save_location() -> void:
+	if not current_library:
+		push_warning("No library selected to relocate")
+		return
+
+	var suggested_path := current_library.resource_path
+	if suggested_path == "":
+		suggested_path = DEFAULT_LIBRARY_DIR.path_join("%s.tres" % current_library.library_name.to_snake_case())
+	if suggested_path.get_base_dir() == "":
+		suggested_path = DEFAULT_LIBRARY_DIR.path_join(suggested_path.get_file())
+	var ensure_dir_err := _ensure_directory_for_path(suggested_path)
+	if ensure_dir_err != OK and ensure_dir_err != ERR_ALREADY_EXISTS:
+		push_error("Failed to prepare directory for relocation: %d" % ensure_dir_err)
+		return
+	if library_save_dialog:
+		library_save_dialog.current_path = suggested_path
+		library_save_dialog.popup_centered_ratio(0.75)
+
+
+func _on_library_save_path_selected(path: String) -> void:
+	_apply_library_save_location(path)
+
+
+func _apply_library_save_location(path: String) -> void:
+	if not current_library:
+		return
+	var trimmed := path.strip_edges()
+	if trimmed == "":
+		push_warning("Invalid save path for library")
+		return
+	var dir_err := _ensure_directory_for_path(trimmed)
+	if dir_err != OK and dir_err != ERR_ALREADY_EXISTS:
+		push_error("Failed to create directory for library: %d" % dir_err)
+		return
+	var old_path := current_library.resource_path
+	var save_err := ResourceSaver.save(current_library, trimmed)
+	if save_err != OK:
+		push_error("Failed to save library to '%s' (error %d)" % [trimmed, save_err])
+		return
+	current_library.take_over_path(trimmed)
+	if old_path != "" and old_path != trimmed and FileAccess.file_exists(old_path):
+		var remove_err := DirAccess.remove_absolute(ProjectSettings.globalize_path(old_path))
+		if remove_err != OK:
+			push_warning("Failed to remove old library file '%s' (error %d)" % [old_path, remove_err])
+	print("Library relocated to: %s" % trimmed)
+	_refresh_tile_list()
+	_save_library()
 
 
 func on_tile_selected(index: int) -> void:

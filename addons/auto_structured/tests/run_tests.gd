@@ -5,6 +5,7 @@ const WfcStrategyTests := preload("res://addons/auto_structured/tests/test_wfc_s
 const SocketTemplateTests := preload("res://addons/auto_structured/tests/test_socket_templates.gd")
 const SocketConsistencyTests := preload("res://addons/auto_structured/tests/test_socket_consistency.gd")
 const SocketInferenceTests := preload("res://addons/auto_structured/tests/test_socket_inference.gd")
+const ModuleLibraryPanelTests := preload("res://addons/auto_structured/tests/test_module_library_panel.gd")
 const ModuleLibrary := preload("res://addons/auto_structured/core/module_library.gd")
 const Tile := preload("res://addons/auto_structured/core/tile.gd")
 const Socket := preload("res://addons/auto_structured/core/socket.gd")
@@ -30,13 +31,17 @@ func _initialize() -> void:
 	var inference_suite := SocketInferenceTests.new()
 	var inference_results := inference_suite.run_all()
 
-	var total: int = int(solver_results["total"]) + int(strategy_results["total"]) + int(template_results["total"]) + int(consistency_results["total"]) + int(inference_results["total"])
+	var panel_suite := ModuleLibraryPanelTests.new()
+	var panel_results := panel_suite.run_all()
+
+	var total: int = int(solver_results["total"]) + int(strategy_results["total"]) + int(template_results["total"]) + int(consistency_results["total"]) + int(inference_results["total"]) + int(panel_results["total"])
 	var failures: Array = []
 	failures.append_array(solver_results["failures"])
 	failures.append_array(strategy_results["failures"])
 	failures.append_array(template_results["failures"])
 	failures.append_array(consistency_results["failures"])
 	failures.append_array(inference_results["failures"])
+	failures.append_array(panel_results["failures"])
 
 	if failures.is_empty():
 		print("\nAll %d tests passed!" % total)

@@ -18,6 +18,13 @@ func _ready() -> void:
 
 
 func _on_module_tile_selected(tile: Tile) -> void:
+	if tile == null:
+		if details_panel.current_tile != null:
+			details_panel.close_details()
+		else:
+			details_panel.hide()
+		return
+
 	details_panel.show_tile(tile, module_library_control.current_library)
 	viewport_panel.preview_tile(tile)
 

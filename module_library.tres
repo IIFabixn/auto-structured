@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="ModuleLibrary" load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://addons/auto_structured/core/module_library.gd" id="1_peua7"]
+[ext_resource type="Script" path="res://addons/auto_structured/core/tile.gd" id="2_e70lh"]
+[ext_resource type="Script" path="res://addons/auto_structured/core/requirements/requirement.gd" id="3_ybimf"]
+[ext_resource type="PackedScene" path="res://sample/modules/floor.tscn" id="4_ocyvf"]
+[ext_resource type="Script" path="res://addons/auto_structured/core/socket.gd" id="5_7pgw0"]
+
+[sub_resource type="Resource" id="Resource_4nsv4"]
+script = ExtResource("5_7pgw0")
+socket_id = "floor_side"
+direction = Vector3i(1, 0, 0)
+compatible_sockets = Array[String](["floor_side"])
+
+[sub_resource type="Resource" id="Resource_wjay0"]
+script = ExtResource("5_7pgw0")
+socket_id = "floor_side"
+direction = Vector3i(-1, 0, 0)
+compatible_sockets = Array[String](["floor_side"])
+
+[sub_resource type="Resource" id="Resource_4d2ao"]
+script = ExtResource("5_7pgw0")
+socket_id = "floor_side"
+direction = Vector3i(0, 0, -1)
+compatible_sockets = Array[String](["floor_side"])
+
+[sub_resource type="Resource" id="Resource_22vab"]
+script = ExtResource("5_7pgw0")
+socket_id = "floor_side"
+direction = Vector3i(0, 0, 1)
+compatible_sockets = Array[String](["floor_side"])
+
+[sub_resource type="Resource" id="Resource_vv34b"]
+script = ExtResource("5_7pgw0")
+socket_id = "floor_top"
+
+[sub_resource type="Resource" id="Resource_t1vno"]
+script = ExtResource("5_7pgw0")
+socket_id = "floor_bottom"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_bdy81"]
+script = ExtResource("2_e70lh")
+name = "floor"
+scene = ExtResource("4_ocyvf")
+tags = Array[String](["floor"])
+sockets = Array[ExtResource("5_7pgw0")]([SubResource("Resource_4nsv4"), SubResource("Resource_wjay0"), SubResource("Resource_4d2ao"), SubResource("Resource_22vab"), SubResource("Resource_vv34b"), SubResource("Resource_t1vno")])
+
+[resource]
+script = ExtResource("1_peua7")
+library_name = "Sample Module Library"
+tiles = Array[ExtResource("2_e70lh")]([SubResource("Resource_bdy81")])
+socket_types = Array[String](["any", "floor_bottom", "floor_side", "floor_top", "none"])

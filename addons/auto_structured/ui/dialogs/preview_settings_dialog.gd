@@ -240,23 +240,26 @@ func _discover_strategies() -> void:
 	# Instantiate each strategy
 	for strategy_file in strategy_files:
 		var script_path = strategies_path + strategy_file
-		var script = load(script_path)
-		
-		if script and script is GDScript:
-			# Try to instantiate the strategy
-			var strategy_instance = script.new()
+		var script := load(script_path) as Script
+		if script == null:
+			push_warning("Skipped '%s' (not a script resource)" % strategy_file)
+			continue
+
+		var strategy_instance := _instantiate_strategy_script(script, script_path)
+		if strategy_instance == null:
+			continue
+
+		# Verify it's a valid strategy (has the required methods)
+		if strategy_instance.has_method("should_collapse_cell") and \
+			strategy_instance.has_method("get_name") and \
+			strategy_instance.has_method("get_description"):
 			
-			# Verify it's a valid strategy (has the required methods)
-			if strategy_instance.has_method("should_collapse_cell") and \
-				strategy_instance.has_method("get_name") and \
-				strategy_instance.has_method("get_description"):
-				
-				available_strategies.append(strategy_instance)
-				strategy_keys.append(_get_strategy_key(strategy_instance))
-				_remember_strategy_defaults(strategy_instance)
-				print("Discovered strategy: ", strategy_instance.get_name())
-			else:
-				push_warning("Skipped invalid strategy: " + strategy_file)
+			available_strategies.append(strategy_instance)
+			strategy_keys.append(_get_strategy_key(strategy_instance))
+			_remember_strategy_defaults(strategy_instance)
+			print("Discovered strategy: ", strategy_instance.get_name())
+		else:
+			push_warning("Skipped invalid strategy: " + strategy_file)
 	
 	# Ensure we have at least one strategy
 	if available_strategies.is_empty():
@@ -265,6 +268,47 @@ func _discover_strategies() -> void:
 		available_strategies = [fallback]
 		strategy_keys = [_get_strategy_key(fallback)]
 		_remember_strategy_defaults(fallback)
+
+
+func _instantiate_strategy_script(script: Script, script_path: String) -> WfcStrategyBase:
+	if script == null:
+		return null
+
+	if not script.can_instantiate():
+		push_warning("Strategy script '%s' cannot be instantiated." % script_path)
+		return null
+
+	var base_type := script.get_instance_base_type()
+	var instance: Variant = null
+
+	if ClassDB.is_parent_class(base_type, "RefCounted"):
+		if script.has_method("new"):
+			instance = script.call("new")
+		else:
+			push_warning("Strategy script '%s' lacks new() despite RefCounted base." % script_path)
+	elif ClassDB.is_parent_class(base_type, "Node"):
+		if script.has_method("instantiate"):
+			instance = script.call("instantiate")
+		else:
+			instance = script.instantiate()
+	else:
+		# Attempt generic instantiation fallback
+		if script.has_method("new"):
+			instance = script.call("new")
+		elif script.has_method("instantiate"):
+			instance = script.call("instantiate")
+
+	if instance is WfcStrategyBase:
+		return instance
+
+	if instance is Object and instance is Node:
+		(instance as Node).queue_free()
+
+	if instance == null:
+		push_warning("Strategy script '%s' could not be instantiated." % script_path)
+	else:
+		push_warning("Strategy script '%s' did not produce a WfcStrategyBase instance." % script_path)
+	return null
 
 
 func _update_strategy_panel() -> void:
