@@ -4,4 +4,5 @@
 
 [node name="OutsideFloor" type="Node3D"]
 
-[node name="Floor_Brick" type="Node3D" parent="." instance=ExtResource("1_nqxwt")]
+[node name="Floor_Brick" parent="." instance=ExtResource("1_nqxwt")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.9996837, 0, 0.99249613)

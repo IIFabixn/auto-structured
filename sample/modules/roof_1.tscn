@@ -3,6 +3,6 @@
 [ext_resource type="PackedScene" uid="uid://w8hfxr2gjxhk" path="res://sample/assets/Roof_RoundTiles_4x4.gltf" id="1_xwcmk"]
 
 [node name="Roof1" type="Node3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 
-[node name="Roof_RoundTiles_4x4" type="Node3D" parent="." instance=ExtResource("1_xwcmk")]
+[node name="Roof_RoundTiles_4x4" parent="." instance=ExtResource("1_xwcmk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 3)

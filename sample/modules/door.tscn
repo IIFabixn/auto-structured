@@ -6,10 +6,11 @@
 
 [node name="Door" type="Node3D"]
 
-[node name="Floor_WoodDark" type="Node3D" parent="." instance=ExtResource("1_oqy3n")]
+[node name="Floor_WoodDark" parent="." instance=ExtResource("1_oqy3n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1)
 
-[node name="Wall_Plaster_Door_Flat" type="Node3D" parent="." instance=ExtResource("2_bxle0")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -1.2, 0, 0)
+[node name="Wall_Plaster_Door_Flat" parent="." instance=ExtResource("2_bxle0")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -0.0041333907, 0, 0.9999529)
 
-[node name="DoorFrame_Round_WoodDark" type="Node3D" parent="." instance=ExtResource("3_0xteo")]
-transform = Transform3D(-7.5896696e-07, 0, -0.99999976, 0, 1, 0, 0.99999976, 0, -7.5896696e-07, -1.199609, 0, -1.5952507e-11)
+[node name="DoorFrame_Round_WoodDark" parent="." instance=ExtResource("3_0xteo")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -0.0041333907, 0, 0.9999529)

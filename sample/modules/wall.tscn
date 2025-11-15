@@ -6,7 +6,7 @@
 [node name="wall" type="Node3D"]
 
 [node name="Wall_Plaster_Straight_Base" parent="." instance=ExtResource("2_1x3fw")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -1.1987839, 0, 9.1478476e-05)
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, 0, 1)
 
 [node name="Floor_WoodDark" parent="." instance=ExtResource("2_ln3ec")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0012160841, 0, 9.1478476e-05)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1)
