@@ -12,6 +12,8 @@ const Socket = preload("res://addons/auto_structured/core/socket.gd")
 const SocketSuggestionDialogScene = preload("res://addons/auto_structured/ui/dialogs/socket_suggestion_dialog.tscn")
 const SocketSuggestionBuilder = preload("res://addons/auto_structured/core/analysis/socket_suggestion_builder.gd")
 const SocketWizardDialogScene = preload("res://addons/auto_structured/ui/dialogs/socket_wizard.tscn")
+const NO_LIBRARY_ITEM_ID = -1
+const NO_LIBRARY_PLACEHOLDER = "- None -"
 
 var libraries: Array[ModuleLibrary] = []
 var current_library: ModuleLibrary
@@ -70,27 +72,50 @@ func _exit_tree() -> void:
 	if rename_dialog:
 		rename_dialog.queue_free()
 
+func _is_showing_no_library_placeholder() -> bool:
+	return (
+		library_option.get_item_count() == 1
+		and library_option.get_item_id(0) == NO_LIBRARY_ITEM_ID
+	)
+
+func _clear_library_placeholder_if_needed() -> void:
+	if _is_showing_no_library_placeholder():
+		library_option.clear()
+
+func _show_no_library_placeholder() -> void:
+	libraries.clear()
+	current_library = null
+	selected_tile = null
+	library_option.set_block_signals(true)
+	library_option.clear()
+	library_option.disabled = false
+	library_option.add_item(NO_LIBRARY_PLACEHOLDER, NO_LIBRARY_ITEM_ID)
+	library_option.set_block_signals(false)
+	library_option.select(0)
+	_refresh_tile_list()
+
 func find_libraries() -> void:
 	# Scan the resource folder for ModuleLibrary resources.
 	libraries.clear()
-	library_option.clear()
+	selected_tile = null
 
 	var libraries_found = _scan_directory_for_libraries("res://")
 
 	if libraries_found.is_empty():
-		library_option.add_item("No libraries found")
-		library_option.disabled = true
+		_show_no_library_placeholder()
 		return
 
-	for i in range(libraries_found.size()):
-		var lib = libraries_found[i]
-		libraries.append(lib)
-		library_option.add_item(lib.library_name, i)
+	library_option.set_block_signals(true)
+	library_option.clear()
+	library_option.disabled = false
 
+	for lib in libraries_found:
+		libraries.append(lib)
+		library_option.add_item(lib.library_name, libraries.size() - 1)
+
+	library_option.set_block_signals(false)
 	if not libraries.is_empty():
-		current_library = libraries[0]
-		library_option.selected = 0
-		library_loaded.emit(current_library)
+		library_option.select(0)
 
 
 func _on_library_selected(index: int) -> void:
@@ -98,6 +123,7 @@ func _on_library_selected(index: int) -> void:
 		return
 
 	current_library = libraries[index]
+	selected_tile = null
 	_refresh_tile_list()
 	library_loaded.emit(current_library)
 
@@ -304,26 +330,31 @@ func _delete_library() -> void:
 		push_warning("No library selected to delete")
 		return
 
-	# Remove from array
-	var index = libraries.find(current_library)
+	var removed_library: ModuleLibrary = current_library
+	var previous_index := library_option.selected
+
+	var index = libraries.find(removed_library)
 	if index >= 0:
 		libraries.remove_at(index)
 
-	# Remove from dropdown
-	library_option.remove_item(library_option.selected)
+	if removed_library.resource_path != "":
+		DirAccess.remove_absolute(removed_library.resource_path)
 
-	# Delete the resource file
-	if current_library.resource_path != "":
-		DirAccess.remove_absolute(current_library.resource_path)
+	selected_tile = null
 
-	# Select first library if available, or create a new empty one if none exist
-	if not libraries.is_empty():
-		current_library = libraries[0]
-		library_option.selected = 0
-		_refresh_tile_list()
-	else:
-		# No libraries left, create a new empty one
-		create_new_library()
+	if libraries.is_empty():
+		_show_no_library_placeholder()
+		return
+
+	library_option.set_block_signals(true)
+	library_option.clear()
+	library_option.disabled = false
+	for i in range(libraries.size()):
+		library_option.add_item(libraries[i].library_name, i)
+	library_option.set_block_signals(false)
+
+	var new_index = clampi(previous_index, 0, libraries.size() - 1)
+	library_option.select(new_index)
 
 
 func _save_library() -> void:
@@ -352,6 +383,8 @@ func create_new_library() -> void:
 	new_library.library_name = "New Library"
 	new_library.ensure_defaults()  # Set up default socket types
 	
+	_clear_library_placeholder_if_needed()
+
 	# Find a unique filename
 	var base_path = "res://module_library"
 	var save_path = base_path + ".tres"
@@ -365,10 +398,11 @@ func create_new_library() -> void:
 
 	if err == OK:
 		libraries.append(new_library)
+		selected_tile = null
+		library_option.set_block_signals(true)
 		library_option.add_item(new_library.library_name, libraries.size() - 1)
-		library_option.selected = libraries.size() - 1
-		current_library = new_library
-		_refresh_tile_list()
+		library_option.set_block_signals(false)
+		library_option.select(libraries.size() - 1)
 		print("Created new library at: ", save_path)
 	else:
 		push_error("Failed to save new library resource. Error code: ", err)
