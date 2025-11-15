@@ -84,6 +84,16 @@ func get_cell_tags(position: Vector3i, grid_size: Vector3i) -> Array[String]:
 	return tags
 
 
+func get_required_tags(_grid_size: Vector3i) -> Array[String]:
+	var tags: Array[String] = ["structure", "floor", "wall", "exterior"]
+	if mode == Mode.GROUND_WALLS:
+		tags.append("interior")
+	if include_roof:
+		tags.append("roof")
+		tags.append("edge")
+	return tags
+
+
 func _is_ground_or_wall_cell(position: Vector3i, grid_size: Vector3i) -> bool:
 	"""Check if cell is on ground level or on a perimeter wall"""
 	var is_ground = position.y == 0

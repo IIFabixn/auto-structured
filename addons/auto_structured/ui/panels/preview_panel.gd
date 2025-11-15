@@ -94,6 +94,7 @@ func _initialize_settings_dialog() -> void:
 		# Add to scene tree (hidden) so _ready() gets called and it initializes properly
 		add_child(settings_dialog)
 		settings_dialog.hide()
+		settings_dialog.apply_requested.connect(_on_settings_apply_requested)
 
 
 func _process(delta: float) -> void:
@@ -141,6 +142,11 @@ func on_edit_preview_settings_pressed():
 		# Add to scene and show
 		add_child(dialog)
 		dialog.popup_centered()
+
+
+func _on_settings_apply_requested(_strategy: WfcStrategyBase) -> void:
+	# Reuse the existing generation workflow triggered by the "New" button
+	_on_new_button_pressed()
 
 func _on_viewport_option_selected(id: int) -> void:
 	var popup = viewport_options.get_popup()
@@ -425,6 +431,10 @@ func _make_translucent(node: Node3D) -> void:
 func set_module_library(library: ModuleLibrary) -> void:
 	"""Set the module library to use for generation"""
 	module_library = library
+	if not settings_dialog:
+		_initialize_settings_dialog()
+	if settings_dialog and settings_dialog.has_method("set_module_library"):
+		settings_dialog.set_module_library(library)
 	_refresh_library_cell_size()
 	_update_button_states()
 

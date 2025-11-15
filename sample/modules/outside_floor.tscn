@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://dkbqpf1v23wwk"]
+
+[ext_resource type="PackedScene" uid="uid://cqipc2bsfqxeh" path="res://sample/assets/Floor_Brick.gltf" id="1_nqxwt"]
+
+[node name="OutsideFloor" type="Node3D"]
+
+[node name="Floor_Brick" type="Node3D" parent="." instance=ExtResource("1_nqxwt")]

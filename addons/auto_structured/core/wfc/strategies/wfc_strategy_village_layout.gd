@@ -293,6 +293,10 @@ func _count_regions_of_type(type: RegionType) -> int:
 	return count
 
 
+func get_required_tags(_grid_size: Vector3i) -> Array[String]:
+	return ["road", "floor", "wall", "interior", "exterior", "roof", "building"]
+
+
 func get_options() -> Control:
 	"""Return UI controls for configuring village layout parameters"""
 	var scroll = ScrollContainer.new()

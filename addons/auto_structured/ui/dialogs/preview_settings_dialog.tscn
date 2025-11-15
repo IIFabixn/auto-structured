@@ -94,18 +94,116 @@ custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
 tooltip_text = "Generation strategy"
 selected = 0
-item_count = 5
-popup/item_0/text = "Fill All"
+item_count = 7
+popup/item_0/text = "Building (Single Volume)"
 popup/item_0/id = 0
-popup/item_1/text = "Ground + Walls"
+popup/item_1/text = "Fill All"
 popup/item_1/id = 1
-popup/item_2/text = "Organic (Noise-Based)"
+popup/item_2/text = "Ground + Walls"
 popup/item_2/id = 2
-popup/item_3/text = "Perimeter Only"
+popup/item_3/text = "Atrium (Layered)"
 popup/item_3/id = 3
-popup/item_4/text = "Sparse (50%)"
+popup/item_4/text = "Organic (Noise-Based)"
 popup/item_4/id = 4
+popup/item_5/text = "Scatter (Decoration)"
+popup/item_5/id = 5
+popup/item_6/text = "Village Layout (Macro)"
+popup/item_6/id = 6
 
-[node name="StrategyOptionsContainer" type="VBoxContainer" parent="ScrollContainer/VBoxContainer"]
+[node name="StrategyDescription" type="RichTextLabel" parent="ScrollContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"RichTextLabel"
+bbcode_enabled = true
+text = "Select a strategy to view its description."
+fit_content = true
+autowrap_mode = 2
+
+[node name="WarningPanel" type="PanelContainer" parent="ScrollContainer/VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+
+[node name="WarningMargin" type="MarginContainer" parent="ScrollContainer/VBoxContainer/WarningPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 8
+
+[node name="WarningLabel" type="RichTextLabel" parent="ScrollContainer/VBoxContainer/WarningPanel/WarningMargin"]
+unique_name_in_owner = true
+layout_mode = 2
+bbcode_enabled = true
+fit_content = true
+autowrap_mode = 2
+
+[node name="OptionsPanel" type="PanelContainer" parent="ScrollContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="OptionsMargin" type="MarginContainer" parent="ScrollContainer/VBoxContainer/OptionsPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="StrategyOptionsContainer" type="VBoxContainer" parent="ScrollContainer/VBoxContainer/OptionsPanel/OptionsMargin"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="OptionsPlaceholder" type="Label" parent="ScrollContainer/VBoxContainer/OptionsPanel/OptionsMargin/StrategyOptionsContainer"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+text = "This strategy has no configurable options."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="StrategyToolbar" type="HBoxContainer" parent="ScrollContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ResetButton" type="Button" parent="ScrollContainer/VBoxContainer/StrategyToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Reset"
+
+[node name="SavePresetButton" type="Button" parent="ScrollContainer/VBoxContainer/StrategyToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Save Preset"
+
+[node name="LoadPresetButton" type="MenuButton" parent="ScrollContainer/VBoxContainer/StrategyToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Load Preset"
+item_count = 2
+popup/item_0/text = "Building (Single Volume) V1"
+popup/item_0/id = 0
+popup/item_1/text = "Building (Single Volume) V2"
+popup/item_1/id = 1
+
+[node name="ApplySpacer" type="Control" parent="ScrollContainer/VBoxContainer/StrategyToolbar"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ApplyButton" type="Button" parent="ScrollContainer/VBoxContainer/StrategyToolbar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+text = "Apply to Preview"
+
+[node name="SavePresetDialog" type="AcceptDialog" parent="."]
+unique_name_in_owner = true
+title = "Save Preset"
+ok_button_text = "Save"
+dialog_text = "Enter a preset name"
+
+[node name="PresetNameEdit" type="LineEdit" parent="SavePresetDialog"]
+unique_name_in_owner = true
+placeholder_text = "Preset name"

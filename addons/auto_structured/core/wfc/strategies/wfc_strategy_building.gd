@@ -129,6 +129,15 @@ func get_cell_weight(position: Vector3i, grid_size: Vector3i) -> float:
 	return float(grid_size.y - position.y)
 
 
+func get_required_tags(_grid_size: Vector3i) -> Array[String]:
+	var tags: Array[String] = ["structure", "floor", "wall", "exterior", "interior", "roof"]
+	if roof_height > 0:
+		tags.append("edge")
+	if add_height_tags:
+		tags.append_array(["lower", "middle", "upper"])
+	return tags
+
+
 func get_options() -> Control:
 	"""Return UI controls for configuring building parameters"""
 	var vbox = VBoxContainer.new()

@@ -51,6 +51,10 @@ func _update_noise() -> void:
 	noise.seed = noise_seed
 
 
+func _on_after_deserialize_state() -> void:
+	_update_noise()
+
+
 func should_collapse_cell(position: Vector3i, grid_size: Vector3i) -> bool:
 	return _is_cell_filled(position, grid_size)
 
@@ -146,6 +150,13 @@ func get_cell_tags(position: Vector3i, grid_size: Vector3i) -> Array[String]:
 
 func get_name() -> String:
 	return "Organic (Noise-Based)"
+
+
+func get_required_tags(_grid_size: Vector3i) -> Array[String]:
+	var tags: Array[String] = ["structure", "floor", "wall", "exterior", "interior", "roof"]
+	if add_height_tags:
+		tags.append_array(["lower", "middle", "upper"])
+	return tags
 
 
 func get_description() -> String:

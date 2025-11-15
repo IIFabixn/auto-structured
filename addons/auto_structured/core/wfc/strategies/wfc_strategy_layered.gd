@@ -89,6 +89,15 @@ func _distance_to_perimeter(position: Vector3i, grid_size: Vector3i) -> int:
 	return max(0, min(dist_x, dist_z))
 
 
+func get_required_tags(_grid_size: Vector3i) -> Array[String]:
+	var tags: Array[String] = ["structure", "floor", "interior", "walkway", "wall", "exterior", "edge"]
+	if include_roof:
+		tags.append("roof")
+	if carve_central_atrium:
+		tags.append("void")
+	return tags
+
+
 func get_options() -> Control:
 	var vbox = VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 10)

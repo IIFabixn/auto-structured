@@ -71,6 +71,53 @@ func get_options() -> Control:
 	return null
 
 
+func serialize_state() -> Dictionary:
+	var state: Dictionary = {}
+	for prop in get_property_list():
+		var usage: int = int(prop.get("usage", 0))
+		if (usage & PROPERTY_USAGE_STORAGE) == 0:
+			continue
+		var name: String = prop.get("name", "")
+		if name == "script" or name.begins_with("_"):
+			continue
+		var type := int(prop.get("type", TYPE_NIL))
+		if type == TYPE_OBJECT:
+			continue
+		state[name] = get(name)
+	return state.duplicate(true)
+
+
+func deserialize_state(state: Dictionary) -> void:
+	if not state:
+		return
+	for key in state.keys():
+		if _has_storage_property(key):
+			set(key, state[key])
+	if has_method("_on_after_deserialize_state"):
+		call("_on_after_deserialize_state")
+
+
+func _has_storage_property(property_name: String) -> bool:
+	for prop in get_property_list():
+		if prop.get("name", "") == property_name and int(prop.get("usage", 0)) & PROPERTY_USAGE_STORAGE:
+			return true
+	return false
+
+
+func get_ui_warnings(_grid_size: Vector3i) -> Array[String]:
+	return []
+
+
+func get_required_tags(_grid_size: Vector3i) -> Array[String]:
+	"""
+	Return the list of semantic tile tags that this strategy expects to find.
+
+	The UI uses this to explain strategy requirements and to highlight
+	missing coverage in the active Module Library.
+	"""
+	return []
+
+
 ## Get semantic tags for a cell to filter which tile types can be placed.
 ## Override to assign semantic meaning (e.g., "road", "wall", "roof", "floor").
 ##

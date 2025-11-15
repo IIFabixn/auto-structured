@@ -118,3 +118,13 @@ func get_cell_tags(position: Vector3i, _grid_size: Vector3i) -> Array[String]:
 	if not _should_place(position):
 		return []
 	return ["decoration"]
+
+
+func get_required_tags(_grid_size: Vector3i) -> Array[String]:
+	return ["decoration"]
+
+
+func _on_after_deserialize_state() -> void:
+	_noise.noise_type = FastNoiseLite.TYPE_CELLULAR
+	_noise.frequency = noise_frequency
+	_noise.seed = random_seed
