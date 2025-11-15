@@ -1,9 +1,186 @@
-[gd_resource type="Resource" script_class="ModuleLibrary" load_steps=3 format=3 uid="uid://dvk4oevceqcdg"]
+[gd_resource type="Resource" script_class="ModuleLibrary" load_steps=42 format=3 uid="uid://dvk4oevceqcdg"]
 
 [ext_resource type="Script" uid="uid://n5qundf42kiu" path="res://addons/auto_structured/core/module_library.gd" id="1_nyshj"]
 [ext_resource type="Script" uid="uid://c7f03neubtkf3" path="res://addons/auto_structured/core/tile.gd" id="2_uyf68"]
+[ext_resource type="Script" uid="uid://cj5irb5up18v1" path="res://addons/auto_structured/core/requirements/requirement.gd" id="3_ona3u"]
+[ext_resource type="PackedScene" uid="uid://brrawbb8qli2o" path="res://sample/modules/floor.tscn" id="4_bmyaq"]
+[ext_resource type="Script" uid="uid://bddgr0flhmhcl" path="res://addons/auto_structured/core/socket.gd" id="5_iouyn"]
+[ext_resource type="PackedScene" uid="uid://dvmtflhjehotm" path="res://sample/modules/wall.tscn" id="6_bmyaq"]
+[ext_resource type="Script" uid="uid://b8dpqr1m8otkh" path="res://addons/auto_structured/core/requirements/rotation_requirement.gd" id="7_iouyn"]
+[ext_resource type="Script" uid="uid://bj35d48w37cx5" path="res://addons/auto_structured/core/requirements/ground_requirement.gd" id="8_p6xx3"]
+[ext_resource type="PackedScene" uid="uid://cvdf8f47a4oa1" path="res://sample/modules/door.tscn" id="8_u0jbl"]
+[ext_resource type="PackedScene" uid="uid://khrtlct1n2sc" path="res://sample/modules/wall_corner.tscn" id="9_g6hs5"]
+
+[sub_resource type="Resource" id="Resource_p6xx3"]
+script = ExtResource("5_iouyn")
+socket_id = "floor_top"
+compatible_sockets = Array[String](["floor_top"])
+
+[sub_resource type="Resource" id="Resource_xn8up"]
+script = ExtResource("5_iouyn")
+socket_id = "floor_bottom"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_3mp4w"]
+script = ExtResource("5_iouyn")
+socket_id = "floor_side"
+direction = Vector3i(1, 0, 0)
+compatible_sockets = Array[String](["floor_side"])
+
+[sub_resource type="Resource" id="Resource_80t75"]
+script = ExtResource("5_iouyn")
+socket_id = "floor_side"
+direction = Vector3i(-1, 0, 0)
+compatible_sockets = Array[String](["floor_side"])
+
+[sub_resource type="Resource" id="Resource_madpg"]
+script = ExtResource("5_iouyn")
+socket_id = "floor_side"
+direction = Vector3i(0, 0, -1)
+compatible_sockets = Array[String](["floor_side"])
+
+[sub_resource type="Resource" id="Resource_3t08w"]
+script = ExtResource("5_iouyn")
+socket_id = "floor_side"
+direction = Vector3i(0, 0, 1)
+compatible_sockets = Array[String](["floor_side", "wall_forward"])
+
+[sub_resource type="Resource" id="Resource_pqnng"]
+script = ExtResource("2_uyf68")
+name = "floor"
+scene = ExtResource("4_bmyaq")
+sockets = Array[ExtResource("5_iouyn")]([SubResource("Resource_p6xx3"), SubResource("Resource_xn8up"), SubResource("Resource_3mp4w"), SubResource("Resource_80t75"), SubResource("Resource_madpg"), SubResource("Resource_3t08w")])
+
+[sub_resource type="Resource" id="Resource_f4pqm"]
+script = ExtResource("5_iouyn")
+socket_id = "wall_top"
+
+[sub_resource type="Resource" id="Resource_hckkq"]
+script = ExtResource("5_iouyn")
+socket_id = "floor_top"
+direction = Vector3i(0, -1, 0)
+compatible_sockets = Array[String](["floor_top"])
+
+[sub_resource type="Resource" id="Resource_ao4ki"]
+script = ExtResource("7_iouyn")
+
+[sub_resource type="Resource" id="Resource_kucj2"]
+script = ExtResource("5_iouyn")
+socket_id = "wall_right_side"
+direction = Vector3i(1, 0, 0)
+compatible_sockets = Array[String](["corner_side", "door_side", "wall_left_side"])
+requirements = Array[ExtResource("3_ona3u")]([SubResource("Resource_ao4ki")])
+
+[sub_resource type="Resource" id="Resource_w1jmp"]
+script = ExtResource("7_iouyn")
+
+[sub_resource type="Resource" id="Resource_5l4yy"]
+script = ExtResource("5_iouyn")
+socket_id = "wall_left_side"
+direction = Vector3i(-1, 0, 0)
+compatible_sockets = Array[String](["corner_side", "door_side", "wall_right_side"])
+requirements = Array[ExtResource("3_ona3u")]([SubResource("Resource_w1jmp")])
+
+[sub_resource type="Resource" id="Resource_54rin"]
+script = ExtResource("5_iouyn")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_r0cjs"]
+script = ExtResource("5_iouyn")
+socket_id = "wall_forward"
+direction = Vector3i(0, 0, 1)
+compatible_sockets = Array[String](["floor_side"])
+
+[sub_resource type="Resource" id="Resource_emwhl"]
+script = ExtResource("2_uyf68")
+name = "wall"
+scene = ExtResource("6_bmyaq")
+sockets = Array[ExtResource("5_iouyn")]([SubResource("Resource_f4pqm"), SubResource("Resource_hckkq"), SubResource("Resource_kucj2"), SubResource("Resource_5l4yy"), SubResource("Resource_54rin"), SubResource("Resource_r0cjs")])
+
+[sub_resource type="Resource" id="Resource_arbdp"]
+script = ExtResource("8_p6xx3")
+
+[sub_resource type="Resource" id="Resource_bfn5o"]
+script = ExtResource("5_iouyn")
+socket_id = "door_right_side"
+direction = Vector3i(1, 0, 0)
+compatible_sockets = Array[String](["wall_left_side"])
+
+[sub_resource type="Resource" id="Resource_n6i6s"]
+script = ExtResource("5_iouyn")
+socket_id = "door_left_side"
+direction = Vector3i(-1, 0, 0)
+compatible_sockets = Array[String](["door_side", "door_right_side", "wall_right_side"])
+
+[sub_resource type="Resource" id="Resource_y08g2"]
+script = ExtResource("5_iouyn")
+socket_id = "floor_side"
+direction = Vector3i(0, 0, 1)
+compatible_sockets = Array[String](["floor_side"])
+
+[sub_resource type="Resource" id="Resource_in4iu"]
+script = ExtResource("5_iouyn")
+socket_id = "none"
+
+[sub_resource type="Resource" id="Resource_ti8u5"]
+script = ExtResource("5_iouyn")
+socket_id = "none"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_uai3o"]
+script = ExtResource("5_iouyn")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_mrcvf"]
+script = ExtResource("2_uyf68")
+name = "door"
+scene = ExtResource("8_u0jbl")
+requirements = Array[ExtResource("3_ona3u")]([SubResource("Resource_arbdp")])
+sockets = Array[ExtResource("5_iouyn")]([SubResource("Resource_bfn5o"), SubResource("Resource_n6i6s"), SubResource("Resource_y08g2"), SubResource("Resource_in4iu"), SubResource("Resource_ti8u5"), SubResource("Resource_uai3o")])
+
+[sub_resource type="Resource" id="Resource_s5u8m"]
+script = ExtResource("5_iouyn")
+socket_id = "floor_top"
+compatible_sockets = Array[String](["floor_top"])
+
+[sub_resource type="Resource" id="Resource_mun00"]
+script = ExtResource("5_iouyn")
+socket_id = "floor_top"
+direction = Vector3i(0, -1, 0)
+compatible_sockets = Array[String](["floor_top"])
+
+[sub_resource type="Resource" id="Resource_qgi2m"]
+script = ExtResource("5_iouyn")
+socket_id = "wall_side"
+direction = Vector3i(1, 0, 0)
+compatible_sockets = Array[String](["corner_side", "wall_side", "door_side"])
+
+[sub_resource type="Resource" id="Resource_dldh5"]
+script = ExtResource("5_iouyn")
+socket_id = "none"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_gubru"]
+script = ExtResource("5_iouyn")
+socket_id = "none"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_laigs"]
+script = ExtResource("5_iouyn")
+socket_id = "wall_forward"
+direction = Vector3i(0, 0, 1)
+compatible_sockets = Array[String](["floor_side", "wall_forward"])
+
+[sub_resource type="Resource" id="Resource_fn4bq"]
+script = ExtResource("2_uyf68")
+name = "wall_corner"
+scene = ExtResource("9_g6hs5")
+sockets = Array[ExtResource("5_iouyn")]([SubResource("Resource_s5u8m"), SubResource("Resource_mun00"), SubResource("Resource_qgi2m"), SubResource("Resource_dldh5"), SubResource("Resource_gubru"), SubResource("Resource_laigs")])
 
 [resource]
 script = ExtResource("1_nyshj")
 library_name = "New Library"
-socket_types = Array[String](["any", "none"])
+tiles = Array[ExtResource("2_uyf68")]([SubResource("Resource_pqnng"), SubResource("Resource_emwhl"), SubResource("Resource_mrcvf"), SubResource("Resource_fn4bq")])
+socket_types = Array[String](["any", "corner_side", "door_left_side", "door_right_side", "door_side", "floor_bottom", "floor_side", "floor_top", "none", "wall_forward", "wall_left_side", "wall_right_side", "wall_side", "wall_top"])

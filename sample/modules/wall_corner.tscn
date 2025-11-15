@@ -7,13 +7,13 @@
 [node name="Test" type="Node3D"]
 
 [node name="Floor_WoodDark" parent="." instance=ExtResource("1_ske3f")]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 1, 0, 1)
+transform = Transform3D(0.99999976, 0, -5.3566316e-07, 0, 1, 0, 5.3566316e-07, 0, 0.99999976, 1.000002, 0, 0.99996257)
 
 [node name="Wall_Plaster_Straight_Base" parent="." instance=ExtResource("2_efpik")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, 0, 1)
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 1, 0, 0)
 
 [node name="Wall_Plaster_Straight_Base_2" parent="." instance=ExtResource("2_efpik")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 2)
+transform = Transform3D(-7.5896696e-07, 0, -0.99999976, 0, 1, 0, 0.99999976, 0, -7.5896696e-07, 2.4039127e-06, 0, 0.9999622)
 
 [node name="Corner_Exterior_TopDown" parent="." instance=ExtResource("3_ske3f")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2)
+transform = Transform3D(-7.5896696e-07, 0, -0.99999976, 0, 1, 0, 0.99999976, 0, -7.5896696e-07, 2.8559837e-06, 0, -3.7428e-05)

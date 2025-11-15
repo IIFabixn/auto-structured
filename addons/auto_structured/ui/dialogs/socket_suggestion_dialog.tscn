@@ -29,6 +29,29 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "Review detected socket matches for the newly imported tile."
 
+[node name="TemplatePanel" type="HBoxContainer" parent="Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TemplateLabel" type="Label" parent="Margin/VBox/TemplatePanel"]
+layout_mode = 2
+size_flags_horizontal = 1
+text = "Template:"
+
+[node name="TemplateOption" type="OptionButton" parent="Margin/VBox/TemplatePanel"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+disabled = true
+
+[node name="ApplyTemplateButton" type="Button" parent="Margin/VBox/TemplatePanel"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 1
+text = "Apply Template"
+disabled = true
+
 [node name="SuggestionTree" type="Tree" parent="Margin/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -55,11 +78,6 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 disabled = true
-selected = 0
-item_count = 1
-popup/item_0/text = "No library available"
-popup/item_0/id = 0
-popup/item_0/disabled = true
 
 [node name="HintLabel" type="Label" parent="Margin/VBox"]
 layout_mode = 2

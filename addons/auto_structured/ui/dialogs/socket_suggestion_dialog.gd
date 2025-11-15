@@ -7,9 +7,15 @@ signal suggestions_rejected(tile: Tile)
 
 const Tile := preload("res://addons/auto_structured/core/tile.gd")
 const ModuleLibrary := preload("res://addons/auto_structured/core/module_library.gd")
+const SocketSuggestionBuilder := preload("res://addons/auto_structured/core/analysis/socket_suggestion_builder.gd")
+const SocketTemplateLibrary := preload("res://addons/auto_structured/ui/utils/socket_template_library.gd")
+const SocketTemplate := preload("res://addons/auto_structured/ui/utils/socket_template.gd")
 
 @onready var summary_label: Label = %SummaryLabel
 @onready var suggestion_tree: Tree = %SuggestionTree
+@onready var template_panel: HBoxContainer = %TemplatePanel
+@onready var template_option: OptionButton = %TemplateOption
+@onready var apply_template_button: Button = %ApplyTemplateButton
 @onready var socket_type_option: OptionButton = %SocketTypeOption
 @onready var socket_type_hint: Label = %SocketTypeHint
 
@@ -21,9 +27,12 @@ var _selected_item: TreeItem = null
 var _selected_index: int = -1
 var _is_updating_socket_type_option := false
 var _pending_new_type_dialog: AcceptDialog = null
+var _template_cache: Array[SocketTemplate] = []
+var _pending_tree_refresh := false
 
 const PLACEHOLDER_TYPE_ID := -1
 const ADD_NEW_TYPE_ID := -9999
+const TEMPLATE_PLACEHOLDER_ID := -1
 
 func _ready() -> void:
 	title = "Socket Suggestions"
@@ -34,22 +43,33 @@ func _ready() -> void:
 	canceled.connect(_on_canceled)
 	custom_action.connect(_on_custom_action)
 	_setup_tree()
+	_setup_template_controls()
 	_setup_socket_type_option()
+	_sync_ui_state()
 
 func show_for_tile(tile: Tile, library: ModuleLibrary, suggestions: Array) -> void:
 	_current_tile = tile
 	_current_library = library
 	_suggestions = suggestions.duplicate()
 	_update_summary()
-	_populate_tree()
+	if suggestion_tree == null:
+		_pending_tree_refresh = true
+	else:
+		_populate_tree()
 	var has_suggestions := not _suggestions.is_empty()
 	_update_accept_button_state()
 	if _modify_button:
 		_modify_button.disabled = tile == null
+	_update_template_controls_state()
 	_update_type_editor_state()
-	popup_centered_ratio(0.5)
+	if is_inside_tree():
+		popup_centered_ratio(0.5)
+	else:
+		call_deferred("popup_centered_ratio", 0.5)
 
 func _setup_tree() -> void:
+	if suggestion_tree == null:
+		return
 	suggestion_tree.columns = 5
 	suggestion_tree.set_column_titles_visible(true)
 	suggestion_tree.set_column_title(0, "Use")
@@ -63,6 +83,10 @@ func _setup_tree() -> void:
 	suggestion_tree.item_edited.connect(_on_tree_item_edited)
 
 func _populate_tree() -> void:
+	if suggestion_tree == null:
+		_pending_tree_refresh = true
+		return
+	_pending_tree_refresh = false
 	suggestion_tree.clear()
 	var root := suggestion_tree.create_item()
 	for i in range(_suggestions.size()):
@@ -84,6 +108,8 @@ func _populate_tree() -> void:
 
 func _collect_selected_suggestions() -> Array:
 	var selections: Array = []
+	if suggestion_tree == null:
+		return _suggestions.duplicate()
 	var root := suggestion_tree.get_root()
 	if root == null:
 		return selections
@@ -95,6 +121,13 @@ func _collect_selected_suggestions() -> Array:
 				selections.append(_suggestions[index])
 		item = item.get_next()
 	return selections
+
+func _sync_ui_state() -> void:
+	_update_summary()
+	_populate_tree()
+	_update_template_controls_state()
+	_update_type_editor_state()
+	_update_accept_button_state()
 
 func _on_confirmed() -> void:
 	var selections := _collect_selected_suggestions()
@@ -123,6 +156,68 @@ func _update_summary() -> void:
 		summary_label.text = "No matching sockets were detected for '%s'." % _current_tile.name
 	else:
 		summary_label.text = "Found %d potential socket match%s for '%s'." % [count, "es" if count != 1 else "", _current_tile.name]
+
+func _setup_template_controls() -> void:
+	if template_option == null or apply_template_button == null:
+		return
+	template_option.item_selected.connect(_on_template_option_selected)
+	apply_template_button.pressed.connect(_on_apply_template_pressed)
+	_update_template_controls_state()
+
+func _refresh_template_option() -> void:
+	if template_option == null:
+		return
+	var previous_block := template_option.is_blocking_signals()
+	template_option.set_block_signals(true)
+	_template_cache = SocketTemplateLibrary.get_all_templates()
+	template_option.clear()
+	template_option.add_item("-- Select Template --", TEMPLATE_PLACEHOLDER_ID)
+	template_option.set_item_disabled(0, true)
+	for i in range(_template_cache.size()):
+		var tpl := _template_cache[i]
+		var label := tpl.template_name if tpl.template_name.strip_edges() != "" else "Template %d" % i
+		template_option.add_item(label, i)
+		template_option.set_item_tooltip(i + 1, tpl.description)
+	template_option.select(0)
+	template_option.set_block_signals(previous_block)
+
+func _update_template_controls_state() -> void:
+	if template_option == null or apply_template_button == null:
+		return
+	_refresh_template_option()
+	var has_context := _current_tile != null and _current_library != null
+	var has_templates := not _template_cache.is_empty()
+	template_option.disabled = not has_context or not has_templates
+	apply_template_button.disabled = true
+	if template_panel:
+		template_panel.visible = has_templates
+
+func _on_template_option_selected(index: int) -> void:
+	if template_option == null or apply_template_button == null:
+		return
+	var item_id := template_option.get_item_id(index)
+	var valid := item_id >= 0 and item_id < _template_cache.size() and _current_tile != null and _current_library != null
+	apply_template_button.disabled = not valid
+
+func _on_apply_template_pressed() -> void:
+	if template_option == null:
+		return
+	var template_id := template_option.get_selected_id()
+	_apply_template_from_cache(template_id)
+
+func _apply_template_from_cache(template_id: int) -> void:
+	if _current_tile == null or _current_library == null:
+		return
+	if template_id < 0 or template_id >= _template_cache.size():
+		return
+	var template := _template_cache[template_id]
+	SocketTemplateLibrary.apply_template(_current_tile, template, _current_library)
+	_suggestions = SocketSuggestionBuilder.build_suggestions(_current_tile, _current_library)
+	_update_summary()
+	_populate_tree()
+	_on_tree_nothing_selected()
+	_update_type_editor_state()
+	_update_accept_button_state()
 
 func _setup_socket_type_option() -> void:
 	if socket_type_option == null:
@@ -175,6 +270,9 @@ func _select_socket_type_in_option(socket_id: String) -> void:
 			return
 
 func _on_tree_item_selected() -> void:
+	if suggestion_tree == null:
+		_on_tree_nothing_selected()
+		return
 	var selected := suggestion_tree.get_selected()
 	if selected == null:
 		_on_tree_nothing_selected()
@@ -288,23 +386,10 @@ func _update_accept_button_state() -> void:
 	var button := get_ok_button()
 	if button == null:
 		return
-	var root := suggestion_tree.get_root()
-	if root == null:
+	if _current_tile == null:
 		button.disabled = true
 		return
-	var item := root.get_first_child()
-	var has_valid := false
-	while item:
-		if item.is_checked(0):
-			var index := int(item.get_metadata(0))
-			if index >= 0 and index < _suggestions.size():
-				var entry: Dictionary = _suggestions[index]
-				var socket_id := str(entry.get("socket_id", "")).strip_edges()
-				if socket_id != "" and socket_id != "none":
-					has_valid = true
-					break
-		item = item.get_next()
-	button.disabled = not has_valid
+	button.disabled = false
 
 static func _direction_to_label(direction: Vector3i) -> String:
 	match direction:

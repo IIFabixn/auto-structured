@@ -36,6 +36,11 @@ func run_all() -> Dictionary:
         "Deleting selected tile emits null selection",
         _test_delete_selected_tile_emits_null_selection
     )
+    _run_test(
+        results,
+        "Importing tiles focuses the last added tile",
+        _test_import_selects_new_tile
+    )
     return results
 
 func _run_test(results: Dictionary, name: String, fn: Callable) -> void:
@@ -214,6 +219,39 @@ func _test_delete_selected_tile_emits_null_selection() -> Variant:
             error = "tile_selected signal not emitted"
         elif emitted_tiles[0] != null:
             error = "Expected null selection after deletion"
+
+    _remove_library_file(lib_path)
+    _cleanup_panel(panel)
+    return error
+
+func _test_import_selects_new_tile() -> Variant:
+    _ensure_tmp_dir()
+    var panel := _make_panel()
+    var lib_path := TMP_DIR.path_join("import_focus.tres")
+    var error: Variant = null
+    var lib := _create_library_resource(lib_path, "ImportFocus")
+    if lib == null:
+        error = "Failed to create test library"
+    else:
+        panel.libraries = [lib]
+        panel.current_library = lib
+        panel.library_option.clear()
+        panel.library_option.add_item(lib.library_name, 0)
+        panel.library_option.select(0)
+        var emitted: Array = []
+        panel.tile_selected.connect(func(tile): emitted.append(tile))
+        var import_paths := PackedStringArray(["res://sample/modules/floor.tscn"])
+        panel._on_files_selected(import_paths)
+        if panel.selected_tile == null:
+            error = "Selected tile was null after import"
+        elif emitted.is_empty():
+            error = "tile_selected signal not emitted"
+        elif emitted.back() != panel.selected_tile:
+            error = "tile_selected emitted different tile"
+        elif panel.tile_list == null or panel.tile_list.item_count == 0:
+            error = "Tile list did not populate"
+        elif not panel.tile_list.is_selected(panel.tile_list.item_count - 1):
+            error = "Newly imported tile not selected"
 
     _remove_library_file(lib_path)
     _cleanup_panel(panel)

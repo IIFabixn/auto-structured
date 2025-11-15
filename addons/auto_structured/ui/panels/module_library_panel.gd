@@ -495,6 +495,7 @@ func _on_files_selected(paths: PackedStringArray) -> void:
 	var tiles_copy: Array[Tile] = []
 	tiles_copy.assign(current_library.tiles)
 	var new_tiles: Array[Tile] = []
+	var focus_tile: Tile = null
 
 	for path in paths:
 		var tile = Tile.new()
@@ -517,6 +518,7 @@ func _on_files_selected(paths: PackedStringArray) -> void:
 		# Add tile to the writable copy
 		tiles_copy.append(tile)
 		new_tiles.append(tile)
+		focus_tile = tile
 
 	# Assign the modified array back
 	current_library.tiles = tiles_copy
@@ -526,6 +528,8 @@ func _on_files_selected(paths: PackedStringArray) -> void:
 
 	# Refresh the tile list display
 	_refresh_tile_list()
+	if focus_tile:
+		_focus_on_tile(focus_tile)
 	if not new_tiles.is_empty():
 		_handle_import_suggestions(new_tiles)
 
@@ -602,6 +606,18 @@ func unselect_tile() -> void:
 		tile_list.deselect_all()
 		tile_list.item_selected.emit(-1)
 	selected_tile = null
+
+func _focus_on_tile(tile: Tile) -> void:
+	if tile_list == null or tile == null:
+		return
+	for i in range(tile_list.item_count):
+		var meta_tile: Tile = tile_list.get_item_metadata(i)
+		if meta_tile == tile:
+			tile_list.select(i)
+			tile_list.ensure_current_is_visible()
+			selected_tile = tile
+			tile_selected.emit(selected_tile)
+			return
 
 func _refresh_tile_list() -> void:
 	tile_list.clear()
@@ -857,6 +873,19 @@ func _apply_socket_suggestions(tile: Tile, selections: Array) -> void:
 			partner_socket_id = str(partner_socket.socket_id).strip_edges()
 			if partner_socket_id != "" and partner_socket_id != "none":
 				compat_set[partner_socket_id] = true
+		elif current_library:
+			var partner_tile: Tile = suggestion.get("partner_tile", null)
+			var partner_direction: Vector3i = suggestion.get("partner_direction", Vector3i.ZERO)
+			if partner_tile and partner_direction != Vector3i.ZERO:
+				partner_socket = partner_tile.get_socket_by_direction(partner_direction)
+				if partner_socket == null:
+					partner_socket = Socket.new()
+					partner_socket.direction = partner_direction
+					partner_socket.socket_id = "none"
+					partner_tile.add_socket(partner_socket)
+				partner_socket_id = str(partner_socket.socket_id).strip_edges()
+				if partner_socket_id != "" and partner_socket_id != "none":
+					compat_set[partner_socket_id] = true
 		var compat_list: Array[String] = []
 		for compat_id in compat_set.keys():
 			compat_list.append(str(compat_id))

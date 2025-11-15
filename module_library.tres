@@ -1,10 +1,10 @@
-[gd_resource type="Resource" script_class="ModuleLibrary" load_steps=13 format=3]
+[gd_resource type="Resource" script_class="ModuleLibrary" load_steps=13 format=3 uid="uid://dhle26sfkha06"]
 
-[ext_resource type="Script" path="res://addons/auto_structured/core/module_library.gd" id="1_peua7"]
-[ext_resource type="Script" path="res://addons/auto_structured/core/tile.gd" id="2_e70lh"]
-[ext_resource type="Script" path="res://addons/auto_structured/core/requirements/requirement.gd" id="3_ybimf"]
-[ext_resource type="PackedScene" path="res://sample/modules/floor.tscn" id="4_ocyvf"]
-[ext_resource type="Script" path="res://addons/auto_structured/core/socket.gd" id="5_7pgw0"]
+[ext_resource type="Script" uid="uid://n5qundf42kiu" path="res://addons/auto_structured/core/module_library.gd" id="1_peua7"]
+[ext_resource type="Script" uid="uid://c7f03neubtkf3" path="res://addons/auto_structured/core/tile.gd" id="2_e70lh"]
+[ext_resource type="Script" uid="uid://cj5irb5up18v1" path="res://addons/auto_structured/core/requirements/requirement.gd" id="3_ybimf"]
+[ext_resource type="PackedScene" uid="uid://brrawbb8qli2o" path="res://sample/modules/floor.tscn" id="4_ocyvf"]
+[ext_resource type="Script" uid="uid://bddgr0flhmhcl" path="res://addons/auto_structured/core/socket.gd" id="5_7pgw0"]
 
 [sub_resource type="Resource" id="Resource_4nsv4"]
 script = ExtResource("5_7pgw0")
