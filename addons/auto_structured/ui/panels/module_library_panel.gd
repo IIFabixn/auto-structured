@@ -677,7 +677,7 @@ func _show_next_socket_suggestion() -> void:
 	_pending_suggestion_queue.remove_at(0)
 	var tile: Tile = entry.get("tile", null)
 	var suggestions: Array = entry.get("suggestions", [])
-	socket_suggestion_dialog.show_for_tile(tile, suggestions)
+	socket_suggestion_dialog.show_for_tile(tile, current_library, suggestions)
 
 func _on_socket_suggestions_accepted(tile: Tile, selections: Array) -> void:
 	var applied := false
@@ -737,6 +737,12 @@ func _apply_socket_suggestions(tile: Tile, selections: Array) -> void:
 			if compat_id == "":
 				continue
 			compat_set[compat_id] = true
+		var partner_socket: Socket = suggestion.get("partner_socket", null)
+		var partner_socket_id := ""
+		if partner_socket:
+			partner_socket_id = str(partner_socket.socket_id).strip_edges()
+			if partner_socket_id != "" and partner_socket_id != "none":
+				compat_set[partner_socket_id] = true
 		var compat_list: Array[String] = []
 		for compat_id in compat_set.keys():
 			compat_list.append(str(compat_id))
@@ -747,13 +753,17 @@ func _apply_socket_suggestions(tile: Tile, selections: Array) -> void:
 			current_library.register_socket_type(socket_id)
 			for compat_id in compat_list:
 				current_library.register_socket_type(compat_id)
-		var partner_socket: Socket = suggestion.get("partner_socket", null)
 		if partner_socket:
 			var partner_compats: Array[String] = []
 			partner_compats.assign(partner_socket.compatible_sockets)
 			if socket_id not in partner_compats:
 				partner_compats.append(socket_id)
-			partner_socket.compatible_sockets = _to_string_array(partner_compats)
+			var partner_array := _to_string_array(partner_compats)
+			partner_array.sort()
+			partner_socket.compatible_sockets = partner_array
+			var partner_tile: Tile = suggestion.get("partner_tile", null)
+			if partner_tile:
+				partner_tile.sockets = partner_tile.sockets
 		changed = true
 	if changed:
 		tile.sockets = tile.sockets

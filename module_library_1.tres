@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="ModuleLibrary" load_steps=3 format=3 uid="uid://dt7fqo0dup3is"]
+
+[ext_resource type="Script" uid="uid://n5qundf42kiu" path="res://addons/auto_structured/core/module_library.gd" id="1_j4kfb"]
+[ext_resource type="Script" uid="uid://c7f03neubtkf3" path="res://addons/auto_structured/core/tile.gd" id="2_7iosl"]
+
+[resource]
+script = ExtResource("1_j4kfb")
+library_name = "New Library"
+socket_types = Array[String](["any", "none"])

@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=2 format=3 uid="uid://cf6f1ckaqa0pv"]
 
-[ext_resource type="Script" path="res://addons/auto_structured/ui/dialogs/socket_suggestion_dialog.gd" id="1"]
+[ext_resource type="Script" uid="uid://dfremy6xmpgch" path="res://addons/auto_structured/ui/dialogs/socket_suggestion_dialog.gd" id="1"]
 
 [node name="SocketSuggestionDialog" type="AcceptDialog"]
 unique_name_in_owner = true
@@ -35,7 +35,31 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 columns = 5
+column_titles_visible = true
 hide_root = true
+
+[node name="TypeEditor" type="HBoxContainer" parent="Margin/VBox"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SocketTypeHint" type="Label" parent="Margin/VBox/TypeEditor"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Assign socket type for the selected match:"
+
+[node name="SocketTypeOption" type="OptionButton" parent="Margin/VBox/TypeEditor"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+disabled = true
+selected = 0
+item_count = 1
+popup/item_0/text = "No library available"
+popup/item_0/id = 0
+popup/item_0/disabled = true
 
 [node name="HintLabel" type="Label" parent="Margin/VBox"]
 layout_mode = 2
