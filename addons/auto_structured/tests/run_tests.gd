@@ -4,6 +4,7 @@ const WfcSolverTests := preload("res://addons/auto_structured/tests/test_wfc_sol
 const WfcStrategyTests := preload("res://addons/auto_structured/tests/test_wfc_strategies.gd")
 const SocketTemplateTests := preload("res://addons/auto_structured/tests/test_socket_templates.gd")
 const SocketConsistencyTests := preload("res://addons/auto_structured/tests/test_socket_consistency.gd")
+const SocketInferenceTests := preload("res://addons/auto_structured/tests/test_socket_inference.gd")
 
 func _initialize() -> void:
 	print("Running auto_structured test suite...\n")
@@ -19,12 +20,16 @@ func _initialize() -> void:
 	var consistency_suite := SocketConsistencyTests.new()
 	var consistency_results := consistency_suite.run_all()
 
-	var total: int = int(solver_results["total"]) + int(strategy_results["total"]) + int(template_results["total"]) + int(consistency_results["total"])
+	var inference_suite := SocketInferenceTests.new()
+	var inference_results := inference_suite.run_all()
+
+	var total: int = int(solver_results["total"]) + int(strategy_results["total"]) + int(template_results["total"]) + int(consistency_results["total"]) + int(inference_results["total"])
 	var failures: Array = []
 	failures.append_array(solver_results["failures"])
 	failures.append_array(strategy_results["failures"])
 	failures.append_array(template_results["failures"])
 	failures.append_array(consistency_results["failures"])
+	failures.append_array(inference_results["failures"])
 
 	if failures.is_empty():
 		print("\nAll %d tests passed!" % total)
