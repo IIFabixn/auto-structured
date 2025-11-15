@@ -1,11 +1,10 @@
-[gd_scene load_steps=7 format=3 uid="uid://b2e8dr8sqw65c"]
+[gd_scene load_steps=6 format=3 uid="uid://b2e8dr8sqw65c"]
 
 [ext_resource type="Script" uid="uid://cvlqe0gwq55qv" path="res://addons/auto_structured/ui/panels/details_panel.gd" id="1_i7yuf"]
 [ext_resource type="Texture2D" uid="uid://d04dma5ci7ufp" path="res://icon.svg" id="2_2ihjm"]
 [ext_resource type="Texture2D" uid="uid://bli807wmcfj7h" path="res://addons/auto_structured/assets/close.svg" id="2_qj0jw"]
 [ext_resource type="PackedScene" uid="uid://bs8l0gqo6l105" path="res://addons/auto_structured/ui/controls/tag_control.tscn" id="3_d84tf"]
 [ext_resource type="Texture2D" uid="uid://cklj47goa3tag" path="res://addons/auto_structured/assets/add.svg" id="3_mh04o"]
-[ext_resource type="PackedScene" uid="uid://bvlwexitood1h" path="res://addons/auto_structured/ui/controls/socket_item.tscn" id="5_mh04o"]
 
 [node name="DetailsPanel" type="Control"]
 layout_mode = 3
@@ -174,7 +173,6 @@ stretch_mode = 3
 
 [node name="TagControl" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer/TagsContainer" instance=ExtResource("3_d84tf")]
 layout_mode = 2
-tag_name = "Wall"
 
 [node name="TileToolbar" type="HBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer"]
 unique_name_in_owner = true
@@ -239,14 +237,22 @@ visible = false
 layout_mode = 2
 metadata/_tab_index = 2
 
-[node name="SocketsContainer" type="VBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Sockets"]
-unique_name_in_owner = true
+[node name="SocketsContent" type="VBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Sockets"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="FoldableContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Sockets/SocketsContainer" instance=ExtResource("5_mh04o")]
+[node name="SocketToolbar" type="HBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Sockets/SocketsContent"]
 layout_mode = 2
-title = "Socket: Up"
+
+[node name="SocketWizardButton" type="Button" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Sockets/SocketsContent/SocketToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Socket Wizard…"
+
+[node name="SocketsContainer" type="VBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Sockets/SocketsContent"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
 
 [node name="CloseButton" type="TextureButton" parent="Panel/MarginContainer"]
 z_index = 2

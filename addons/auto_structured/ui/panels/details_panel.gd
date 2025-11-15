@@ -18,6 +18,7 @@ const RequirementItem = preload("res://addons/auto_structured/ui/controls/requir
 const Requirement = preload("res://addons/auto_structured/core/requirements/requirement.gd")
 const TileClipboard = preload("res://addons/auto_structured/ui/utils/tile_clipboard.gd")
 const TilePresetStore = preload("res://addons/auto_structured/ui/utils/tile_preset_store.gd")
+const SocketWizardDialogScene = preload("res://addons/auto_structured/ui/dialogs/socket_wizard.tscn")
 
 const COPY_MENU_COPY_TILE := 0
 const COPY_MENU_PASTE_TILE := 1
@@ -53,6 +54,7 @@ var add_requirement_menu: PopupMenu
 @onready var tile_preset_name_edit: LineEdit = %TilePresetNameEdit
 @onready var tile_preset_delete_dialog: ConfirmationDialog = %TilePresetDeleteDialog
 @onready var tile_preset_delete_option: OptionButton = %TilePresetDeleteOption
+@onready var socket_wizard_button: Button = $Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Sockets/SocketsContent/SocketToolbar/SocketWizardButton
 
 
 func _ready() -> void:
@@ -96,6 +98,9 @@ func _ready() -> void:
 	if tile_preset_delete_dialog:
 		tile_preset_delete_dialog.confirmed.connect(_on_tile_preset_delete_confirmed)
 
+	if socket_wizard_button:
+		socket_wizard_button.pressed.connect(_on_socket_wizard_pressed)
+
 
 func _on_symmetry_option_selected(index: int) -> void:
 	if not current_tile:
@@ -116,6 +121,33 @@ func _add_socket_item(socket: Socket) -> void:
 	socket_item.changed.connect(_on_socket_changed)
 	socket_item.preview_requested.connect(_on_socket_preview_requested.bind(socket))
 	socket_item.socket_types_changed.connect(_on_socket_types_changed)
+
+
+func _on_socket_wizard_pressed() -> void:
+	if not current_tile:
+		return
+	var wizard := SocketWizardDialogScene.instantiate() as SocketWizardDialog
+	if wizard == null:
+		push_warning("Failed to create Socket Wizard dialog")
+		return
+	add_child(wizard)
+	wizard.call_deferred("initialize", current_tile, current_library)
+	wizard.wizard_applied.connect(_on_socket_wizard_applied)
+	wizard.canceled.connect(func(): wizard.queue_free())
+	wizard.confirmed.connect(func(): wizard.queue_free())
+	wizard.popup_centered()
+
+
+func _on_socket_wizard_applied(_tile: Tile, changed_tiles: Array) -> void:
+	clear_sockets()
+	_display_all_sockets_in_order()
+	_refresh_all_socket_dropdowns()
+	save_tile_changes()
+	if changed_tiles:
+		for other_tile in changed_tiles:
+			if other_tile == current_tile:
+				continue
+			tile_modified.emit(other_tile)
 
 
 func clear_sockets() -> void:

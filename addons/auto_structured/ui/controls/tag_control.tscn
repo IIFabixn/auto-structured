@@ -12,7 +12,6 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "Tag"
 placeholder_text = "Tag"
-flat = true
 
 [node name="DeleteButton" type="TextureButton" parent="."]
 custom_minimum_size = Vector2(24, 24)
