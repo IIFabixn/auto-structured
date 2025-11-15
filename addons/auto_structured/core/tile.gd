@@ -54,7 +54,7 @@ func get_sockets_in_direction(direction: Vector3i) -> Array[Socket]:
 	typed_result.assign(result)
 	return typed_result
 
-func add_tag(tag: String) -> void:
+func add_tag(tag: String) -> bool:
 	"""
 	Add a tag to this tile if it doesn't already exist.
 
@@ -62,11 +62,15 @@ func add_tag(tag: String) -> void:
 		tag: The tag string to add
 	"""
 	if tag in tags:
-		return
+		print("Tag already exists on tile: %s" % tag)
+		return false
+	
 	var tags_copy: Array[String] = []
 	tags_copy.assign(tags)
 	tags_copy.append(tag)
 	tags = tags_copy
+	
+	return true
 
 func remove_tag(tag: String) -> void:
 	"""

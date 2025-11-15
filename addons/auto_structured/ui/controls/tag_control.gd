@@ -2,23 +2,42 @@
 class_name TagControl extends Control
 
 signal deleted(tag_name: String)
-signal name_changed(new_name: String)
+signal name_changed(old_name: String, new_name: String)
 
-@export var tag_name: String = "Tag":
-	set(value):
-		tag_name = value
-		name_changed.emit(tag_name)
-		if tag_edit:
-			tag_edit.text = tag_name
-	get:
-		return tag_name
+var tag_name: String = "Tag"
 
 @onready var tag_edit: LineEdit = $TagEdit
 
-# Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	tag_edit.text = tag_name
+	apply_tag_name(tag_name)
+	if tag_edit:
+		tag_edit.text_submitted.connect(_on_tag_edit_committed)
+		tag_edit.focus_exited.connect(_on_tag_edit_focus_exited)
 
 func delete_pressed() -> void:
 	deleted.emit(tag_name)
-	queue_free()
+
+func _on_tag_edit_committed(text: String) -> void:
+	_commit_name_change(text)
+
+func _on_tag_edit_focus_exited() -> void:
+	_commit_name_change(tag_edit.text)
+
+func _commit_name_change(raw_text: String) -> void:
+	var sanitized := raw_text.strip_edges()
+	if sanitized == tag_name:
+		tag_edit.text = tag_name
+		return
+	var previous := tag_name
+	apply_tag_name(sanitized)
+	name_changed.emit(previous, tag_name)
+
+func apply_tag_name(value: String) -> void:
+	tag_name = value
+	if tag_edit:
+		tag_edit.text = tag_name
+
+func focus_edit() -> void:
+	if tag_edit:
+		tag_edit.grab_focus()
+		tag_edit.select_all()

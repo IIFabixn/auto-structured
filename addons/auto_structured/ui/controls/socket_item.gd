@@ -17,6 +17,7 @@ const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const RequirementItem = preload("res://addons/auto_structured/ui/controls/requirement_item.tscn")
 const Requirement = preload("res://addons/auto_structured/core/requirements/requirement.gd")
 const WfcHelper = preload("res://addons/auto_structured/core/wfc/wfc_helper.gd")
+const TileClipboard = preload("res://addons/auto_structured/ui/utils/tile_clipboard.gd")
 
 var socket: Socket = null
 var library: ModuleLibrary = null
@@ -33,6 +34,8 @@ var add_socket_requirement_menu: PopupMenu
 
 const MENU_PREVIEW = 0
 const RESET_SOCKET = 1
+const COPY_SOCKET = 2
+const PASTE_SOCKET = 3
 
 func _ready() -> void:
 	socket_type_option = get_node_or_null("VBoxContainer/SocketTypeOption")
@@ -57,7 +60,11 @@ func _ready() -> void:
 		context_menu.clear()
 		context_menu.add_item("Preview Compatible Tiles", MENU_PREVIEW)
 		context_menu.add_item("Reset Socket", RESET_SOCKET)
+		context_menu.add_separator()
+		context_menu.add_item("Copy Socket", COPY_SOCKET)
+		context_menu.add_item("Paste Socket", PASTE_SOCKET)
 		context_menu.id_pressed.connect(_on_context_menu_item_selected)
+		context_menu.about_to_popup.connect(_on_context_menu_about_to_popup)
 
 
 ## Initialize the socket item with all required data.
@@ -278,6 +285,37 @@ func _on_context_menu_item_selected(id: int) -> void:
 			preview_requested.emit()
 		RESET_SOCKET:
 			_reset_socket()
+		COPY_SOCKET:
+			_copy_socket_to_clipboard()
+		PASTE_SOCKET:
+			_paste_socket_from_clipboard()
+
+
+func _on_context_menu_about_to_popup() -> void:
+	if not context_menu:
+		return
+	var paste_index := context_menu.get_item_index(PASTE_SOCKET)
+	if paste_index != -1:
+		context_menu.set_item_disabled(paste_index, not TileClipboard.has_single_socket_payload())
+
+
+func _copy_socket_to_clipboard() -> void:
+	if not socket:
+		return
+	var source_name := ""
+	if current_tile:
+		source_name = current_tile.name
+	TileClipboard.copy_socket(socket, source_name)
+
+
+func _paste_socket_from_clipboard() -> void:
+	if not socket:
+		return
+	if TileClipboard.paste_socket(socket, library):
+		_update_sockets_button_text()
+		_display_socket_requirements()
+		update_title()
+		changed.emit()
 
 
 func _reset_socket() -> void:
