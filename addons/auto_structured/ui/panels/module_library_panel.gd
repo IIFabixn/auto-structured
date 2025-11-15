@@ -484,8 +484,9 @@ func on_tile_selected(index: int) -> void:
 	tile_selected.emit(selected_tile)
 
 func unselect_tile() -> void:
-	tile_list.select(-1)
-	tile_list.item_selected.emit(-1)
+	if tile_list:
+		tile_list.deselect_all()
+		tile_list.item_selected.emit(-1)
 	selected_tile = null
 
 func _refresh_tile_list() -> void:
@@ -616,7 +617,7 @@ func _manage_library_sockets() -> void:
 	
 	# Create dialog if it doesn't exist
 	if not manage_sockets_dialog:
-		manage_sockets_dialog = ManageSocketsDialog.instanciate()
+		manage_sockets_dialog = ManageSocketsDialog.instantiate()
 		manage_sockets_dialog.socket_renamed.connect(_on_socket_renamed)
 		manage_sockets_dialog.socket_deleted.connect(_on_socket_deleted)
 		add_child(manage_sockets_dialog)
@@ -655,8 +656,6 @@ func _handle_import_suggestions(new_tiles: Array) -> void:
 		return
 	for tile in new_tiles:
 		var suggestions := SocketSuggestionBuilder.build_suggestions(tile, current_library)
-		if suggestions.is_empty():
-			continue
 		_pending_suggestion_queue.append({
 			"tile": tile,
 			"suggestions": suggestions
@@ -704,7 +703,9 @@ func _on_socket_suggestions_modify(tile: Tile, selections: Array) -> void:
 		selected_tile = tile
 		tile_selected.emit(tile)
 		_show_next_after_wizard = true
-		if not _open_socket_wizard_for_tile(tile):
+		socket_suggestion_dialog.hide()
+		var opened := _open_socket_wizard_for_tile(tile)
+		if not opened:
 			_show_next_after_wizard = false
 			_show_next_socket_suggestion()
 	else:
@@ -770,7 +771,7 @@ func _open_socket_wizard_for_tile(tile: Tile) -> bool:
 	wizard.canceled.connect(_on_suggestions_wizard_closed)
 	wizard.confirmed.connect(_on_suggestions_wizard_closed)
 	wizard.call_deferred("initialize", tile, current_library)
-	wizard.popup_centered()
+	wizard.call_deferred("popup_centered")
 	return true
 
 func _on_suggestions_wizard_applied(tile: Tile, _changed_tiles: Array) -> void:

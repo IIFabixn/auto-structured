@@ -31,11 +31,9 @@ func show_for_tile(tile: Tile, suggestions: Array) -> void:
 	_populate_tree()
 	var has_suggestions := not _suggestions.is_empty()
 	get_ok_button().disabled = not has_suggestions
-	_modify_button.disabled = not has_suggestions
-	if has_suggestions:
-		popup_centered_ratio(0.5)
-	else:
-		hide()
+	if _modify_button:
+		_modify_button.disabled = tile == null
+	popup_centered_ratio(0.5)
 
 func _setup_tree() -> void:
 	suggestion_tree.columns = 5
