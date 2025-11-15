@@ -106,7 +106,8 @@ func _build_socket_states() -> void:
 			"working": working_socket,
 			"allow_self": socket.socket_id != "" and socket.socket_id in socket.compatible_sockets,
 			"rotation": _extract_rotation_requirement(socket),
-			"connection_rows": []
+			"connection_rows": [],
+			"connection_data": {}
 		}
 		_apply_rotation_to_socket_resource(working_socket, state["rotation"])
 		socket_states.append(state)
@@ -137,6 +138,8 @@ func _direction_to_label(direction: Vector3i) -> String:
 func _on_socket_selected(index: int) -> void:
 	if index < 0 or index >= socket_states.size():
 		return
+	if current_socket_index >= 0 and current_socket_index < socket_states.size():
+		_capture_connection_rows(socket_states[current_socket_index])
 	current_socket_index = index
 	var state: Dictionary = socket_states[index]
 	_update_socket_editor(state)
@@ -151,6 +154,94 @@ func _update_socket_editor(state: Dictionary) -> void:
 	_update_rotation_option(state)
 	_build_connections_ui(state)
 	_refresh_connections_hint(state)
+
+func _capture_connection_rows(state: Dictionary) -> void:
+	if state == null:
+		return
+	var data_map: Dictionary = state.get("connection_data", {})
+	var rows: Array = state.get("connection_rows", [])
+	for row_data in rows:
+		if row_data == null:
+			continue
+		var entry: Dictionary = row_data.get("entry", null)
+		if entry == null:
+			var tile_ref: Tile = row_data.get("tile", null)
+			if tile_ref and data_map.has(tile_ref):
+				entry = data_map[tile_ref]
+		if entry == null:
+			continue
+		var checkbox: CheckBox = row_data.get("checkbox")
+		if checkbox and is_instance_valid(checkbox):
+			entry["connect"] = checkbox.button_pressed
+		var reciprocal: CheckBox = row_data.get("reciprocal")
+		if reciprocal and is_instance_valid(reciprocal):
+			entry["reciprocal"] = reciprocal.button_pressed
+		var option: OptionButton = row_data.get("option")
+		if option and is_instance_valid(option):
+			var metadata: Dictionary = option.get_item_metadata(option.selected)
+			if metadata:
+				entry["direction"] = metadata.get("direction", entry.get("direction", Vector3i.ZERO))
+				entry["socket"] = metadata.get("socket", entry.get("socket", null))
+		var socket_ref: Socket = entry.get("socket", null)
+		if socket_ref == null or socket_ref.socket_id.strip_edges() == "":
+			entry["connect"] = false
+			entry["reciprocal"] = false
+	state["connection_rows"] = []
+
+func _ensure_connection_data(state: Dictionary) -> void:
+	if state == null:
+		return
+	if not state.has("connection_data") or state["connection_data"] == null:
+		state["connection_data"] = {}
+	var data_map: Dictionary = state["connection_data"]
+	var working: Socket = state.get("working")
+	if working == null or library == null:
+		state["connection_data"] = {}
+		return
+	var dir: Vector3i = state["direction"]
+	var opposite_dir := Vector3i(-dir.x, -dir.y, -dir.z)
+	var working_id := working.socket_id.strip_edges()
+	var tiles_present: Dictionary = {}
+	for other_tile in library.tiles:
+		tiles_present[other_tile] = true
+		if other_tile == tile:
+			continue
+		var entry: Dictionary = data_map.get(other_tile, {})
+		if entry.is_empty():
+			var default_socket := other_tile.get_socket_by_direction(opposite_dir)
+			var partner_id := ""
+			if default_socket:
+				partner_id = default_socket.socket_id.strip_edges()
+			entry = {
+				"tile": other_tile,
+				"direction": opposite_dir,
+				"socket": default_socket,
+				"connect": partner_id != "" and partner_id in working.compatible_sockets,
+				"reciprocal": default_socket != null and working_id != "" and default_socket.compatible_sockets.has(working_id)
+			}
+		else:
+			entry["tile"] = other_tile
+			if not entry.has("direction"):
+				entry["direction"] = opposite_dir
+			var socket_ref: Socket = entry.get("socket", null)
+			if socket_ref and socket_ref not in other_tile.sockets:
+				socket_ref = null
+				entry["socket"] = other_tile.get_socket_by_direction(entry.get("direction", opposite_dir))
+			if not entry.has("connect"):
+				entry["connect"] = false
+			if not entry.has("reciprocal"):
+				entry["reciprocal"] = false
+			if entry["socket"] == null:
+				entry["connect"] = false
+				entry["reciprocal"] = false
+		data_map[other_tile] = entry
+	var data_keys := data_map.keys()
+	for stored_tile in data_keys:
+		if stored_tile == tile:
+			data_map.erase(stored_tile)
+			continue
+		if not tiles_present.has(stored_tile):
+			data_map.erase(stored_tile)
 
 func _allow_self_ui_update(state: Dictionary) -> void:
 	if allow_self_checkbox:
@@ -219,29 +310,35 @@ func _build_connections_ui(state: Dictionary) -> void:
 		connections_info.text = "No library available to build connections."
 		return
 
-	var working: Socket = state["working"]
-	var dir: Vector3i = state["direction"]
-	var opposite_dir := Vector3i(-dir.x, -dir.y, -dir.z)
-
+	_ensure_connection_data(state)
+	var data_map: Dictionary = state["connection_data"]
+	var rows: Array = []
 	for other_tile in library.tiles:
 		if other_tile == tile:
 			continue
-		var row := _create_connection_row(state, working, other_tile, opposite_dir)
-		state["connection_rows"].append(row)
-
-	if state["connection_rows"].is_empty():
+		if not data_map.has(other_tile):
+			continue
+		var entry: Dictionary = data_map[other_tile]
+		var default_direction := entry.get("direction", Vector3i(-state["direction"].x, -state["direction"].y, -state["direction"].z))
+		var row := _create_connection_row(state, entry, default_direction)
+		rows.append(row)
+	state["connection_rows"] = rows
+	if rows.is_empty():
 		var info := Label.new()
 		info.text = "No other tiles in the library yet."
 		connections_container.add_child(info)
+	_refresh_connections_hint(state)
 
-func _create_connection_row(state: Dictionary, working: Socket, other_tile: Tile, default_direction: Vector3i) -> Dictionary:
+func _create_connection_row(state: Dictionary, entry: Dictionary, default_direction: Vector3i) -> Dictionary:
+	var other_tile: Tile = entry.get("tile")
 	var row_container := HBoxContainer.new()
 	row_container.custom_minimum_size = Vector2(0, 28)
 	row_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 	var toggle := CheckBox.new()
-	toggle.text = other_tile.name
+	toggle.text = other_tile.name if other_tile else "Unknown Tile"
 	toggle.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	toggle.button_pressed = entry.get("connect", false)
 	row_container.add_child(toggle)
 
 	var partner_option := OptionButton.new()
@@ -251,33 +348,70 @@ func _create_connection_row(state: Dictionary, working: Socket, other_tile: Tile
 	var reciprocal := CheckBox.new()
 	reciprocal.text = "↔"
 	reciprocal.tooltip_text = "When enabled, update the partner tile to accept this socket type."
-	reciprocal.button_pressed = reciprocal_checkbox and reciprocal_checkbox.button_pressed
+	reciprocal.button_pressed = entry.get("reciprocal", reciprocal_checkbox and reciprocal_checkbox.button_pressed)
 	row_container.add_child(reciprocal)
 
 	connections_container.add_child(row_container)
 
-	var row_data := {
-		"container": row_container,
+	_populate_partner_option(partner_option, entry, default_direction)
+	var socket_ref: Socket = entry.get("socket", null)
+	if socket_ref == null or socket_ref.socket_id.strip_edges() == "":
+		entry["connect"] = false
+		toggle.button_pressed = false
+		reciprocal.button_pressed = false
+
+	toggle.toggled.connect(func(pressed: bool) -> void:
+		var current_entry := entry
+		if pressed:
+			var current_socket: Socket = current_entry.get("socket", null)
+			if current_socket == null or current_socket.socket_id.strip_edges() == "":
+				current_entry["connect"] = false
+				toggle.set_pressed_no_signal(false)
+				current_entry["reciprocal"] = false
+				reciprocal.set_pressed_no_signal(false)
+				_refresh_connections_hint(state)
+				return
+		current_entry["connect"] = pressed
+		_refresh_connections_hint(state)
+	)
+
+	partner_option.item_selected.connect(func(_index: int) -> void:
+		var metadata: Dictionary = partner_option.get_item_metadata(partner_option.selected)
+		entry["direction"] = metadata.get("direction", default_direction)
+		entry["socket"] = metadata.get("socket", null)
+		var selected_socket: Socket = entry.get("socket", null)
+		if selected_socket == null or selected_socket.socket_id.strip_edges() == "":
+			entry["connect"] = false
+			toggle.set_pressed_no_signal(false)
+			entry["reciprocal"] = false
+			reciprocal.set_pressed_no_signal(false)
+		_refresh_connections_hint(state)
+	)
+
+	reciprocal.toggled.connect(func(pressed: bool) -> void:
+		entry["reciprocal"] = pressed
+	)
+
+	return {
+		"entry": entry,
 		"tile": other_tile,
 		"checkbox": toggle,
 		"option": partner_option,
 		"reciprocal": reciprocal
 	}
 
-	_populate_partner_option(row_data, other_tile, default_direction)
-	_update_connection_row_state(row_data, working)
-
-	partner_option.item_selected.connect(func(_index):
-		row_data["metadata"] = partner_option.get_item_metadata(partner_option.selected)
-	)
-
-	return row_data
-
-func _populate_partner_option(row_data: Dictionary, other_tile: Tile, default_direction: Vector3i) -> void:
-	var option: OptionButton = row_data["option"]
+func _populate_partner_option(option: OptionButton, entry: Dictionary, default_direction: Vector3i) -> void:
 	option.clear()
+	var other_tile: Tile = entry.get("tile", null)
+	if other_tile == null:
+		option.add_item("%s (new)" % _direction_to_label(default_direction))
+		option.set_item_metadata(0, {"direction": default_direction, "socket": null})
+		option.select(0)
+		entry["direction"] = default_direction
+		entry["socket"] = null
+		return
 	var sockets: Array[Socket] = other_tile.sockets
-	var default_index := 0
+	var selected_index := -1
 	for i in range(sockets.size()):
 		var socket: Socket = sockets[i]
 		var label := "%s (%s)" % [_direction_to_label(socket.direction), socket.socket_id if socket.socket_id != "" else "unset"]
@@ -287,40 +421,38 @@ func _populate_partner_option(row_data: Dictionary, other_tile: Tile, default_di
 			"socket": socket
 		}
 		option.set_item_metadata(i, metadata)
-		if socket.direction == default_direction:
-			default_index = i
+		if entry.has("socket") and entry["socket"] == socket:
+			selected_index = i
 	if sockets.is_empty():
-		var placeholder_label := "%s (new)" % _direction_to_label(default_direction)
-		option.add_item(placeholder_label)
-		var placeholder := {
-			"direction": default_direction,
-			"socket": null
-		}
-		option.set_item_metadata(0, placeholder)
-		default_index = 0
-	option.select(default_index)
-	row_data["metadata"] = option.get_item_metadata(default_index)
-
-func _update_connection_row_state(row_data: Dictionary, working: Socket) -> void:
-	var checkbox: CheckBox = row_data["checkbox"]
-	var metadata: Dictionary = row_data.get("metadata", {})
-	var partner_socket: Socket = metadata.get("socket", null)
-	var partner_id: String = ""
-	if partner_socket:
-		partner_id = partner_socket.socket_id.strip_edges()
-	var is_connected := partner_id != "" and partner_id in working.compatible_sockets
-	checkbox.button_pressed = is_connected
-	var reciprocal: CheckBox = row_data["reciprocal"]
-	if partner_socket and working.socket_id.strip_edges() != "":
-		reciprocal.button_pressed = partner_socket.compatible_sockets.has(working.socket_id)
+		option.add_item("%s (new)" % _direction_to_label(default_direction))
+		option.set_item_metadata(0, {"direction": default_direction, "socket": null})
+		selected_index = 0
+	elif selected_index == -1:
+		for i in range(option.item_count):
+			var metadata: Dictionary = option.get_item_metadata(i)
+			if metadata and metadata.get("direction") == entry.get("direction", default_direction):
+				selected_index = i
+				break
+	if selected_index == -1:
+		selected_index = 0
+	option.select(selected_index)
+	var current_metadata: Dictionary = option.get_item_metadata(option.selected)
+	if current_metadata:
+		entry["direction"] = current_metadata.get("direction", default_direction)
+		entry["socket"] = current_metadata.get("socket", null)
 
 func _refresh_connections_hint(state: Dictionary) -> void:
 	if not connections_info:
 		return
+	var count := 0
+	var data_map: Dictionary = state.get("connection_data", {})
+	for entry in data_map.values():
+		if entry.get("connect", false):
+			count += 1
 	var working: Socket = state["working"]
 	connections_info.text = "Socket '%s' currently allows %d partner types." % [
 		working.socket_id if working.socket_id != "" else "unset",
-		working.compatible_sockets.size()
+		count
 	]
 
 func _on_allow_self_toggled(pressed: bool) -> void:
@@ -392,9 +524,16 @@ func _on_global_reciprocal_toggled(_pressed: bool) -> void:
 	if current_socket_index < 0 or current_socket_index >= socket_states.size():
 		return
 	var state: Dictionary = socket_states[current_socket_index]
+	var desired := reciprocal_checkbox.button_pressed
 	for row_data in state["connection_rows"]:
-		var reciprocal: CheckBox = row_data["reciprocal"]
-		reciprocal.button_pressed = reciprocal_checkbox.button_pressed
+		var entry: Dictionary = row_data.get("entry", {})
+		entry["reciprocal"] = desired
+		var reciprocal: CheckBox = row_data.get("reciprocal")
+		if reciprocal and is_instance_valid(reciprocal):
+			reciprocal.button_pressed = desired
+	var data_map: Dictionary = state.get("connection_data", {})
+	for entry in data_map.values():
+		entry["reciprocal"] = desired
 
 func _on_template_selected(_index: int) -> void:
 	# No immediate action needed; template applied via button.
@@ -450,6 +589,8 @@ func _apply_changes() -> void:
 	changed_tiles[tile] = true
 
 	for state in socket_states:
+		_capture_connection_rows(state)
+		_ensure_connection_data(state)
 		var working: Socket = state["working"]
 		var socket_id := working.socket_id.strip_edges()
 		working.socket_id = socket_id
@@ -457,16 +598,18 @@ func _apply_changes() -> void:
 		if state["allow_self"] and socket_id != "":
 			compat_ids.append(socket_id)
 
-		var rows: Array = state["connection_rows"]
-		for row_data in rows:
-			var checkbox: CheckBox = row_data["checkbox"]
-			var reciprocal: CheckBox = row_data["reciprocal"]
-			var option: OptionButton = row_data["option"]
-			var metadata: Dictionary = option.get_item_metadata(option.selected)
-			row_data["metadata"] = metadata
-
-			var partner_tile: Tile = row_data["tile"]
-			if not checkbox.button_pressed:
+		var data_map: Dictionary = state.get("connection_data", {})
+		for entry in data_map.values():
+			var partner_tile: Tile = entry.get("tile", null)
+			if partner_tile == null:
+				continue
+			var connect: bool = bool(entry.get("connect", false))
+			var reciprocal_enabled: bool = bool(entry.get("reciprocal", false))
+			var metadata := {
+				"direction": entry.get("direction", Vector3i.ZERO),
+				"socket": entry.get("socket", null)
+			}
+			if not connect:
 				if _remove_partner_compat_if_needed(partner_tile, metadata, socket_id):
 					changed_tiles[partner_tile] = true
 				continue
@@ -476,6 +619,7 @@ func _apply_changes() -> void:
 				continue
 
 			var partner_socket := _ensure_partner_socket(partner_tile, metadata)
+			entry["socket"] = partner_socket
 			if partner_socket == null:
 				continue
 
@@ -491,7 +635,7 @@ func _apply_changes() -> void:
 			if partner_id != "" and partner_id not in compat_ids:
 				compat_ids.append(partner_id)
 
-			if reciprocal.button_pressed and socket_id != "":
+			if reciprocal_enabled and socket_id != "":
 				partner_modified = _add_unique_socket_id(partner_socket, socket_id) or partner_modified
 			else:
 				partner_modified = _remove_socket_id(partner_socket, socket_id) or partner_modified

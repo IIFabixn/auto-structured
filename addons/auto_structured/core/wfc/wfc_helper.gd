@@ -87,6 +87,74 @@ static func calculate_adjacent_tile_position(main_tile_size: Vector3, compatible
 	return offset
 
 
+static func _normalize_rotation(rotation_degrees: float) -> int:
+	var normalized := int(round(rotation_degrees)) % 360
+	if normalized < 0:
+		normalized += 360
+	return normalized
+
+
+static func get_rotated_bounds_in_cells(tile_size: Vector3i, rotation_degrees: float) -> Dictionary:
+	"""Compute the axis-aligned bounds of a tile (in grid cells) after Y-rotation."""
+	var normalized := _normalize_rotation(rotation_degrees)
+	var rotation_basis := rotation_y_to_basis(normalized)
+	var min_corner := Vector3(INF, INF, INF)
+	var max_corner := Vector3(-INF, -INF, -INF)
+	var x_values := [0.0, float(tile_size.x)]
+	var y_values := [0.0, float(tile_size.y)]
+	var z_values := [0.0, float(tile_size.z)]
+
+	for x in x_values:
+		for y in y_values:
+			for z in z_values:
+				var rotated := rotation_basis * Vector3(x, y, z)
+				min_corner.x = min(min_corner.x, rotated.x)
+				min_corner.y = min(min_corner.y, rotated.y)
+				min_corner.z = min(min_corner.z, rotated.z)
+				max_corner.x = max(max_corner.x, rotated.x)
+				max_corner.y = max(max_corner.y, rotated.y)
+				max_corner.z = max(max_corner.z, rotated.z)
+
+	return {
+		"min": min_corner,
+		"max": max_corner
+	}
+
+
+static func get_rotated_size_in_cells(tile_size: Vector3i, rotation_degrees: float) -> Vector3:
+	"""Get the size of a tile in grid cells after applying a Y-axis rotation."""
+	var bounds := get_rotated_bounds_in_cells(tile_size, rotation_degrees)
+	var min_corner: Vector3 = bounds["min"]
+	var max_corner: Vector3 = bounds["max"]
+	var size: Vector3 = max_corner - min_corner
+	return Vector3(abs(size.x), abs(size.y), abs(size.z))
+
+
+static func get_rotation_offset_in_cells(tile_size: Vector3i, rotation_degrees: float) -> Vector3:
+	"""Get the translation (in cells) required to keep the rotated tile in positive grid space."""
+	var bounds := get_rotated_bounds_in_cells(tile_size, rotation_degrees)
+	var min_corner: Vector3 = bounds["min"]
+	return Vector3(-min_corner.x, -min_corner.y, -min_corner.z)
+
+
+static func get_rotated_size_world(tile_size: Vector3i, rotation_degrees: float, cell_size: Vector3 = Vector3.ONE) -> Vector3:
+	var rotated_size := get_rotated_size_in_cells(tile_size, rotation_degrees)
+	return Vector3(
+		rotated_size.x * cell_size.x,
+		rotated_size.y * cell_size.y,
+		rotated_size.z * cell_size.z
+	)
+
+
+static func get_rotation_offset_world(tile_size: Vector3i, rotation_degrees: float, cell_size: Vector3 = Vector3.ONE) -> Vector3:
+	var offset_cells := get_rotation_offset_in_cells(tile_size, rotation_degrees)
+	return Vector3(
+		offset_cells.x * cell_size.x,
+		offset_cells.y * cell_size.y,
+		offset_cells.z * cell_size.z
+	)
+
+
 ## Get the opposite direction for socket matching.
 ## Used to find which socket on a neighboring tile should connect.
 ##

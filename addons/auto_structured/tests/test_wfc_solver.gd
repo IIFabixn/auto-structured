@@ -8,6 +8,7 @@ const WfcStrategyBase := preload("res://addons/auto_structured/core/wfc/strategi
 const Requirement := preload("res://addons/auto_structured/core/requirements/requirement.gd")
 const TagRequirement := preload("res://addons/auto_structured/core/requirements/tag_requirement.gd")
 const GroundRequirement := preload("res://addons/auto_structured/core/requirements/ground_requirement.gd")
+const WfcHelper := preload("res://addons/auto_structured/core/wfc/wfc_helper.gd")
 
 class WeightStrategy extends WfcStrategyBase:
 	func get_name() -> String:
@@ -35,6 +36,7 @@ func run_all() -> Dictionary:
 	_run_test(results, "Socket requirements constrain neighbors", test_socket_requirements)
 	_run_test(results, "Tile-level requirements filter invalid positions", test_tile_requirements_filtering)
 	_run_test(results, "Cell weights influence collapse order", test_cell_weight_priority)
+	_run_test(results, "Rotation offsets keep tiles within grid bounds", test_rotation_offset_helpers)
 
 	return results
 
@@ -275,6 +277,26 @@ func test_cell_weight_priority() -> Variant:
 
 	if first_cell.position != Vector3i(0, 0, 2):
 		return "Expected highest weight cell at (0,0,2) but got %s" % [first_cell.position]
+
+	return null
+
+func test_rotation_offset_helpers() -> Variant:
+	var single_cell := Vector3i.ONE
+	var offset_0 := WfcHelper.get_rotation_offset_in_cells(single_cell, 0)
+	if not offset_0.is_equal_approx(Vector3.ZERO):
+		return "0° rotation should require no offset but got %s" % [offset_0]
+
+	var offset_90 := WfcHelper.get_rotation_offset_in_cells(Vector3i(2, 1, 1), 90)
+	if not offset_90.is_equal_approx(Vector3(0, 0, 2)):
+		return "90° rotation should shift by +X size on Z axis but got %s" % [offset_90]
+
+	var offset_180 := WfcHelper.get_rotation_offset_in_cells(Vector3i(1, 1, 3), 180)
+	if not offset_180.is_equal_approx(Vector3(1, 0, 3)):
+		return "180° rotation should shift by full size on X and Z but got %s" % [offset_180]
+
+	var rotated_size_270 := WfcHelper.get_rotated_size_in_cells(Vector3i(3, 2, 1), 270)
+	if not rotated_size_270.is_equal_approx(Vector3(1, 2, 3)):
+		return "270° rotation should swap X/Z extents but got %s" % [rotated_size_270]
 
 	return null
 

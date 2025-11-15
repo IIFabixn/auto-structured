@@ -279,14 +279,6 @@ func _get_effective_cell_size() -> Vector3:
 		size.z = DEFAULT_CELL_WORLD_SIZE.z
 	return size
 
-func _get_rotated_cell_counts(cell_counts: Vector3, rotation_degrees: float) -> Vector3:
-	var normalized := int(round(rotation_degrees)) % 360
-	if normalized < 0:
-		normalized += 360
-	if normalized == 90 or normalized == 270:
-		return Vector3(cell_counts.z, cell_counts.y, cell_counts.x)
-	return cell_counts
-
 func _ensure_cell_world_size_from_library() -> void:
 	current_cell_world_size = library_cell_world_size
 
@@ -404,8 +396,7 @@ func _show_compatible_tile(index: int) -> void:
 		var main_tile_cells: Vector3i = main_tile.size if main_tile else Vector3i.ONE
 		var compatible_tile_cells: Vector3i = tile.size
 		var main_tile_size = Vector3(float(main_tile_cells.x), float(main_tile_cells.y), float(main_tile_cells.z))
-		var compatible_tile_size = Vector3(float(compatible_tile_cells.x), float(compatible_tile_cells.y), float(compatible_tile_cells.z))
-		var rotated_compatible_size = _get_rotated_cell_counts(compatible_tile_size, predetermined_rotation)
+		var rotated_compatible_size = WfcHelper.get_rotated_size_in_cells(compatible_tile_cells, predetermined_rotation)
 		
 		# Position the compatible tile adjacent to the main tile
 		var main_direction = main_socket.direction
@@ -416,7 +407,8 @@ func _show_compatible_tile(index: int) -> void:
 			main_direction,
 			cell_size
 		)
-		instance.position = calculated_position
+		var rotation_offset = WfcHelper.get_rotation_offset_world(compatible_tile_cells, predetermined_rotation, cell_size)
+		instance.position = calculated_position + rotation_offset
 		
 		# Make the preview translucent
 		_make_translucent(instance)
@@ -682,10 +674,11 @@ func _visualize_grid() -> void:
 		if instance:
 			# Apply rotation and keep tiles anchored to their grid cell origin
 			instance.transform.basis = Basis(Vector3.UP, deg_to_rad(rotation))
-			
-			# Position based on grid position and cell size, centered at origin
+
+			# Position based on grid position, rotation offset, and cell size, centered at origin
 			var world_pos = WfcHelper.grid_to_world(cell.position, cell_size)
-			instance.position = world_pos - center_offset
+			var rotation_offset = WfcHelper.get_rotation_offset_world(tile.size, rotation, cell_size)
+			instance.position = world_pos + rotation_offset - center_offset
 			
 			instance.name = "Cell_%d_%d_%d" % [cell.position.x, cell.position.y, cell.position.z]
 			preview_root.add_child(instance)
