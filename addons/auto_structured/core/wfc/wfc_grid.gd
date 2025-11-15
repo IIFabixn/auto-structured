@@ -2,6 +2,7 @@ class_name WfcGrid extends RefCounted
 
 const WfcCell = preload("res://addons/auto_structured/core/wfc/wfc_cell.gd")
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
+const WfcStrategyBase = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_base.gd")
 
 ## 3D grid of WFC cells for procedural generation.
 ## Optimized: Flat array storage instead of Dictionary for better performance
@@ -9,10 +10,12 @@ var _cells: Array[WfcCell] = []
 var size: Vector3i
 var all_tiles: Array[Tile] = []
 var all_tile_variants: Array[Dictionary] = []  # All possible tile+rotation combinations
+var _strategy: WfcStrategyBase = null
 
 ## Performance optimization: Priority queue (min-heap) for entropy selection
 var _entropy_heap: Array = []  # Array of { "entropy": float, "seq": int, "cell": WfcCell }
 var _heap_seq: int = 0  # Monotonic counter for tie-breaking in heap
+var _cell_weights: PackedFloat32Array = PackedFloat32Array()
 
 ## Helper function to convert 3D position to flat array index
 func _index(pos: Vector3i) -> int:
@@ -44,6 +47,10 @@ func _init(grid_size: Vector3i, tiles: Array[Tile]) -> void:
 				var cell = WfcCell.new(pos, all_tile_variants)
 				_apply_tile_requirements(cell)
 				_cells[_index(pos)] = cell
+
+	_cell_weights.resize(total_cells)
+	for i in range(total_cells):
+		_cell_weights[i] = 1.0
 	
 	# Initialize heap - will be populated when solver needs it
 	_entropy_heap.clear()
@@ -138,6 +145,9 @@ func initialize_heap() -> void:
 	"""Initialize the heap with all uncollapsed cells. Call once at start of solve."""
 	_entropy_heap.clear()
 	_heap_seq = 0
+
+	if _cell_weights.size() != _cells.size():
+		_recalculate_cell_weights()
 	
 	for cell in _cells:
 		if not cell.is_collapsed() and not cell.is_empty():
@@ -148,8 +158,10 @@ func initialize_heap() -> void:
 
 func _heap_push(cell: WfcCell) -> void:
 	"""Add a cell to the min-heap."""
+	var weight_priority: float = _get_weight_priority(cell)
 	var item = {
 		"entropy": cell.get_entropy(),
+		"weight_priority": weight_priority,
 		"seq": _heap_seq,
 		"cell": cell
 	}
@@ -221,6 +233,14 @@ func _heap_less_than(a_idx: int, b_idx: int) -> bool:
 		return true
 	elif a["entropy"] > b["entropy"]:
 		return false
+
+	# Then compare by strategy weight priority (lower value = higher weight)
+	var a_weight_priority: float = a.get("weight_priority", 0.0)
+	var b_weight_priority: float = b.get("weight_priority", 0.0)
+	if a_weight_priority < b_weight_priority:
+		return true
+	elif a_weight_priority > b_weight_priority:
+		return false
 	
 	# Tie-break by sequence (for stability and randomization)
 	return a["seq"] < b["seq"]
@@ -264,6 +284,7 @@ func reset() -> void:
 	# Clear heap - will be reinitialized on next solve
 	_entropy_heap.clear()
 	_heap_seq = 0
+	_recalculate_cell_weights()
 
 
 func _apply_tile_requirements(cell: WfcCell) -> void:
@@ -303,3 +324,33 @@ func _variant_meets_tile_requirements(variant: Dictionary, cell_position: Vector
 			return false
 
 	return true
+
+
+func set_strategy(strategy: WfcStrategyBase) -> void:
+	_strategy = strategy
+	_recalculate_cell_weights()
+
+
+func _recalculate_cell_weights() -> void:
+	if _cells.is_empty():
+		return
+
+	var total_cells = _cells.size()
+	_cell_weights.resize(total_cells)
+
+	for x in range(size.x):
+		for y in range(size.y):
+			for z in range(size.z):
+				var pos = Vector3i(x, y, z)
+				var idx = _index(pos)
+				var weight := 1.0
+				if _strategy:
+					weight = max(_strategy.get_cell_weight(pos, size), 0.0)
+				_cell_weights[idx] = weight
+
+
+func _get_weight_priority(cell: WfcCell) -> float:
+	var idx = _index(cell.position)
+	if idx < 0 or idx >= _cell_weights.size():
+		return -1.0
+	return -_cell_weights[idx]

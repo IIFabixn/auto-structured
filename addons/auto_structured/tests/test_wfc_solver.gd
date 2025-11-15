@@ -4,9 +4,23 @@ const WfcGrid := preload("res://addons/auto_structured/core/wfc/wfc_grid.gd")
 const WfcSolver := preload("res://addons/auto_structured/core/wfc/wfc_solver.gd")
 const Tile := preload("res://addons/auto_structured/core/tile.gd")
 const Socket := preload("res://addons/auto_structured/core/socket.gd")
+const WfcStrategyBase := preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_base.gd")
 const Requirement := preload("res://addons/auto_structured/core/requirements/requirement.gd")
 const TagRequirement := preload("res://addons/auto_structured/core/requirements/tag_requirement.gd")
 const GroundRequirement := preload("res://addons/auto_structured/core/requirements/ground_requirement.gd")
+
+class WeightStrategy extends WfcStrategyBase:
+	func get_name() -> String:
+		return "Weight Test Strategy"
+
+	func get_description() -> String:
+		return "Assigns higher weights to larger Z positions for testing."
+
+	func should_collapse_cell(_position: Vector3i, _grid_size: Vector3i) -> bool:
+		return true
+
+	func get_cell_weight(position: Vector3i, _grid_size: Vector3i) -> float:
+		return float(position.z)
 
 func run_all() -> Dictionary:
 	var results := {
@@ -20,6 +34,7 @@ func run_all() -> Dictionary:
 	_run_test(results, "Neighbor variant filtering removes incompatible options", test_neighbor_variant_filtering)
 	_run_test(results, "Socket requirements constrain neighbors", test_socket_requirements)
 	_run_test(results, "Tile-level requirements filter invalid positions", test_tile_requirements_filtering)
+	_run_test(results, "Cell weights influence collapse order", test_cell_weight_priority)
 
 	return results
 
@@ -246,6 +261,23 @@ func test_tile_requirements_filtering() -> Variant:
 
 	return null
 
+func test_cell_weight_priority() -> Variant:
+	var neutral_tile := _create_tile("WeightTile", [])
+	neutral_tile.symmetry = Tile.Symmetry.ROTATION_90
+
+	var strategy := WeightStrategy.new()
+	var solver := _create_solver(Vector3i(1, 1, 3), [neutral_tile], strategy)
+	var grid := solver.grid
+	grid.initialize_heap()
+	var first_cell := grid.get_lowest_entropy_cell()
+	if first_cell == null:
+		return "Expected a cell from the heap but received null"
+
+	if first_cell.position != Vector3i(0, 0, 2):
+		return "Expected highest weight cell at (0,0,2) but got %s" % [first_cell.position]
+
+	return null
+
 func _get_rotations_for_tile(variants: Array[Dictionary], tile: Tile) -> Array[int]:
 	var rotations: Array[int] = []
 	for variant in variants:
@@ -279,12 +311,12 @@ func _create_tile(name: String, socket_defs: Array, symmetry: int = Tile.Symmetr
 	tile.sockets = sockets
 	return tile
 
-func _create_solver(grid_size: Vector3i, tiles: Array) -> WfcSolver:
+func _create_solver(grid_size: Vector3i, tiles: Array, strategy: WfcStrategyBase = null) -> WfcSolver:
 	var typed_tiles: Array[Tile] = []
 	for tile in tiles:
 		typed_tiles.append(tile)
 	var grid := WfcGrid.new(grid_size, typed_tiles)
-	return WfcSolver.new(grid, null, false)
+	return WfcSolver.new(grid, strategy, false)
 
 func _find_variant(grid: WfcGrid, tile: Tile, rotation: int) -> Dictionary:
 	for variant in grid.all_tile_variants:

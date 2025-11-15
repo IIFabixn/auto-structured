@@ -59,6 +59,7 @@ func _init(wfc_grid: WfcGrid, wfc_strategy: WfcStrategyBase = null, prewarm_cach
 	grid = wfc_grid
 	strategy = wfc_strategy if wfc_strategy else WfcStrategyFillAll.new()
 	strategy.initialize(grid.size)
+	grid.set_strategy(strategy)
 	
 	# Auto-configure based on grid size
 	var total_cells = grid.size.x * grid.size.y * grid.size.z
