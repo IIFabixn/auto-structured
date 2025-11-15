@@ -115,6 +115,10 @@ func find_libraries() -> void:
 
 	library_option.set_block_signals(false)
 	if not libraries.is_empty():
+		current_library = libraries[0]
+		selected_tile = null
+		_refresh_tile_list()
+		library_loaded.emit(current_library)
 		library_option.select(0)
 
 
