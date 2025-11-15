@@ -383,9 +383,7 @@ func _display_socket_requirements() -> void:
 	"""Display all requirements for this socket"""
 	if not socket or not socket_requirements_container:
 		return
-	
-	print("Displaying socket requirements. Socket has %d requirements" % socket.requirements.size())
-	
+
 	# Clear existing requirement items (but not the add button)
 	for child in socket_requirements_container.get_children():
 		if child is RequirementItem:

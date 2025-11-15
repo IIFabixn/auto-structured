@@ -86,6 +86,14 @@ text = "Symmetry"
 [node name="SymmetryOptionButton" type="OptionButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
+selected = 0
+item_count = 3
+popup/item_0/text = "None"
+popup/item_0/id = 0
+popup/item_1/text = "Rotation 180°"
+popup/item_1/id = 1
+popup/item_2/text = "Rotation 90°"
+popup/item_2/id = 2
 
 [node name="Tags" type="FoldableContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer"]
 layout_mode = 2
@@ -145,7 +153,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 step = 0.1
 value = 1.0
-suffix = "m"
+select_all_on_focus = true
 
 [node name="HBoxContainer2" type="HBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
@@ -161,7 +169,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 step = 0.1
 value = 1.0
-suffix = "m"
+select_all_on_focus = true
 
 [node name="HBoxContainer3" type="HBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
@@ -177,7 +185,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 step = 0.1
 value = 1.0
-suffix = "m"
+select_all_on_focus = true
 
 [node name="Requirements" type="ScrollContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer"]
 visible = false

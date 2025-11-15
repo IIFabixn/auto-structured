@@ -49,6 +49,7 @@ min_value = 1.0
 max_value = 50.0
 value = 5.0
 update_on_text_changed = true
+select_all_on_focus = true
 
 [node name="YLabel" type="Label" parent="ScrollContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
@@ -65,6 +66,7 @@ min_value = 1.0
 max_value = 50.0
 value = 5.0
 update_on_text_changed = true
+select_all_on_focus = true
 
 [node name="ZLabel" type="Label" parent="ScrollContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
@@ -81,6 +83,7 @@ min_value = 1.0
 max_value = 50.0
 value = 5.0
 update_on_text_changed = true
+select_all_on_focus = true
 
 [node name="CellSizeLabel" type="Label" parent="ScrollContainer/VBoxContainer"]
 layout_mode = 2
@@ -105,6 +108,8 @@ min_value = 0.1
 step = 0.1
 value = 1.0
 update_on_text_changed = true
+suffix = "m"
+select_all_on_focus = true
 
 [node name="CellYLabel" type="Label" parent="ScrollContainer/VBoxContainer/CellSizeHBox"]
 layout_mode = 2
@@ -121,6 +126,8 @@ min_value = 0.1
 step = 0.1
 value = 1.0
 update_on_text_changed = true
+suffix = "m"
+select_all_on_focus = true
 
 [node name="CellZLabel" type="Label" parent="ScrollContainer/VBoxContainer/CellSizeHBox"]
 layout_mode = 2
@@ -137,6 +144,8 @@ min_value = 0.1
 step = 0.1
 value = 1.0
 update_on_text_changed = true
+suffix = "m"
+select_all_on_focus = true
 
 [node name="StrategyLabel" type="Label" parent="ScrollContainer/VBoxContainer"]
 layout_mode = 2
