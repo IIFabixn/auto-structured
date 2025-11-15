@@ -26,57 +26,122 @@ class_name WfcStrategyOrganic
 ## How much to favor filling cells near the edges (0.0 = no bias, 1.0 = strong edge preference)
 @export_range(0.0, 1.0) var edge_bias_strength: float = 0.6
 
+@export_range(0.0, 1.0) var height_taper_strength: float = 0.4
+@export var add_height_tags: bool = true
+
 var noise: FastNoiseLite
+var _grid_size: Vector3i = Vector3i.ZERO
 
 
 func _init() -> void:
 	noise = FastNoiseLite.new()
+	_update_noise()
+
+
+func initialize(grid_size: Vector3i) -> void:
+	_grid_size = grid_size
+	_update_noise()
+
+
+func _update_noise() -> void:
+	if not noise:
+		noise = FastNoiseLite.new()
 	noise.noise_type = FastNoiseLite.TYPE_PERLIN
 	noise.frequency = noise_frequency
 	noise.seed = noise_seed
 
 
 func should_collapse_cell(position: Vector3i, grid_size: Vector3i) -> bool:
-	# Always fill the base floors for structural stability
+	return _is_cell_filled(position, grid_size)
+
+
+func _is_cell_filled(position: Vector3i, grid_size: Vector3i) -> bool:
+	if grid_size == Vector3i.ZERO:
+		grid_size = _grid_size
+
 	if position.y < base_solid_height:
 		return true
-	
-	# Always fill perimeter walls for first few floors to ensure socket compatibility
-	var is_perimeter = (position.x == 0 or position.x == grid_size.x - 1 or
-						position.z == 0 or position.z == grid_size.z - 1)
-	if is_perimeter and position.y < 3:
+
+	var is_perimeter := _is_perimeter(position, grid_size)
+	if is_perimeter and position.y < max(3, base_solid_height + 1):
 		return true
-	
-	# Get noise value for this position
-	var noise_val = noise.get_noise_3d(float(position.x), float(position.y), float(position.z))
-	# Noise returns values from -1 to 1, normalize to 0 to 1
+
+	var noise_val := noise.get_noise_3d(float(position.x), float(position.y), float(position.z))
 	noise_val = (noise_val + 1.0) / 2.0
-	
-	# Calculate distance to nearest edge (for edge bias)
-	var dist_x = min(position.x, grid_size.x - 1 - position.x)
-	var dist_z = min(position.z, grid_size.z - 1 - position.z)
-	var dist_to_edge = min(dist_x, dist_z)
-	
-	# Normalize distance (0 at edge, 1 at center)
-	var max_dist = min(grid_size.x, grid_size.z) / 2.0
-	var normalized_dist = clamp(float(dist_to_edge) / max_dist, 0.0, 1.0)
-	
-	# Edge bias: cells near edges are more likely to be filled
-	# (1.0 - normalized_dist) means edge = 1.0, center = 0.0
-	var edge_bias = (1.0 - normalized_dist) * edge_bias_strength
-	
-	# Height falloff: higher floors are less likely to be filled (creates tapered effect)
-	var height_ratio = float(position.y) / float(grid_size.y)
-	var height_falloff = 1.0 - (height_ratio * 0.4)  # Reduce by up to 40% at top for taper
-	
-	# Combine noise with biases
-	var final_value = noise_val + edge_bias
-	final_value *= height_falloff
-	
-	# Threshold based on density setting
-	var threshold = 1.0 - density
-	
+
+	var dist_x := min(position.x, grid_size.x - 1 - position.x)
+	var dist_z := min(position.z, grid_size.z - 1 - position.z)
+	var dist_to_edge := min(dist_x, dist_z)
+	var max_dist := max(1.0, min(grid_size.x, grid_size.z) / 2.0)
+	var normalized_dist := clamp(float(dist_to_edge) / max_dist, 0.0, 1.0)
+	var edge_bias: float = (1.0 - normalized_dist) * edge_bias_strength
+
+	var height_ratio := 0.0
+	if grid_size.y > 1:
+		height_ratio = float(position.y) / float(grid_size.y - 1)
+	var height_falloff := 1.0 - (height_ratio * height_taper_strength)
+
+	var final_value: float = (noise_val + edge_bias) * height_falloff
+	var threshold := 1.0 - density
+
 	return final_value > threshold
+
+
+func _is_perimeter(position: Vector3i, grid_size: Vector3i) -> bool:
+	return (
+		position.x == 0 or position.x == grid_size.x - 1 or
+		position.z == 0 or position.z == grid_size.z - 1
+	)
+
+
+func _is_inside(position: Vector3i, grid_size: Vector3i) -> bool:
+	return (
+		position.x >= 0 and position.x < grid_size.x and
+		position.y >= 0 and position.y < grid_size.y and
+		position.z >= 0 and position.z < grid_size.z
+	)
+
+
+func get_cell_tags(position: Vector3i, grid_size: Vector3i) -> Array[String]:
+	if not _is_cell_filled(position, grid_size):
+		return []
+
+	var tags: Array[String] = ["structure"]
+	var below := position + Vector3i.DOWN
+	var above := position + Vector3i.UP
+	var has_support_below := below.y >= 0 and _is_cell_filled(below, grid_size)
+	var has_air_above := (above.y >= grid_size.y) or not _is_cell_filled(above, grid_size)
+
+	if position.y == 0 or not has_support_below:
+		tags.append("floor")
+
+	var exposed := false
+	for dir in [Vector3i.LEFT, Vector3i.RIGHT, Vector3i.FORWARD, Vector3i.BACK]:
+		var neighbor: Vector3i = position + dir
+		if not _is_inside(neighbor, grid_size) or not _is_cell_filled(neighbor, grid_size):
+			exposed = true
+			break
+
+	if exposed:
+		tags.append_array(["wall", "exterior"])
+	else:
+		tags.append("interior")
+		if has_support_below:
+			tags.append("floor")
+
+	if has_air_above:
+		tags.append("roof")
+
+	if add_height_tags and grid_size.y > 1:
+		var ratio := clamp(float(position.y) / float(grid_size.y - 1), 0.0, 1.0)
+		if ratio < 0.33:
+			tags.append("lower")
+		elif ratio < 0.66:
+			tags.append("middle")
+		else:
+			tags.append("upper")
+
+	return tags
 
 
 func get_name() -> String:

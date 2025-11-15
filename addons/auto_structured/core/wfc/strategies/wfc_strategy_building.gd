@@ -34,6 +34,17 @@ class_name WfcStrategyBuilding extends WfcStrategyBase
 ## Whether to add material variation tags based on height
 @export var add_height_tags: bool = false
 
+var _grid_size: Vector3i = Vector3i.ZERO
+
+
+func initialize(grid_size: Vector3i) -> void:
+	_grid_size = grid_size
+	if grid_size.y <= 0:
+		return
+	roof_height = clamp(roof_height, 1, max(1, grid_size.y))
+	var max_wall_thickness = max(1, min(grid_size.x, grid_size.z) / 2)
+	wall_thickness = clamp(wall_thickness, 1, max_wall_thickness)
+
 
 func get_name() -> String:
 	return "Building (Single Volume)"
@@ -51,6 +62,7 @@ func should_collapse_cell(position: Vector3i, grid_size: Vector3i) -> bool:
 func get_cell_tags(position: Vector3i, grid_size: Vector3i) -> Array[String]:
 	"""Assign semantic tags based on position within the building"""
 	var tags: Array[String] = []
+	tags.append("structure")
 	
 	# Determine vertical layer
 	var is_ground = position.y == 0
@@ -74,7 +86,9 @@ func get_cell_tags(position: Vector3i, grid_size: Vector3i) -> Array[String]:
 		tags.append("roof")
 		# Optionally differentiate roof edges
 		if is_perimeter:
-			tags.append("edge")
+			tags.append_array(["edge", "exterior"])
+		else:
+			tags.append("exterior")
 	
 	# Middle floors (between ground and roof)
 	elif is_mid_floor:
@@ -108,6 +122,11 @@ func _is_on_perimeter(position: Vector3i, grid_size: Vector3i) -> bool:
 		# For thicker walls (future support)
 		return (position.x < wall_thickness or position.x >= grid_size.x - wall_thickness or
 		        position.z < wall_thickness or position.z >= grid_size.z - wall_thickness)
+
+
+func get_cell_weight(position: Vector3i, grid_size: Vector3i) -> float:
+	# Collapse from ground upwards for stability and predictable layering
+	return float(grid_size.y - position.y)
 
 
 func get_options() -> Control:

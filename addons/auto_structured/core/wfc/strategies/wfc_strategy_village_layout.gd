@@ -39,11 +39,13 @@ enum RegionType {
 @export var ground_floor_height: int = 1  ## Cells for ground floor (y=0)
 @export var wall_thickness: int = 1  ## Walls are typically 1 cell thick
 @export var roof_height: int = 1  ## Cells for roof at top
+@export var random_seed: int = 2024
 
 ## Internal: Stored region data (built during initialize)
 var _regions: Dictionary = {}  ## Vector3i -> RegionType
 var _building_footprints: Array[Dictionary] = []  ## [{min: Vector3i, max: Vector3i}]
 var _grid_size: Vector3i
+var _rng := RandomNumberGenerator.new()
 
 func get_name() -> String:
 	return "Village Layout (Macro)"
@@ -56,6 +58,27 @@ func initialize(grid_size: Vector3i) -> void:
 	_grid_size = grid_size
 	_regions.clear()
 	_building_footprints.clear()
+	if random_seed == 0:
+		_rng.randomize()
+	else:
+		_rng.seed = random_seed
+
+	var min_horizontal := max(1, min(grid_size.x, grid_size.z))
+	var max_road_width := max(1, min_horizontal - 1)
+	road_width = clamp(road_width, 1, max_road_width)
+	road_spacing = max(road_width + 2, road_spacing)
+	building_density = clamp(building_density, 0.0, 1.0)
+
+	building_min_size = Vector3i(
+		clamp(building_min_size.x, 2, max(2, building_max_size.x)),
+		clamp(building_min_size.y, 2, max(2, building_max_size.y)),
+		clamp(building_min_size.z, 2, max(2, building_max_size.z))
+	)
+	building_max_size = Vector3i(
+		clamp(building_max_size.x, building_min_size.x, max(building_min_size.x, grid_size.x - road_width)),
+		clamp(building_max_size.y, building_min_size.y, max(building_min_size.y, grid_size.y)),
+		clamp(building_max_size.z, building_min_size.z, max(building_min_size.z, grid_size.z - road_width))
+	)
 	
 	print("[Village Strategy] Initializing village layout...")
 	print("  Grid size: ", grid_size)
@@ -120,19 +143,21 @@ func _generate_building_footprints() -> void:
 	# This is a simplified algorithm - production code would use more sophisticated placement
 	
 	var attempted_positions: Array[Vector3i] = []
-	
+
 	# Try placing buildings in a grid pattern
-	var step = (building_min_size.x + building_max_size.x) / 2
-	for x in range(road_width + 1, _grid_size.x - building_max_size.x, step):
-		for z in range(road_width + 1, _grid_size.z - building_max_size.z, step):
-			if randf() > building_density:
+	var step = max(1, int(round((building_min_size.x + building_max_size.x) / 2.0)))
+	var max_x := max(road_width + 1, _grid_size.x - building_max_size.x)
+	var max_z := max(road_width + 1, _grid_size.z - building_max_size.z)
+	for x in range(road_width + 1, max_x, step):
+		for z in range(road_width + 1, max_z, step):
+			if _rng.randf() > building_density:
 				continue
 			
 			# Random building size within bounds
 			var size = Vector3i(
-				randi_range(building_min_size.x, building_max_size.x),
-				randi_range(building_min_size.y, building_max_size.y),
-				randi_range(building_min_size.z, building_max_size.z)
+				_rng.randi_range(building_min_size.x, building_max_size.x),
+				_rng.randi_range(building_min_size.y, building_max_size.y),
+				_rng.randi_range(building_min_size.z, building_max_size.z)
 			)
 			
 			var min_pos = Vector3i(x, 0, z)
@@ -145,6 +170,26 @@ func _generate_building_footprints() -> void:
 					"max": max_pos,
 					"size": size
 				})
+
+	if _building_footprints.is_empty():
+		var fallback_size := Vector3i(
+			clamp(building_min_size.x, 2, max(2, _grid_size.x - (road_width * 2))),
+			clamp(building_min_size.y, 2, max(2, _grid_size.y)),
+			clamp(building_min_size.z, 2, max(2, _grid_size.z - (road_width * 2)))
+		)
+		fallback_size.x = min(fallback_size.x, _grid_size.x - 2)
+		fallback_size.z = min(fallback_size.z, _grid_size.z - 2)
+		var min_pos := Vector3i(
+			clamp((_grid_size.x - fallback_size.x) / 2, 1, max(1, _grid_size.x - fallback_size.x - 1)),
+			0,
+			clamp((_grid_size.z - fallback_size.z) / 2, 1, max(1, _grid_size.z - fallback_size.z - 1))
+		)
+		var max_pos := min_pos + fallback_size
+		_building_footprints.append({
+			"min": min_pos,
+			"max": max_pos,
+			"size": fallback_size
+		})
 
 func _is_valid_building_plot(min_pos: Vector3i, max_pos: Vector3i) -> bool:
 	"""Check if a building can be placed here (no roads, other buildings, or out of bounds)"""
@@ -420,4 +465,26 @@ func get_options() -> Control:
 	vbox.add_child(roof_spinner)
 	
 	scroll.add_child(vbox)
+
+	# Random seed control
+	vbox.add_child(HSeparator.new())
+	var seed_header := Label.new()
+	seed_header.text = "Randomization"
+	seed_header.add_theme_font_size_override("font_size", 16)
+	vbox.add_child(seed_header)
+
+	var seed_label := Label.new()
+	seed_label.text = "Seed (0 = randomize each run):"
+	vbox.add_child(seed_label)
+
+	var seed_spinner := SpinBox.new()
+	seed_spinner.min_value = -2147483648
+	seed_spinner.max_value = 2147483647
+	seed_spinner.step = 1
+	seed_spinner.value = random_seed
+	seed_spinner.value_changed.connect(func(value: float):
+		random_seed = int(value)
+	)
+	vbox.add_child(seed_spinner)
+
 	return scroll
