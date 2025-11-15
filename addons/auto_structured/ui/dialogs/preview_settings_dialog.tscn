@@ -82,6 +82,62 @@ max_value = 50.0
 value = 5.0
 update_on_text_changed = true
 
+[node name="CellSizeLabel" type="Label" parent="ScrollContainer/VBoxContainer"]
+layout_mode = 2
+text = "Cell Size (World Units)"
+vertical_alignment = 1
+
+[node name="CellSizeHBox" type="HBoxContainer" parent="ScrollContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="CellXLabel" type="Label" parent="ScrollContainer/VBoxContainer/CellSizeHBox"]
+layout_mode = 2
+text = "X"
+vertical_alignment = 1
+
+[node name="CellXSpinBox" type="SpinBox" parent="ScrollContainer/VBoxContainer/CellSizeHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "World width per cell"
+min_value = 0.1
+step = 0.1
+value = 1.0
+update_on_text_changed = true
+
+[node name="CellYLabel" type="Label" parent="ScrollContainer/VBoxContainer/CellSizeHBox"]
+layout_mode = 2
+text = "Y"
+vertical_alignment = 1
+
+[node name="CellYSpinBox" type="SpinBox" parent="ScrollContainer/VBoxContainer/CellSizeHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "World height per cell"
+min_value = 0.1
+step = 0.1
+value = 1.0
+update_on_text_changed = true
+
+[node name="CellZLabel" type="Label" parent="ScrollContainer/VBoxContainer/CellSizeHBox"]
+layout_mode = 2
+text = "Z"
+vertical_alignment = 1
+
+[node name="CellZSpinBox" type="SpinBox" parent="ScrollContainer/VBoxContainer/CellSizeHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "World depth per cell"
+min_value = 0.1
+step = 0.1
+value = 1.0
+update_on_text_changed = true
+
 [node name="StrategyLabel" type="Label" parent="ScrollContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 0

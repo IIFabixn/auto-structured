@@ -7,6 +7,8 @@ signal library_loaded(library: ModuleLibrary)
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.gd")
 const ManageSocketsDialog = preload("res://addons/auto_structured/ui/dialogs/manage_sockets_dialog.tscn")
+const Requirement = preload("res://addons/auto_structured/core/requirements/requirement.gd")
+const Socket = preload("res://addons/auto_structured/core/socket.gd")
 
 var libraries: Array[ModuleLibrary] = []
 var current_library: ModuleLibrary
@@ -28,8 +30,9 @@ var library_menu_button: MenuButton = $Panel/MarginContainer/VBoxContainer/VBoxC
 @onready var tile_list: ItemList = %TileList
 @onready var search_edit: LineEdit = %AssetSearchEdit
 
-const DELETE_TILE = 0
-const RESET_TILE = 1
+const OPEN_TILE = 0
+const DELETE_TILE = 1
+const RESET_TILE = 2
 
 func _ready() -> void:
 	# Get EditorResourcePreview instance
@@ -167,6 +170,8 @@ func _setup_rename_dialog() -> void:
 func _setup_tile_context_menu() -> void:
 	tile_context_menu = PopupMenu.new()
 	add_child(tile_context_menu)
+	tile_context_menu.add_item("Open", OPEN_TILE)
+	tile_context_menu.add_separator()
 	tile_context_menu.add_item("Delete Tile", DELETE_TILE)
 	tile_context_menu.add_item("Reset Tile", RESET_TILE)
 	tile_context_menu.id_pressed.connect(_on_tile_context_menu_item_selected)
@@ -189,15 +194,12 @@ func _on_tile_list_item_clicked(index: int, at_position: Vector2, mouse_button_i
 
 func _on_tile_context_menu_item_selected(id: int) -> void:
 	match id:
+		OPEN_TILE:
+			_open_selected_tile()
 		DELETE_TILE:  # Delete Tile
 			_delete_selected_tile()
 		RESET_TILE:  # Reset Tile (clear requirements, sockets, tags)
-			if selected_tile:
-				selected_tile.requirements = []
-				selected_tile.sockets = []
-				selected_tile.tags = []
-				_save_library()
-				_refresh_tile_list()
+			_reset_selected_tile()
 
 
 func _delete_selected_tile() -> void:
@@ -210,6 +212,41 @@ func _delete_selected_tile() -> void:
 		_save_library()
 		_refresh_tile_list()
 		selected_tile = null
+
+
+func _reset_selected_tile() -> void:
+	if not selected_tile:
+		return
+
+	var empty_requirements: Array[Requirement] = []
+	selected_tile.requirements = empty_requirements
+
+	var empty_sockets: Array[Socket] = []
+	selected_tile.sockets = empty_sockets
+	selected_tile.ensure_all_sockets()
+
+	var empty_tags: Array[String] = []
+	selected_tile.tags = empty_tags
+
+	_save_library()
+	_refresh_tile_list()
+	if selected_tile:
+		tile_selected.emit(selected_tile)
+
+
+func _open_selected_tile() -> void:
+	if not selected_tile:
+		return
+
+	if selected_tile.scene and selected_tile.scene.resource_path != "":
+		EditorInterface.open_scene_from_path(selected_tile.scene.resource_path)
+		return
+
+	if selected_tile.mesh:
+		EditorInterface.edit_resource(selected_tile.mesh)
+		return
+
+	push_warning("Tile has no scene or mesh to open")
 
 
 func _on_library_menu_item_selected(id: int) -> void:
@@ -419,6 +456,12 @@ func _refresh_tile_list() -> void:
 		tile_list.add_item(tile.name, icon)
 		# Store the tile reference as metadata so we can update it later
 		tile_list.set_item_metadata(i, tile)
+
+	if selected_tile:
+		var selected_index = filtered_tiles.find(selected_tile)
+		if selected_index != -1:
+			tile_list.select(selected_index)
+			tile_list.ensure_current_is_visible()
 
 func get_thumbnail_for_tile(tile: Tile) -> Texture2D:
 	"""

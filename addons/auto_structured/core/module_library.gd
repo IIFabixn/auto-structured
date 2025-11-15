@@ -6,6 +6,7 @@ const Tile = preload("res://addons/auto_structured/core/tile.gd")
 @export var library_name: String = "My Building Set"
 @export var tiles: Array[Tile] = []
 @export var socket_types: Array[String] = []  ## Registered socket type IDs for this library
+@export var cell_world_size: Vector3 = Vector3(2, 3, 2)
 
 func ensure_defaults() -> void:
 	"""
@@ -17,6 +18,10 @@ func ensure_defaults() -> void:
 	if "any" not in socket_types:
 		socket_types.append("any")
 	socket_types.sort()
+
+	# Ensure cell size has sane defaults
+	if cell_world_size.x <= 0.0 or cell_world_size.y <= 0.0 or cell_world_size.z <= 0.0:
+		cell_world_size = Vector3(2, 3, 2)
 
 func get_tile_by_name(name: String) -> Tile:
 	for tile in tiles:

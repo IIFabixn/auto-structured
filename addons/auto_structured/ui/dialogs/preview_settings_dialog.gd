@@ -8,6 +8,7 @@ const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.
 const StrategyPresetStore = preload("res://addons/auto_structured/ui/dialogs/strategy_preset_store.gd")
 
 signal apply_requested(strategy: WfcStrategyBase)
+signal cell_size_changed(new_size: Vector3)
 
 @onready var x_spinbox: SpinBox = %XSpinBox
 @onready var y_spinbox: SpinBox = %YSpinBox
@@ -25,9 +26,15 @@ signal apply_requested(strategy: WfcStrategyBase)
 @onready var apply_button: Button = %ApplyButton
 @onready var save_preset_dialog: AcceptDialog = %SavePresetDialog
 @onready var preset_name_edit: LineEdit = %PresetNameEdit
+@onready var cell_x_spinbox: SpinBox = %CellXSpinBox
+@onready var cell_y_spinbox: SpinBox = %CellYSpinBox
+@onready var cell_z_spinbox: SpinBox = %CellZSpinBox
 
 # Grid size
 var grid_size: Vector3i = Vector3i(5, 5, 5)
+
+# Cell size (world units)
+var cell_world_size: Vector3 = Vector3(1, 1, 1)
 
 # Strategy management
 var available_strategies: Array[WfcStrategyBase] = []
@@ -55,6 +62,12 @@ func _ready() -> void:
 	x_spinbox.value_changed.connect(_on_grid_size_changed)
 	y_spinbox.value_changed.connect(_on_grid_size_changed)
 	z_spinbox.value_changed.connect(_on_grid_size_changed)
+	cell_x_spinbox.value = cell_world_size.x
+	cell_y_spinbox.value = cell_world_size.y
+	cell_z_spinbox.value = cell_world_size.z
+	cell_x_spinbox.value_changed.connect(_on_cell_size_changed)
+	cell_y_spinbox.value_changed.connect(_on_cell_size_changed)
+	cell_z_spinbox.value_changed.connect(_on_cell_size_changed)
 	reset_button.pressed.connect(_on_reset_pressed)
 	save_preset_button.pressed.connect(_on_save_preset_pressed)
 	apply_button.pressed.connect(_on_apply_pressed)
@@ -93,9 +106,53 @@ func set_grid_size(size: Vector3i) -> void:
 		_refresh_warnings()
 
 
+func get_cell_size() -> Vector3:
+	return cell_world_size
+
+
+func set_cell_size(size: Vector3, emit_signal: bool = false) -> void:
+	cell_world_size = size
+	if cell_x_spinbox:
+		cell_x_spinbox.set_value_no_signal(cell_world_size.x)
+		cell_y_spinbox.set_value_no_signal(cell_world_size.y)
+		cell_z_spinbox.set_value_no_signal(cell_world_size.z)
+		if emit_signal:
+			_emit_cell_size_changed()
+
+
+func _on_cell_size_changed(_value: float) -> void:
+	var new_size = Vector3(
+		float(cell_x_spinbox.value),
+		float(cell_y_spinbox.value),
+		float(cell_z_spinbox.value)
+	)
+	# Clamp to minimum positive size
+	new_size.x = max(new_size.x, 0.1)
+	new_size.y = max(new_size.y, 0.1)
+	new_size.z = max(new_size.z, 0.1)
+
+	if new_size == cell_world_size:
+		return
+
+	cell_world_size = new_size
+	_emit_cell_size_changed()
+
+
+func _emit_cell_size_changed() -> void:
+	if module_library and module_library.cell_world_size != cell_world_size:
+		module_library.cell_world_size = cell_world_size
+		if module_library.resource_path != "":
+			var err = ResourceSaver.save(module_library, module_library.resource_path)
+			if err != OK:
+				push_warning("Failed to save module library: %s" % err)
+	cell_size_changed.emit(cell_world_size)
+
+
 func set_module_library(library: ModuleLibrary) -> void:
 	"""Provide the active module library so requirements can be validated."""
 	module_library = library
+	if module_library:
+		set_cell_size(module_library.cell_world_size, false)
 	if is_inside_tree():
 		call_deferred("_refresh_warnings")
 

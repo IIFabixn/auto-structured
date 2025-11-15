@@ -95,6 +95,8 @@ func _initialize_settings_dialog() -> void:
 		add_child(settings_dialog)
 		settings_dialog.hide()
 		settings_dialog.apply_requested.connect(_on_settings_apply_requested)
+		settings_dialog.cell_size_changed.connect(_on_cell_size_changed)
+		settings_dialog.set_cell_size(library_cell_world_size, false)
 
 
 func _process(delta: float) -> void:
@@ -289,8 +291,39 @@ func _ensure_cell_world_size_from_library() -> void:
 	current_cell_world_size = library_cell_world_size
 
 func _refresh_library_cell_size() -> void:
-	library_cell_world_size = DEFAULT_CELL_WORLD_SIZE
+	var size := DEFAULT_CELL_WORLD_SIZE
+	if module_library:
+		var lib_size: Vector3 = module_library.cell_world_size
+		if lib_size.x > 0.0 and lib_size.y > 0.0 and lib_size.z > 0.0:
+			size = lib_size
+	library_cell_world_size = size
 	current_cell_world_size = library_cell_world_size
+	if settings_dialog:
+		settings_dialog.set_cell_size(library_cell_world_size, false)
+
+
+func _on_cell_size_changed(new_size: Vector3) -> void:
+	var clamped_size = Vector3(
+		max(new_size.x, 0.1),
+		max(new_size.y, 0.1),
+		max(new_size.z, 0.1)
+	)
+	if library_cell_world_size == clamped_size:
+		return
+
+	library_cell_world_size = clamped_size
+	current_cell_world_size = library_cell_world_size
+	if settings_dialog:
+		settings_dialog.set_cell_size(library_cell_world_size, false)
+	if module_library and module_library.cell_world_size != clamped_size:
+		module_library.cell_world_size = clamped_size
+		if module_library.resource_path != "":
+			ResourceSaver.save(module_library, module_library.resource_path)
+
+	if wfc_grid:
+		_visualize_grid()
+	elif main_tile:
+		preview_tile(main_tile)
 
 func clear_structure() -> void:
 	"""Remove all structure nodes from the viewport"""
@@ -477,6 +510,7 @@ func _on_new_button_pressed() -> void:
 	# Get settings from dialog
 	var grid_size = settings_dialog.get_grid_size()
 	wfc_strategy = settings_dialog.get_current_strategy()
+	_on_cell_size_changed(settings_dialog.get_cell_size())
 	
 	if not wfc_strategy:
 		push_error("No strategy selected")

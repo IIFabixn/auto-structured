@@ -32,7 +32,7 @@ var add_socket_requirement_menu: PopupMenu
 @onready var add_socket_requirement_button: Button = %AddRequirementButton
 
 const MENU_PREVIEW = 0
-const CLEAR = 1
+const RESET_SOCKET = 1
 
 func _ready() -> void:
 	socket_type_option = get_node_or_null("VBoxContainer/SocketTypeOption")
@@ -56,7 +56,7 @@ func _ready() -> void:
 	if context_menu:
 		context_menu.clear()
 		context_menu.add_item("Preview Compatible Tiles", MENU_PREVIEW)
-		context_menu.add_item("Clear Socket Type", CLEAR)
+		context_menu.add_item("Reset Socket", RESET_SOCKET)
 		context_menu.id_pressed.connect(_on_context_menu_item_selected)
 
 
@@ -276,16 +276,30 @@ func _on_context_menu_item_selected(id: int) -> void:
 	match id:
 		MENU_PREVIEW:
 			preview_requested.emit()
-		CLEAR:
-			if socket:
-				socket.socket_id = ""
-				if socket_type_option:
-					_select_socket_type_in_dropdown("")
-				update_title()
-				for compatible in socket.compatible_sockets:
-					socket.remove_compatible_socket(compatible)
-				_update_sockets_button_text()
-				changed.emit()
+		RESET_SOCKET:
+			_reset_socket()
+
+
+func _reset_socket() -> void:
+	if not socket:
+		return
+
+	var default_type := "none"
+	if library:
+		# Ensure the library knows about the default socket type
+		library.register_socket_type(default_type)
+
+	socket.socket_id = default_type
+	socket.compatible_sockets = []
+	socket.requirements = []
+
+	if socket_type_option:
+		_select_socket_type_in_dropdown(default_type)
+
+	_update_sockets_button_text()
+	_display_socket_requirements()
+	update_title()
+	changed.emit()
 
 # ============================================================================
 # Socket Requirements Management
