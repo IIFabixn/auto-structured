@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="ModuleLibrary" load_steps=72 format=3 uid="uid://qvwewx4db5ot"]
+[gd_resource type="Resource" script_class="ModuleLibrary" load_steps=64 format=3 uid="uid://qvwewx4db5ot"]
 
 [ext_resource type="Script" uid="uid://n5qundf42kiu" path="res://addons/auto_structured/core/module_library.gd" id="1_g2r0m"]
 [ext_resource type="Script" uid="uid://c7f03neubtkf3" path="res://addons/auto_structured/core/tile.gd" id="2_f08mx"]
@@ -9,7 +9,6 @@
 [ext_resource type="PackedScene" uid="uid://khrtlct1n2sc" path="res://sample/modules/wall_corner.tscn" id="7_7pgw0"]
 [ext_resource type="Script" uid="uid://bj35d48w37cx5" path="res://addons/auto_structured/core/requirements/ground_requirement.gd" id="8_7pgw0"]
 [ext_resource type="PackedScene" uid="uid://cvdf8f47a4oa1" path="res://sample/modules/door.tscn" id="8_ocyvf"]
-[ext_resource type="PackedScene" uid="uid://c6a7di3w1iub7" path="res://sample/modules/void.tscn" id="10_4nsv4"]
 [ext_resource type="PackedScene" uid="uid://dkbqpf1v23wwk" path="res://sample/modules/outside_floor.tscn" id="11_wjay0"]
 [ext_resource type="PackedScene" uid="uid://chy445dk4bd36" path="res://sample/modules/roof_1.tscn" id="12_4d2ao"]
 [ext_resource type="PackedScene" uid="uid://bl7l14vim8fc2" path="res://sample/assets/Prop_Wagon.gltf" id="13_22vab"]
@@ -183,43 +182,6 @@ tags = Array[String](["door"])
 requirements = Array[ExtResource("3_peua7")]([SubResource("Resource_3novf")])
 sockets = Array[ExtResource("5_ybimf")]([SubResource("Resource_p21c7"), SubResource("Resource_tvb0s"), SubResource("Resource_nnu2s"), SubResource("Resource_47lmb"), SubResource("Resource_432t1"), SubResource("Resource_2thg0")])
 
-[sub_resource type="Resource" id="Resource_wjeek"]
-script = ExtResource("5_ybimf")
-socket_id = "none"
-
-[sub_resource type="Resource" id="Resource_c6oc2"]
-script = ExtResource("5_ybimf")
-socket_id = "none"
-direction = Vector3i(0, -1, 0)
-
-[sub_resource type="Resource" id="Resource_k6yym"]
-script = ExtResource("5_ybimf")
-socket_id = "none"
-direction = Vector3i(1, 0, 0)
-
-[sub_resource type="Resource" id="Resource_5smqa"]
-script = ExtResource("5_ybimf")
-socket_id = "none"
-direction = Vector3i(-1, 0, 0)
-
-[sub_resource type="Resource" id="Resource_a6yk7"]
-script = ExtResource("5_ybimf")
-socket_id = "none"
-direction = Vector3i(0, 0, -1)
-
-[sub_resource type="Resource" id="Resource_2menp"]
-script = ExtResource("5_ybimf")
-socket_id = "none"
-direction = Vector3i(0, 0, 1)
-
-[sub_resource type="Resource" id="Resource_l1rwj"]
-script = ExtResource("2_f08mx")
-name = "void"
-scene = ExtResource("10_4nsv4")
-tags = Array[String](["void"])
-symmetry = 2
-sockets = Array[ExtResource("5_ybimf")]([SubResource("Resource_wjeek"), SubResource("Resource_c6oc2"), SubResource("Resource_k6yym"), SubResource("Resource_5smqa"), SubResource("Resource_a6yk7"), SubResource("Resource_2menp")])
-
 [sub_resource type="Resource" id="Resource_vi2la"]
 script = ExtResource("5_ybimf")
 socket_id = "none"
@@ -339,5 +301,5 @@ sockets = Array[ExtResource("5_ybimf")]([SubResource("Resource_bs21j"), SubResou
 [resource]
 script = ExtResource("1_g2r0m")
 library_name = "New Library"
-tiles = Array[ExtResource("2_f08mx")]([SubResource("Resource_wkdip"), SubResource("Resource_gk0uh"), SubResource("Resource_0bhjl"), SubResource("Resource_0uc16"), SubResource("Resource_l1rwj"), SubResource("Resource_x3nae"), SubResource("Resource_42k52"), SubResource("Resource_dr1lg")])
+tiles = Array[ExtResource("2_f08mx")]([SubResource("Resource_wkdip"), SubResource("Resource_gk0uh"), SubResource("Resource_0bhjl"), SubResource("Resource_0uc16"), SubResource("Resource_x3nae"), SubResource("Resource_42k52"), SubResource("Resource_dr1lg")])
 socket_types = Array[String](["any", "door", "floor", "none", "roof", "wall", "wall_corner", "wall_corner_left", "wall_corner_right"])

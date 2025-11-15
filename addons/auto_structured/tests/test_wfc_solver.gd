@@ -6,6 +6,7 @@ const Tile := preload("res://addons/auto_structured/core/tile.gd")
 const Socket := preload("res://addons/auto_structured/core/socket.gd")
 const Requirement := preload("res://addons/auto_structured/core/requirements/requirement.gd")
 const TagRequirement := preload("res://addons/auto_structured/core/requirements/tag_requirement.gd")
+const GroundRequirement := preload("res://addons/auto_structured/core/requirements/ground_requirement.gd")
 
 func run_all() -> Dictionary:
 	var results := {
@@ -18,6 +19,7 @@ func run_all() -> Dictionary:
 	_run_test(results, "\"None\" sockets interact correctly with empty neighbors", test_none_socket_behavior)
 	_run_test(results, "Neighbor variant filtering removes incompatible options", test_neighbor_variant_filtering)
 	_run_test(results, "Socket requirements constrain neighbors", test_socket_requirements)
+	_run_test(results, "Tile-level requirements filter invalid positions", test_tile_requirements_filtering)
 
 	return results
 
@@ -212,6 +214,38 @@ func test_socket_requirements() -> Variant:
 
 	return null
 
+func test_tile_requirements_filtering() -> Variant:
+	var ground_requirement := GroundRequirement.new()
+	var door_tile := _create_tile("Door", [
+		{
+			"direction": Vector3i.RIGHT,
+			"id": "door",
+			"compatible": []
+		}
+	])
+	var door_requirements: Array[Requirement] = []
+	door_requirements.append(ground_requirement)
+	door_tile.requirements = door_requirements
+
+	var floor_tile := _create_tile("Floor", [])
+
+	var solver := _create_solver(Vector3i(1, 2, 1), [door_tile, floor_tile])
+	var grid := solver.grid
+	var door_variant := _find_variant(grid, door_tile, 0)
+	if door_variant.is_empty():
+		return "Door variant missing from grid"
+
+	var ground_cell := grid.get_cell(Vector3i.ZERO)
+	var upper_cell := grid.get_cell(Vector3i(0, 1, 0))
+
+	if not _cell_has_variant(ground_cell, door_variant):
+		return "Door variant should remain available at ground level"
+
+	if _cell_has_variant(upper_cell, door_variant):
+		return "Door variant should be filtered out above ground"
+
+	return null
+
 func _get_rotations_for_tile(variants: Array[Dictionary], tile: Tile) -> Array[int]:
 	var rotations: Array[int] = []
 	for variant in variants:
@@ -257,3 +291,11 @@ func _find_variant(grid: WfcGrid, tile: Tile, rotation: int) -> Dictionary:
 		if variant["tile"] == tile and variant["rotation_degrees"] == rotation:
 			return variant
 	return {}
+
+func _cell_has_variant(cell, target: Dictionary) -> bool:
+	if cell == null:
+		return false
+	for variant in cell.possible_tile_variants:
+		if variant == target:
+			return true
+	return false

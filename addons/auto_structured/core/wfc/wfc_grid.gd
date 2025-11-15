@@ -41,7 +41,9 @@ func _init(grid_size: Vector3i, tiles: Array[Tile]) -> void:
 		for y in range(size.y):
 			for z in range(size.z):
 				var pos = Vector3i(x, y, z)
-				_cells[_index(pos)] = WfcCell.new(pos, all_tile_variants)
+				var cell = WfcCell.new(pos, all_tile_variants)
+				_apply_tile_requirements(cell)
+				_cells[_index(pos)] = cell
 	
 	# Initialize heap - will be populated when solver needs it
 	_entropy_heap.clear()
@@ -257,7 +259,47 @@ func reset() -> void:
 	"""Reset all cells to their initial uncollapsed state."""
 	for cell in _cells:
 		cell.reset(all_tile_variants)
+		_apply_tile_requirements(cell)
 	
 	# Clear heap - will be reinitialized on next solve
 	_entropy_heap.clear()
 	_heap_seq = 0
+
+
+func _apply_tile_requirements(cell: WfcCell) -> void:
+	"""Filter a cell's variants based on tile-level requirements."""
+	if cell == null:
+		return
+
+	var filtered: Array[Dictionary] = []
+	for variant in all_tile_variants:
+		if _variant_meets_tile_requirements(variant, cell.position):
+			filtered.append(variant)
+
+	cell.possible_tile_variants = filtered
+
+
+func _variant_meets_tile_requirements(variant: Dictionary, cell_position: Vector3i) -> bool:
+	var tile: Tile = variant.get("tile")
+	if tile == null:
+		return false
+
+	var tile_requirements: Array = tile.requirements
+	if tile_requirements.is_empty():
+		return true
+
+	var context: Dictionary = {
+		"module": tile,
+		"tags": tile.tags,
+		"grid": self,
+		"grid_size": size,
+		"rotation_degrees": variant.get("rotation_degrees", 0)
+	}
+
+	for requirement in tile_requirements:
+		if requirement == null:
+			continue
+		if not requirement.evaluate(cell_position, context):
+			return false
+
+	return true
