@@ -48,48 +48,48 @@ name = "floor"
 scene = ExtResource("4_bmyaq")
 sockets = Array[ExtResource("5_iouyn")]([SubResource("Resource_iouyn"), SubResource("Resource_u0jbl"), SubResource("Resource_g6hs5"), SubResource("Resource_p6xx3"), SubResource("Resource_xn8up"), SubResource("Resource_w1jmp")])
 
-[sub_resource type="Resource" id="Resource_3mp4w"]
+[sub_resource type="Resource" id="Resource_bmyaq"]
 script = ExtResource("5_iouyn")
 socket_id = "wall_top"
 
-[sub_resource type="Resource" id="Resource_80t75"]
+[sub_resource type="Resource" id="Resource_3mp4w"]
 script = ExtResource("5_iouyn")
 socket_id = "floor_top"
 direction = Vector3i(0, -1, 0)
-compatible_sockets = Array[String](["floor_top"])
+compatible_sockets = Array[String](["floor_bottom", "floor_top"])
 
-[sub_resource type="Resource" id="Resource_3t08w"]
+[sub_resource type="Resource" id="Resource_80t75"]
 script = ExtResource("5_iouyn")
 socket_id = "wall_side"
 direction = Vector3i(1, 0, 0)
 compatible_sockets = Array[String](["wall_side"])
 
-[sub_resource type="Resource" id="Resource_f4pqm"]
+[sub_resource type="Resource" id="Resource_madpg"]
 script = ExtResource("5_iouyn")
 socket_id = "wall_side"
 direction = Vector3i(-1, 0, 0)
 compatible_sockets = Array[String](["wall_side"])
 
-[sub_resource type="Resource" id="Resource_hckkq"]
+[sub_resource type="Resource" id="Resource_3t08w"]
 script = ExtResource("5_iouyn")
 socket_id = "wall_forward"
 direction = Vector3i(0, 0, -1)
 compatible_sockets = Array[String](["wall_forward", "floor_side"])
 
-[sub_resource type="Resource" id="Resource_ao4ki"]
+[sub_resource type="Resource" id="Resource_pqnng"]
 script = ExtResource("5_iouyn")
 socket_id = "floor_side"
 direction = Vector3i(0, 0, 1)
 compatible_sockets = Array[String](["floor_side"])
 
-[sub_resource type="Resource" id="Resource_kucj2"]
+[sub_resource type="Resource" id="Resource_f4pqm"]
 script = ExtResource("2_uyf68")
 name = "wall"
 scene = ExtResource("6_bmyaq")
-sockets = Array[ExtResource("5_iouyn")]([SubResource("Resource_3mp4w"), SubResource("Resource_80t75"), SubResource("Resource_3t08w"), SubResource("Resource_f4pqm"), SubResource("Resource_hckkq"), SubResource("Resource_ao4ki")])
+sockets = Array[ExtResource("5_iouyn")]([SubResource("Resource_bmyaq"), SubResource("Resource_3mp4w"), SubResource("Resource_80t75"), SubResource("Resource_madpg"), SubResource("Resource_3t08w"), SubResource("Resource_pqnng")])
 
 [resource]
 script = ExtResource("1_nyshj")
 library_name = "New Library"
-tiles = Array[ExtResource("2_uyf68")]([SubResource("Resource_5l4yy"), SubResource("Resource_kucj2")])
+tiles = Array[ExtResource("2_uyf68")]([SubResource("Resource_5l4yy"), SubResource("Resource_f4pqm")])
 socket_types = Array[String](["any", "corner_side", "floor_bottom", "floor_side", "floor_top", "none", "wall_forward", "wall_side", "wall_top"])
