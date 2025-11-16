@@ -2,11 +2,10 @@
 class_name Socket extends Resource
 
 const Requirement = preload("res://addons/auto_structured/core/requirements/requirement.gd")
+const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
 
-## Unique identifier for this socket type
-@export var socket_id: String = "":
-	set(value):
-		socket_id = value
+## The type of this socket
+@export var socket_type: SocketType = null
 
 ## Direction this socket is facing (must be one of the 6 cardinal directions)
 @export var direction: Vector3i = Vector3i.UP:
@@ -16,9 +15,6 @@ const Requirement = preload("res://addons/auto_structured/core/requirements/requ
 		else:
 			push_warning("Socket: Invalid direction %s. Must be cardinal direction." % value)
 			direction = Vector3i.UP
-
-## List of socket IDs that are compatible with this socket
-@export var compatible_sockets: Array[String] = []
 
 ## Requirements that the neighboring tile must satisfy to connect to this socket
 ## Example: TagRequirement("stone") means only tiles with "stone" tag can connect here
@@ -36,30 +32,16 @@ static func is_valid_direction(dir: Vector3i) -> bool:
 		Vector3i.BACK # (0, 0, 1)
 	]
 
-func is_compatible_with(other_socket: Socket) -> bool:
+func is_compatible_with(other: Socket) -> bool:
 	"""
 	Check if this socket is compatible with another socket.
 
 	Args:
-		other_socket: The socket to check compatibility against
+		other: The socket to check compatibility against
 
 	Returns:
 		true if compatible, false otherwise
 	"""
-	return other_socket.socket_id in compatible_sockets
-
-func add_compatible_socket(id: String) -> void:
-	if id in compatible_sockets:
-		return
-	var compatible_copy: Array[String] = []
-	compatible_copy.assign(compatible_sockets)
-	compatible_copy.append(id)
-	compatible_sockets = compatible_copy
-
-func remove_compatible_socket(id: String) -> void:
-	if id not in compatible_sockets:
-		return
-	var compatible_copy: Array[String] = []
-	compatible_copy.assign(compatible_sockets)
-	compatible_copy.erase(id)
-	compatible_sockets = compatible_copy
+	if socket_type == null or other == null or other.socket_type == null:
+		return false
+	return socket_type.is_compatible_with(other.socket_type)

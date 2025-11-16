@@ -236,7 +236,7 @@ static func find_compatible_tiles(source_socket: Socket, all_tiles: Array[Tile],
 	var compatible_results: Array[Dictionary] = []
 	
 	# Skip "none" sockets
-	if source_socket.socket_id == "none":
+	if source_socket.socket_type != null and source_socket.socket_type.type_id == "none":
 		return compatible_results
 	
 	# The connecting socket needs to face toward the source socket (opposite of source direction)
@@ -250,7 +250,7 @@ static func find_compatible_tiles(source_socket: Socket, all_tiles: Array[Tile],
 		# Check all sockets on this tile
 		for tile_socket in tile.sockets:
 			# Skip "none" sockets
-			if tile_socket.socket_id == "none":
+			if tile_socket.socket_type != null and tile_socket.socket_type.type_id == "none":
 				continue
 			
 			# Skip the exact same socket we're checking from

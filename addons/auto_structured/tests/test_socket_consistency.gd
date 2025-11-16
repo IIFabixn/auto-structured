@@ -25,32 +25,34 @@ func _test_reciprocal_compatibility() -> Variant:
 	var library: ModuleLibrary = ResourceLoader.load("res://module_library.tres")
 	if library == null:
 		return "Failed to load module_library.tres"
-	for tile: Tile in library.tiles:
-		if tile == null:
+	
+	# Build a map of socket type ID to SocketType
+	var types_by_id := {}
+	for socket_type in library.socket_types:
+		types_by_id[socket_type.type_id] = socket_type
+	
+	# Check reciprocal compatibility at the SocketType level
+	for socket_type in library.socket_types:
+		var source_id := socket_type.type_id.strip_edges()
+		if source_id == "" or source_id == "none":
 			continue
-		for socket: Socket in tile.sockets:
-			if socket == null:
+		
+		for partner_id in socket_type.compatible_types:
+			var partner_id_clean := str(partner_id).strip_edges()
+			if partner_id_clean == "" or partner_id_clean == "none":
 				continue
-			var source_id := socket.socket_id.strip_edges()
-			if source_id == "" or source_id == "none":
-				continue
-			for raw_partner_id in socket.compatible_sockets:
-				var partner_id := str(raw_partner_id).strip_edges()
-				if partner_id == "" or partner_id == "none":
-					continue
-				var matches := _find_sockets_with_id(library, partner_id)
-				if matches.is_empty():
-					return _format_issue(tile, socket, partner_id, "no sockets with id")
-				var reciprocal_found := false
-				for partner in matches:
-					var partner_socket: Socket = partner["socket"]
-					if partner_socket == null:
-						continue
-					if partner_socket.compatible_sockets.has(source_id):
-						reciprocal_found = true
-						break
-				if not reciprocal_found:
-					return _format_issue(tile, socket, partner_id, "missing reciprocal entry")
+			
+			# Check if partner type exists
+			var partner_type = types_by_id.get(partner_id_clean)
+			if partner_type == null:
+				return "SocketType '%s' references non-existent type '%s'" % [source_id, partner_id_clean]
+			
+			# Check reciprocal entry
+			if source_id not in partner_type.compatible_types:
+				return "SocketType '%s' lists '%s' as compatible, but '%s' doesn't list '%s' (missing reciprocal entry)" % [
+					source_id, partner_id_clean, partner_id_clean, source_id
+				]
+	
 	return null
 
 func _find_sockets_with_id(library: ModuleLibrary, socket_id: String) -> Array:
@@ -61,7 +63,7 @@ func _find_sockets_with_id(library: ModuleLibrary, socket_id: String) -> Array:
 		for socket: Socket in tile.sockets:
 			if socket == null:
 				continue
-			if socket.socket_id.strip_edges() == socket_id:
+			if socket.socket_type != null and socket.socket_type.type_id.strip_edges() == socket_id:
 				results.append({
 					"tile": tile,
 					"socket": socket

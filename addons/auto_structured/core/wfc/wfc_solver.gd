@@ -557,22 +557,27 @@ func _get_virtual_none_socket(direction: Vector3i) -> Socket:
 	if not _virtual_none_socket_cache.has(key):
 		var socket := Socket.new()
 		socket.direction = direction
-		socket.socket_id = "none"
-		var compat: Array[String] = []
-		compat.append("none")
-		socket.compatible_sockets = compat
+		# Create a temporary "none" socket type
+		var none_type := grid.library.get_socket_type_by_id("none") if grid.library else null
+		if none_type == null:
+			none_type = preload("res://addons/auto_structured/core/socket_type.gd").new()
+			none_type.type_id = "none"
+			none_type.add_compatible_type("none")
+		socket.socket_type = none_type
 		_virtual_none_socket_cache[key] = socket
 	return _virtual_none_socket_cache[key]
 
 func _sockets_are_compatible(source_socket: Socket, neighbor_socket: Socket) -> bool:
 	if source_socket == null or neighbor_socket == null:
 		return false
-	if source_socket.socket_id == "none" and neighbor_socket.socket_id == "none":
+	var source_type_id = source_socket.socket_type.type_id if source_socket.socket_type else ""
+	var neighbor_type_id = neighbor_socket.socket_type.type_id if neighbor_socket.socket_type else ""
+	if source_type_id == "none" and neighbor_type_id == "none":
 		return true
-	if source_socket.socket_id == "none":
-		return "none" in neighbor_socket.compatible_sockets
-	if neighbor_socket.socket_id == "none":
-		return "none" in source_socket.compatible_sockets
+	if source_type_id == "none":
+		return neighbor_socket.socket_type != null and "none" in neighbor_socket.socket_type.compatible_types
+	if neighbor_type_id == "none":
+		return source_socket.socket_type != null and "none" in source_socket.socket_type.compatible_types
 	return source_socket.is_compatible_with(neighbor_socket) and neighbor_socket.is_compatible_with(source_socket)
 
 func _prewarm_compatibility_cache() -> void:

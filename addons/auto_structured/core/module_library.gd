@@ -2,10 +2,11 @@
 class_name ModuleLibrary extends Resource
 
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
+const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
 
 @export var library_name: String = "My Building Set"
 @export var tiles: Array[Tile] = []
-@export var socket_types: Array[String] = []  ## Registered socket type IDs for this library
+@export var socket_types: Array[SocketType] = []  ## Registered socket types for this library
 @export var cell_world_size: Vector3 = Vector3(2, 3, 2)
 
 func ensure_defaults() -> void:
@@ -13,11 +14,17 @@ func ensure_defaults() -> void:
 	Ensure default socket types exist in the library.
 	Call this explicitly when setting up the library, not in _init.
 	"""
-	if "none" not in socket_types:
-		socket_types.append("none")
-	if "any" not in socket_types:
-		socket_types.append("any")
-	socket_types.sort()
+	# Create "none" socket type if it doesn't exist
+	if get_socket_type_by_id("none") == null:
+		var none_type = SocketType.new()
+		none_type.type_id = "none"
+		socket_types.append(none_type)
+	
+	# Create "any" socket type if it doesn't exist
+	if get_socket_type_by_id("any") == null:
+		var any_type = SocketType.new()
+		any_type.type_id = "any"
+		socket_types.append(any_type)
 
 	# Ensure cell size has sane defaults
 	if cell_world_size.x <= 0.0 or cell_world_size.y <= 0.0 or cell_world_size.z <= 0.0:
@@ -34,37 +41,53 @@ func get_tiles_with_tag(tag: String) -> Array[Tile]:
 
 func get_all_unique_socket_ids() -> Array[String]:
 	"""
-	Get all unique socket IDs from all tiles in this library.
+	Get all unique socket type IDs from all tiles in this library.
 	
 	Returns:
-		A sorted array of unique socket ID strings
+		A sorted array of unique socket type ID strings
 	"""
 	var socket_ids: Array[String] = []
 	var unique_ids: Dictionary = {}
 	
 	for tile in tiles:
 		for socket in tile.sockets:
-			if socket.socket_id and not unique_ids.has(socket.socket_id):
-				unique_ids[socket.socket_id] = true
-				socket_ids.append(socket.socket_id)
+			if socket.socket_type != null and socket.socket_type.type_id and not unique_ids.has(socket.socket_type.type_id):
+				unique_ids[socket.socket_type.type_id] = true
+				socket_ids.append(socket.socket_type.type_id)
 	
 	socket_ids.sort()
 	return socket_ids
 
-func register_socket_type(socket_id: String) -> void:
+func register_socket_type(type: SocketType) -> void:
 	"""
-	Register a new socket type ID in this library.
+	Register a new socket type in this library.
 	
 	Args:
-		socket_id: The socket type ID to register
+		type: The SocketType to register
 	"""
-	if socket_id.strip_edges().is_empty():
+	if type == null or type.type_id.strip_edges().is_empty():
 		return
 	
-	var normalized_id = socket_id.strip_edges()
-	if normalized_id not in socket_types:
-		socket_types.append(normalized_id)
-		socket_types.sort()
+	for existing in socket_types:
+		if existing.type_id == type.type_id:
+			return
+	
+	socket_types.append(type)
+
+func get_socket_type_by_id(id: String) -> SocketType:
+	"""
+	Get a socket type by its ID.
+	
+	Args:
+		id: The socket type ID to look up
+	
+	Returns:
+		The SocketType with that ID, or null if not found
+	"""
+	for t in socket_types:
+		if t.type_id == id:
+			return t
+	return null
 
 func validate_socket_id(socket_id: String) -> bool:
 	"""
@@ -76,18 +99,19 @@ func validate_socket_id(socket_id: String) -> bool:
 	Returns:
 		true if the socket ID is registered, false otherwise
 	"""
-	return socket_id in socket_types
+	return get_socket_type_by_id(socket_id) != null
 
-func get_socket_types() -> Array[String]:
+func get_socket_type_ids() -> Array[String]:
 	"""
-	Get a copy of all registered socket type IDs.
+	Get a list of all registered socket type IDs.
 	
 	Returns:
-		A sorted array of registered socket type IDs
+		An array of socket type ID strings
 	"""
-	var types_copy: Array[String] = []
-	types_copy.assign(socket_types)
-	return types_copy
+	var ids: Array[String] = []
+	for t in socket_types:
+		ids.append(t.type_id)
+	return ids
 
 func validate_library() -> Dictionary:
 	"""
@@ -103,13 +127,18 @@ func validate_library() -> Dictionary:
 	
 	for tile in tiles:
 		for socket in tile.sockets:
-			# Check if socket ID is registered
-			if socket.socket_id and not validate_socket_id(socket.socket_id):
-				issues.append("Socket '%s' on tile '%s' is not registered in socket_types" % [socket.socket_id, tile.name])
+			# Check if socket has a valid type
+			if socket.socket_type == null:
+				issues.append("Socket on tile '%s' (direction %s) has no socket_type" % [tile.name, socket.direction])
+			elif socket.socket_type.type_id.strip_edges().is_empty():
+				issues.append("Socket on tile '%s' (direction %s) has empty type_id" % [tile.name, socket.direction])
+			elif not validate_socket_id(socket.socket_type.type_id):
+				issues.append("Socket type '%s' on tile '%s' is not registered in socket_types" % [socket.socket_type.type_id, tile.name])
 			
-			# Check if any compatible socket doesn't exist in library
-			for compat_id in socket.compatible_sockets:
-				if compat_id not in all_socket_ids:
-					issues.append("Socket '%s' on tile '%s' references unknown socket type '%s'" % [socket.socket_id, tile.name, compat_id])
+			# Check if socket type's compatible types exist
+			if socket.socket_type != null:
+				for compat_id in socket.socket_type.compatible_types:
+					if compat_id not in all_socket_ids and not validate_socket_id(compat_id):
+						issues.append("Socket type '%s' on tile '%s' references unknown socket type '%s'" % [socket.socket_type.type_id, tile.name, compat_id])
 	
 	return {"valid": issues.is_empty(), "issues": issues}

@@ -159,10 +159,13 @@ func remove_socket(socket: Socket) -> void:
 	sockets = sockets_copy
 	_rebuild_socket_cache()
 
-func ensure_all_sockets() -> void:
+func ensure_all_sockets(library = null) -> void:
 	"""
 	Ensure this tile has exactly 6 sockets (one for each cardinal direction).
-	Creates missing sockets with socket_id = 'none'.
+	Creates missing sockets with socket_type = 'none'.
+	
+	Args:
+		library: Optional ModuleLibrary to get the 'none' socket type from
 	"""
 	var directions = [
 		Vector3i.UP,      # (0, 1, 0)
@@ -179,7 +182,8 @@ func ensure_all_sockets() -> void:
 			# Create a 'none' socket for this direction
 			var new_socket = Socket.new()
 			new_socket.direction = direction
-			new_socket.socket_id = "none"
+			if library != null:
+				new_socket.socket_type = library.get_socket_type_by_id("none")
 			add_socket(new_socket)
 
 func get_unique_rotations() -> Array[int]:

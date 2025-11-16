@@ -3,6 +3,7 @@ class_name SocketTemplateLibrary
 
 const USER_TEMPLATE_DIR := "user://auto_structured/socket_templates"
 const TEMPLATE_EXTENSION := ".tres"
+const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
 
 static func get_builtin_templates() -> Array[SocketTemplate]:
 	var templates: Array[SocketTemplate] = []
@@ -123,16 +124,27 @@ static func apply_template(tile: Tile, template: SocketTemplate, library: Module
 		var entry: Dictionary = normalized_entries.get(direction, {})
 		if not entry.is_empty():
 			var socket_id: String = str(entry["socket_id"])
+			var socket_type: SocketType = null
 			if library:
-				library.register_socket_type(socket_id)
-			socket.socket_id = socket_id
-			var compat_copy: Array[String] = []
-			compat_copy.assign(entry["compatible"])
-			socket.compatible_sockets = compat_copy
+				socket_type = library.get_socket_type_by_id(socket_id)
+				if socket_type == null:
+					# Create new socket type
+					socket_type = SocketType.new()
+					socket_type.type_id = socket_id
+					library.register_socket_type(socket_type)
+			else:
+				socket_type = SocketType.new()
+				socket_type.type_id = socket_id
+			
+			# Add compatible types to the socket type
+			for compat_id in entry["compatible"]:
+				socket_type.add_compatible_type(str(compat_id))
+			
+			socket.socket_type = socket_type
 			_apply_rotation_requirement(socket, int(entry["minimum_rotation_degrees"]))
 		else:
-			socket.socket_id = "none"
-			socket.compatible_sockets = []
+			if library:
+				socket.socket_type = library.get_socket_type_by_id("none")
 			_apply_rotation_requirement(socket, 0)
 
 	# Force cache rebuild by reassigning sockets array
