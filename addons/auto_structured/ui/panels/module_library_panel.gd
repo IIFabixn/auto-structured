@@ -11,11 +11,12 @@ const Requirement = preload("res://addons/auto_structured/core/requirements/requ
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
 const SocketSuggestionDialogScene = preload("res://addons/auto_structured/ui/dialogs/socket_suggestion_dialog.tscn")
 const SocketSuggestionBuilder = preload("res://addons/auto_structured/core/analysis/socket_suggestion_builder.gd")
-const SocketWizardDialogScene = preload("res://addons/auto_structured/ui/dialogs/socket_wizard.tscn")
 const NO_LIBRARY_ITEM_ID = -1
 const NO_LIBRARY_PLACEHOLDER = "- None -"
 const DEFAULT_LIBRARY_DIR := "res://module_libraries"
 const DEFAULT_LIBRARY_BASENAME := "module_library"
+const SOCKET_EDITOR_MODE_SUGGESTIONS := 0
+const SOCKET_EDITOR_MODE_EDITOR := 1
 
 var libraries: Array[ModuleLibrary] = []
 var current_library: ModuleLibrary
@@ -29,10 +30,8 @@ var thumbnail_cache: Dictionary = {}  # Cache thumbnails: tile_path -> Texture2D
 var preview_generator: EditorResourcePreview
 var pending_thumbnail_updates: Array[Dictionary] = []  # Queue of thumbnail updates
 var is_processing_thumbnails: bool = false
-var socket_suggestion_dialog: SocketSuggestionDialog
+var socket_suggestion_dialog: SocketEditorDialog
 var _pending_suggestion_queue: Array = []
-var _active_wizard: SocketWizardDialog
-var _show_next_after_wizard: bool = false
 var library_save_dialog: EditorFileDialog
 
 @onready
@@ -768,14 +767,13 @@ func _manage_library_sockets() -> void:
 func _setup_socket_suggestion_dialog() -> void:
 	if socket_suggestion_dialog:
 		return
-	socket_suggestion_dialog = SocketSuggestionDialogScene.instantiate() as SocketSuggestionDialog
+	socket_suggestion_dialog = SocketSuggestionDialogScene.instantiate() as SocketEditorDialog
 	if socket_suggestion_dialog == null:
 		push_warning("Failed to create Socket Suggestion dialog")
 		return
 	add_child(socket_suggestion_dialog)
-	socket_suggestion_dialog.suggestions_accepted.connect(_on_socket_suggestions_accepted)
-	socket_suggestion_dialog.modify_requested.connect(_on_socket_suggestions_modify)
-	socket_suggestion_dialog.suggestions_rejected.connect(_on_socket_suggestions_rejected)
+	socket_suggestion_dialog.changes_applied.connect(_on_socket_editor_changes_applied)
+	socket_suggestion_dialog.suggestions_skipped.connect(_on_socket_editor_skipped)
 
 func _handle_import_suggestions(new_tiles: Array) -> void:
 	if new_tiles.is_empty():
@@ -790,8 +788,6 @@ func _handle_import_suggestions(new_tiles: Array) -> void:
 			"tile": tile,
 			"suggestions": suggestions
 		})
-	if _active_wizard:
-		return
 	if socket_suggestion_dialog.visible:
 		return
 	if _pending_suggestion_queue.is_empty():
@@ -809,144 +805,32 @@ func _show_next_socket_suggestion() -> void:
 	var suggestions: Array = entry.get("suggestions", [])
 	socket_suggestion_dialog.show_for_tile(tile, current_library, suggestions)
 
-func _on_socket_suggestions_accepted(tile: Tile, selections: Array) -> void:
-	var applied := false
-	if tile and not selections.is_empty():
-		_apply_socket_suggestions(tile, selections)
-		applied = true
-	if applied:
-		_save_library()
-		_refresh_tile_list()
-		selected_tile = tile
-		tile_selected.emit(tile)
-	_show_next_socket_suggestion()
-
-func _on_socket_suggestions_modify(tile: Tile, selections: Array) -> void:
-	var applied := false
-	if tile and not selections.is_empty():
-		_apply_socket_suggestions(tile, selections)
-		applied = true
-	if applied:
-		_save_library()
-		_refresh_tile_list()
-	if tile:
-		selected_tile = tile
-		tile_selected.emit(tile)
-		_show_next_after_wizard = true
-		socket_suggestion_dialog.hide()
-		var opened := _open_socket_wizard_for_tile(tile)
-		if not opened:
-			_show_next_after_wizard = false
-			_show_next_socket_suggestion()
-	else:
-		_show_next_socket_suggestion()
-
-func _on_socket_suggestions_rejected(_tile: Tile) -> void:
-	_show_next_socket_suggestion()
-
-func _apply_socket_suggestions(tile: Tile, selections: Array) -> void:
-	if tile == null:
-		return
-	var changed := false
-	for selection in selections:
-		var suggestion: Dictionary = selection
-		var socket_id := str(suggestion.get("socket_id", "")).strip_edges()
-		if socket_id == "" or socket_id == "none":
-			continue
-		var direction: Vector3i = suggestion.get("direction", Vector3i.ZERO)
-		if direction == Vector3i.ZERO:
-			continue
-		var socket := tile.get_socket_by_direction(direction)
-		if socket == null:
-			socket = Socket.new()
-			socket.direction = direction
-			tile.add_socket(socket)
-		var compat_set := {}
-		for compat in suggestion.get("compatible", []):
-			var compat_id := str(compat).strip_edges()
-			if compat_id == "":
-				continue
-			compat_set[compat_id] = true
-		var partner_socket: Socket = suggestion.get("partner_socket", null)
-		var partner_socket_id := ""
-		if partner_socket:
-			partner_socket_id = str(partner_socket.socket_id).strip_edges()
-			if partner_socket_id != "" and partner_socket_id != "none":
-				compat_set[partner_socket_id] = true
-		elif current_library:
-			var partner_tile: Tile = suggestion.get("partner_tile", null)
-			var partner_direction: Vector3i = suggestion.get("partner_direction", Vector3i.ZERO)
-			if partner_tile and partner_direction != Vector3i.ZERO:
-				partner_socket = partner_tile.get_socket_by_direction(partner_direction)
-				if partner_socket == null:
-					partner_socket = Socket.new()
-					partner_socket.direction = partner_direction
-					partner_socket.socket_id = "none"
-					partner_tile.add_socket(partner_socket)
-				partner_socket_id = str(partner_socket.socket_id).strip_edges()
-				if partner_socket_id != "" and partner_socket_id != "none":
-					compat_set[partner_socket_id] = true
-		var compat_list: Array[String] = []
-		for compat_id in compat_set.keys():
-			compat_list.append(str(compat_id))
-		compat_list.sort()
-		socket.socket_id = socket_id
-		socket.compatible_sockets = _to_string_array(compat_list)
-		if current_library:
-			current_library.register_socket_type(socket_id)
-			for compat_id in compat_list:
-				current_library.register_socket_type(compat_id)
-		if partner_socket:
-			var partner_compats: Array[String] = []
-			partner_compats.assign(partner_socket.compatible_sockets)
-			if socket_id not in partner_compats:
-				partner_compats.append(socket_id)
-			var partner_array := _to_string_array(partner_compats)
-			partner_array.sort()
-			partner_socket.compatible_sockets = partner_array
-			var partner_tile: Tile = suggestion.get("partner_tile", null)
-			if partner_tile:
-				partner_tile.sockets = partner_tile.sockets
-		changed = true
-	if changed:
-		tile.sockets = tile.sockets
-
-func _open_socket_wizard_for_tile(tile: Tile) -> bool:
+func open_socket_editor_for_tile(tile: Tile, start_mode: int = SOCKET_EDITOR_MODE_EDITOR) -> void:
 	if tile == null or current_library == null:
-		return false
-	var wizard := SocketWizardDialogScene.instantiate() as SocketWizardDialog
-	if wizard == null:
-		push_warning("Failed to create Socket Wizard dialog")
-		return false
-	_active_wizard = wizard
-	add_child(wizard)
-	wizard.wizard_applied.connect(_on_suggestions_wizard_applied)
-	wizard.canceled.connect(_on_suggestions_wizard_closed)
-	wizard.confirmed.connect(_on_suggestions_wizard_closed)
-	wizard.call_deferred("initialize", tile, current_library)
-	wizard.call_deferred("popup_centered")
-	return true
+		return
+	_setup_socket_suggestion_dialog()
+	if socket_suggestion_dialog == null:
+		return
+	for i in range(_pending_suggestion_queue.size() - 1, -1, -1):
+		var entry: Dictionary = _pending_suggestion_queue[i]
+		if entry.get("tile", null) == tile:
+			_pending_suggestion_queue.remove_at(i)
+	var suggestions := SocketSuggestionBuilder.build_suggestions(tile, current_library)
+	socket_suggestion_dialog.show_for_tile(tile, current_library, suggestions, start_mode)
 
-func _on_suggestions_wizard_applied(tile: Tile, _changed_tiles: Array) -> void:
-	_save_library()
-	_refresh_tile_list()
-	if tile:
-		selected_tile = tile
-		tile_selected.emit(tile)
+func _on_socket_editor_changes_applied(tile: Tile, changed_tiles: Array) -> void:
+	var applied := not changed_tiles.is_empty()
+	if applied:
+		_save_library()
+		_refresh_tile_list()
+		if tile:
+			selected_tile = tile
+			tile_selected.emit(tile)
+	_show_next_socket_suggestion()
 
-func _on_suggestions_wizard_closed() -> void:
-	if _active_wizard:
-		_active_wizard.queue_free()
-		_active_wizard = null
-	if _show_next_after_wizard:
-		_show_next_after_wizard = false
-		_show_next_socket_suggestion()
 
-func _to_string_array(values: Array) -> Array[String]:
-	var result: Array[String] = []
-	for value in values:
-		result.append(str(value))
-	return result
+func _on_socket_editor_skipped(_tile: Tile) -> void:
+	_show_next_socket_suggestion()
 
 func _on_socket_renamed(old_name: String, new_name: String) -> void:
 	"""Handle socket type rename"""

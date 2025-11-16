@@ -11,6 +11,7 @@ func _ready() -> void:
 	details_panel.closed.connect(_on_details_panel_closed)
 	details_panel.tile_modified.connect(_on_tile_modified)
 	details_panel.socket_preview_requested.connect(_on_socket_preview_requested)
+	details_panel.socket_editor_requested.connect(_on_socket_editor_requested)
 	
 	# Ensure initial library is passed to preview panel if already loaded
 	if module_library_control.current_library:
@@ -59,3 +60,8 @@ func _on_socket_preview_requested(socket: Socket) -> void:
 		socket,
 		compatible_results
 	)
+
+func _on_socket_editor_requested(tile: Tile, start_mode: int) -> void:
+	if module_library_control == null:
+		return
+	module_library_control.open_socket_editor_for_tile(tile, start_mode)

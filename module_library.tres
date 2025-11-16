@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="ModuleLibrary" load_steps=13 format=3 uid="uid://dhle26sfkha06"]
+[gd_resource type="Resource" script_class="ModuleLibrary" load_steps=13 format=3 uid="uid://c1g2q7rhcq4p7"]
 
 [ext_resource type="Script" uid="uid://n5qundf42kiu" path="res://addons/auto_structured/core/module_library.gd" id="1_peua7"]
 [ext_resource type="Script" uid="uid://c7f03neubtkf3" path="res://addons/auto_structured/core/tile.gd" id="2_e70lh"]
