@@ -4,6 +4,30 @@ class_name ModuleLibrary extends Resource
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
 
+## Emitted when a tile is added to the library
+signal tile_added(tile: Tile)
+
+## Emitted when a tile is removed from the library
+signal tile_removed(tile: Tile)
+
+## Emitted when a tile is modified (name, tags, sockets, etc.)
+signal tile_modified(tile: Tile, property: String)
+
+## Emitted when a socket type is added
+signal socket_type_added(socket_type: SocketType)
+
+## Emitted when a socket type is removed
+signal socket_type_removed(socket_type_id: String)
+
+## Emitted when a socket type is renamed
+signal socket_type_renamed(old_id: String, new_id: String)
+
+## Emitted when a socket type's compatibility changes
+signal socket_type_compatibility_changed(socket_type: SocketType)
+
+## Emitted when the library is modified in any way
+signal library_changed
+
 @export var library_name: String = "My Building Set"
 @export var tiles: Array[Tile] = []
 @export var socket_types: Array[SocketType] = []  ## Registered socket types for this library
@@ -91,6 +115,8 @@ func register_socket_type(type) -> SocketType:
 			return existing
 
 	socket_types.append(socket_type)
+	socket_type_added.emit(socket_type)
+	library_changed.emit()
 	return socket_type
 
 func get_socket_types() -> Array[String]:
@@ -147,6 +173,8 @@ func rename_socket_type(old_id: String, new_id: String) -> bool:
 			other.compatible_types = compat
 	# Rename the socket type
 	type.type_id = clean_new
+	socket_type_renamed.emit(old_id, clean_new)
+	library_changed.emit()
 	return true
 
 func delete_socket_type(id: String, fallback_id: String = "none") -> bool:
@@ -173,6 +201,8 @@ func delete_socket_type(id: String, fallback_id: String = "none") -> bool:
 			var compat := other.compatible_types.duplicate()
 			compat.erase(normalized_id)
 			other.compatible_types = compat
+	socket_type_removed.emit(normalized_id)
+	library_changed.emit()
 	return true
 
 func validate_socket_id(socket_id: String) -> bool:
@@ -228,3 +258,36 @@ func validate_library() -> Dictionary:
 						issues.append("Socket type '%s' on tile '%s' references unknown socket type '%s'" % [socket.socket_type.type_id, tile.name, compat_id])
 	
 	return {"valid": issues.is_empty(), "issues": issues}
+
+
+## Add a tile to the library and emit event
+func add_tile(tile: Tile) -> void:
+	if tile in tiles:
+		return
+	tiles.append(tile)
+	tile_added.emit(tile)
+	library_changed.emit()
+
+
+## Remove a tile from the library and emit event
+func remove_tile(tile: Tile) -> bool:
+	if tile not in tiles:
+		return false
+	tiles.erase(tile)
+	tile_removed.emit(tile)
+	library_changed.emit()
+	return true
+
+
+## Notify that a tile was modified (call this after changing tile properties)
+func notify_tile_modified(tile: Tile, property: String = "") -> void:
+	if tile not in tiles:
+		return
+	tile_modified.emit(tile, property)
+	library_changed.emit()
+
+
+## Notify that a socket type's compatibility changed
+func notify_socket_type_compatibility_changed(socket_type: SocketType) -> void:
+	socket_type_compatibility_changed.emit(socket_type)
+	library_changed.emit()

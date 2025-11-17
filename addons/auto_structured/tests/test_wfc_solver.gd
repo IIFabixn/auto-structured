@@ -173,26 +173,27 @@ func test_solver_weights() -> void:
 	
 	var tile1 = create_universal_tile("Tile1")
 	var tile2 = create_universal_tile("Tile2")
+	
+	# Set weights directly on tiles
+	tile1.weight = 10.0
+	tile2.weight = 1.0
+	
 	var tiles: Array[Tile] = [tile1, tile2]
 	
 	var grid = WfcGrid.new(Vector3i(2, 2, 2), tiles)
 	var solver = WfcSolver.new(grid, false)
 	solver.set_logging_enabled(false)
 	
-	# Set heavy weight on tile1
-	solver.set_tile_weight_all_rotations(tile1, 10.0)
-	solver.set_tile_weight_all_rotations(tile2, 1.0)
-	
-	# Check that weights were set
+	# Check that weights were applied to variants
 	var found_weighted = false
 	for variant in grid.all_tile_variants:
 		if variant["tile"] == tile1:
 			if variant.get("weight", 1.0) == 10.0:
 				found_weighted = true
 				break
-	assert_true(found_weighted, "Tile1 should have weight of 10.0", test_name)
+	assert_true(found_weighted, "Tile1 variants should have weight of 10.0", test_name)
 	
-	# Solve and verify tile1 appears more often (probabilistic test)
+	# Solve and verify it works with weighted tiles
 	var result = solver.solve()
 	assert_true(result, "Weighted solve should succeed", test_name)
 

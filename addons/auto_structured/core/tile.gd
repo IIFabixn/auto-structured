@@ -2,6 +2,7 @@
 class_name Tile extends Resource
 
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
+const Requirement = preload("res://addons/auto_structured/core/requirements/requirement.gd")
 
 @export var name: String = ""
 @export var mesh: Mesh = null
@@ -9,10 +10,31 @@ const Socket = preload("res://addons/auto_structured/core/socket.gd")
 @export var size: Vector3i = Vector3i.ONE  ## Size of the tile in grid units (default 1x1x1). Must be integer.
 @export var tags: Array[String] = []
 
+@export_range(0.01, 100.0, 0.01, "or_greater") var weight: float = 1.0:
+	set(value):
+		weight = maxf(0.01, value)  ## Weight determines spawn probability in WFC (higher = more common)
+	get:
+		return weight
+
+@export var requirements: Array[Requirement] = []  ## Placement constraints (e.g., height restrictions, max count)
+
+## Rotation symmetry mode determines which rotations are valid for this tile
+enum RotationSymmetry {
+	AUTO,        ## Automatically detect symmetry from socket configuration (default)
+	FULL,        ## No symmetry - all 4 rotations are unique [0°, 90°, 180°, 270°]
+	HALF,        ## 180° symmetry - only 2 rotations needed [0°, 90°]
+	QUARTER,     ## 90° symmetry - only 1 rotation needed [0°]
+	CUSTOM       ## Use manually specified rotations
+}
+
+@export var rotation_symmetry: RotationSymmetry = RotationSymmetry.AUTO
+@export var custom_rotations: Array[int] = []  ## Used when rotation_symmetry is CUSTOM (e.g., [0, 90, 180])
+
 @export var sockets: Array[Socket] = []:
 	set(value):
 		sockets = value
 		_rebuild_socket_cache()
+		_face_cache_valid = false  ## Invalidate face cache when sockets change
 
 ## Precomputed socket cache for O(1) lookups by direction
 var _sockets_by_dir: Dictionary = {}
@@ -182,8 +204,140 @@ func ensure_all_sockets(library = null) -> void:
 			add_socket(new_socket)
 
 func get_unique_rotations() -> Array[int]:
-	"""Return the list of rotations supported by this tile."""
-	return [0]
+	"""Return the list of unique rotations for this tile based on symmetry.
+	
+	Returns:
+		Array of rotation angles in degrees (e.g., [0, 90, 180, 270])
+	"""
+	match rotation_symmetry:
+		RotationSymmetry.AUTO:
+			return _detect_rotational_symmetry()
+		RotationSymmetry.FULL:
+			return [0, 90, 180, 270]
+		RotationSymmetry.HALF:
+			return [0, 90]
+		RotationSymmetry.QUARTER:
+			return [0]
+		RotationSymmetry.CUSTOM:
+			if custom_rotations.is_empty():
+				push_warning("Tile '%s' has CUSTOM rotation mode but no custom_rotations defined, using [0]" % name)
+				return [0]
+			return custom_rotations
+	
+	return [0]  ## Fallback
+
+func _detect_rotational_symmetry() -> Array[int]:
+	"""Automatically detect which rotations produce unique socket configurations.
+	
+	Checks socket patterns at 0°, 90°, 180°, 270° and returns only unique ones.
+	Uses face signatures for fast comparison.
+	
+	Returns:
+		Array of unique rotation angles
+	"""
+	if sockets.is_empty():
+		return [0]  ## No sockets = no rotation matters
+	
+	## Build face signatures for all 4 cardinal rotations
+	var all_rotations = [0, 90, 180, 270]
+	var signatures: Array[String] = []
+	var unique_rotations: Array[int] = []
+	
+	for rotation in all_rotations:
+		var signature = _get_face_signature_at_rotation(rotation)
+		
+		## Check if this signature is unique
+		if signature not in signatures:
+			signatures.append(signature)
+			unique_rotations.append(rotation)
+	
+	return unique_rotations
+
+func _get_face_signature_at_rotation(rotation_degrees: int) -> String:
+	"""Generate a string signature representing socket configuration at a specific rotation.
+	
+	The signature encodes socket types for each face after rotation, allowing
+	quick comparison of rotational equivalence.
+	
+	Args:
+		rotation_degrees: Rotation angle (0, 90, 180, 270)
+	
+	Returns:
+		String signature encoding the socket pattern
+	"""
+	## Check cache first
+	if _face_cache_valid and _cached_face_signatures.has(rotation_degrees):
+		return _cached_face_signatures[rotation_degrees]
+	
+	## Rotate each cardinal direction and collect socket types
+	var face_data: Array[String] = []
+	var cardinal_dirs = [
+		Vector3i.RIGHT,   ## +X
+		Vector3i.BACK,    ## +Z
+		Vector3i.LEFT,    ## -X
+		Vector3i.FORWARD, ## -Z
+		Vector3i.UP,      ## +Y (doesn't rotate)
+		Vector3i.DOWN     ## -Y (doesn't rotate)
+	]
+	
+	for dir in cardinal_dirs:
+		## Apply inverse rotation to direction to get original socket
+		var rotated_dir = _rotate_direction_y(dir, -rotation_degrees)
+		var sockets_in_dir = get_sockets_in_direction(rotated_dir)
+		
+		if sockets_in_dir.is_empty():
+			face_data.append("none")
+		else:
+			## Sort socket type IDs for consistent comparison
+			var socket_types: Array[String] = []
+			for socket in sockets_in_dir:
+				if socket.socket_type != null:
+					socket_types.append(socket.socket_type.type_id)
+				else:
+					socket_types.append("null")
+			socket_types.sort()
+			face_data.append(",".join(socket_types))
+	
+	var signature = "|".join(face_data)
+	
+	## Cache the result
+	_cached_face_signatures[rotation_degrees] = signature
+	_face_cache_valid = true
+	
+	return signature
+
+func _rotate_direction_y(direction: Vector3i, degrees: int) -> Vector3i:
+	"""Rotate a direction vector around the Y axis.
+	
+	Args:
+		direction: Direction vector to rotate
+		degrees: Rotation angle in degrees (90, 180, 270, or negative)
+	
+	Returns:
+		Rotated direction vector
+	"""
+	## Normalize degrees to 0-360 range
+	var normalized = degrees % 360
+	if normalized < 0:
+		normalized += 360
+	
+	## Y axis doesn't rotate
+	if direction.y != 0:
+		return direction
+	
+	## Rotate in XZ plane
+	match normalized:
+		0:
+			return direction
+		90:
+			return Vector3i(-direction.z, 0, direction.x)
+		180:
+			return Vector3i(-direction.x, 0, -direction.z)
+		270:
+			return Vector3i(direction.z, 0, -direction.x)
+		_:
+			push_warning("Unsupported rotation angle: %d, using 0°" % degrees)
+			return direction
 
 func get_socket_by_direction(direction: Vector3i) -> Socket:
 	"""

@@ -10,6 +10,11 @@ const TestTile = preload("res://addons/auto_structured/tests/test_tile.gd")
 const TestModuleLibrary = preload("res://addons/auto_structured/tests/test_module_library.gd")
 const TestMeshOutlineAnalyzer = preload("res://addons/auto_structured/tests/test_mesh_outline_analyzer.gd")
 const TestSocketSuggestionBuilder = preload("res://addons/auto_structured/tests/test_socket_suggestion_builder.gd")
+const TestRequirements = preload("res://addons/auto_structured/tests/test_requirements.gd")
+const TestValidation = preload("res://addons/auto_structured/tests/test_validation.gd")
+const TestTileRotation = preload("res://addons/auto_structured/tests/test_tile_rotation.gd")
+const TestImportExport = preload("res://addons/auto_structured/tests/test_import_export.gd")
+const TestEventSystems = preload("res://addons/auto_structured/tests/test_event_systems.gd")
 
 var total_tests_passed: int = 0
 var total_tests_failed: int = 0
@@ -42,6 +47,16 @@ func _initialize() -> void:
 	run_test_suite("WfcSolver", TestWfcSolver)
 	print("")
 	run_test_suite("WfcHelper", TestWfcHelper)
+	print("")
+	run_test_suite("Requirements", TestRequirements)
+	print("")
+	run_test_suite("Validation", TestValidation)
+	print("")
+	run_test_suite("TileRotation", TestTileRotation)
+	print("")
+	run_test_suite("ImportExport", TestImportExport)
+	print("")
+	run_test_suite("EventSystems", TestEventSystems)
 	print("")
 	
 	var elapsed_time = Time.get_ticks_msec() - start_time

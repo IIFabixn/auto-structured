@@ -139,10 +139,16 @@ func _auto_configure(total_cells: int) -> void:
 		progress_report_frequency = 50
 
 func _initialize_variant_weights() -> void:
-	"""Initialize weights for all tile variants. Default weight is 1.0."""
+	"""Initialize weights for all tile variants from their tile's weight property."""
 	for variant in grid.all_tile_variants:
-		if not variant.has("weight"):
+		var tile: Tile = variant.get("tile")
+		if tile and tile.weight > 0.0:
+			variant["weight"] = tile.weight
+		elif not variant.has("weight"):
 			variant["weight"] = 1.0
+
+## Context dictionary for requirement evaluation
+var _requirement_context: Dictionary = {}
 
 func solve() -> bool:
 	"""Solve the WFC puzzle synchronously. Use progress_callback for updates."""
@@ -151,6 +157,10 @@ func solve() -> bool:
 	_log(["  Total cells: ", grid.get_cell_count()])
 	_log(["  Cells to collapse: ", _remaining_cells])
 	_log(["  Max iterations: ", max_iterations])
+	
+	# Initialize requirement context (used for tracking tile counts, etc.)
+	_requirement_context.clear()
+	_reset_tile_requirements()
 	
 	# CRITICAL: Initialize entropy heap for O(log N) cell selection
 	_log(["  Initializing entropy heap..."])
@@ -193,6 +203,21 @@ func solve() -> bool:
 		if not cell:
 			_log(["[WFC Solver] No more cells to collapse (fully collapsed)"])
 			break
+		
+		# Filter cell variants based on requirements before collapse
+		_apply_requirements_to_cell(cell)
+		
+		if cell.has_contradiction():
+			if enable_backtracking and not _backtrack_stack.is_empty():
+				_log(["  Requirements caused contradiction at ", cell.position, " - attempting backtrack"])
+				if not _attempt_backtrack():
+					push_error("WFC: Requirements created contradiction at ", cell.position, " and backtracking exhausted")
+					return false
+				iterations += 1
+				continue
+			else:
+				push_error("WFC: Requirements caused contradiction at ", cell.position)
+				return false
 
 		# Save checkpoint before collapsing (if backtracking enabled)
 		if enable_backtracking and _collapses_since_checkpoint >= backtrack_checkpoint_frequency:
@@ -218,6 +243,9 @@ func solve() -> bool:
 			else:
 				push_error("WFC: Failed to collapse cell at ", cell.position)
 				return false
+		
+		# Update requirement context after successful collapse
+		_update_requirement_context_after_collapse(cell)
 
 		# Propagate: Update neighbors based on the collapsed cell
 		var propagate_result = propagate(cell)
@@ -458,6 +486,69 @@ func get_cache_stats() -> Dictionary:
 func set_logging_enabled(enabled: bool) -> void:
 	"""Enable or disable logging output."""
 	logging_enabled = enabled
+
+func _reset_tile_requirements() -> void:
+	"""Reset any stateful requirements (like MaxCountRequirement counters)."""
+	for variant in grid.all_tile_variants:
+		var tile: Tile = variant.get("tile")
+		if not tile or tile.requirements.is_empty():
+			continue
+		
+		for req in tile.requirements:
+			if req.has_method("reset"):
+				req.reset()
+
+func _apply_requirements_to_cell(cell: WfcCell) -> void:
+	"""Filter cell's possible variants based on tile requirements."""
+	if cell.is_collapsed():
+		return
+	
+	var valid_variants: Array[Dictionary] = []
+	
+	for variant in cell.possible_tile_variants:
+		var tile: Tile = variant.get("tile")
+		if not tile:
+			valid_variants.append(variant)
+			continue
+		
+		# If tile has no requirements, it's always valid
+		if tile.requirements.is_empty():
+			valid_variants.append(variant)
+			continue
+		
+		# Check all requirements
+		var all_satisfied = true
+		for req in tile.requirements:
+			if not req.enabled:
+				continue
+			
+			if not req.evaluate(tile, cell.position, grid, _requirement_context):
+				all_satisfied = false
+				if logging_enabled:
+					_log(["  Requirement '", req.display_name, "' failed for tile '", tile.name, "' at ", cell.position])
+					_log(["    Reason: ", req.get_failure_reason()])
+				break
+		
+		if all_satisfied:
+			valid_variants.append(variant)
+	
+	# Update cell with only valid variants
+	if valid_variants.size() < cell.possible_tile_variants.size():
+		cell.possible_tile_variants = valid_variants
+		cell._entropy_valid = false
+
+func _update_requirement_context_after_collapse(cell: WfcCell) -> void:
+	"""Update requirement context after a tile is placed (for count tracking, etc.)."""
+	if not cell.is_collapsed():
+		return
+	
+	var tile: Tile = cell.get_tile()
+	if not tile:
+		return
+	
+	# Update tile count in context
+	var count_key = "tile_count_" + str(tile.get_instance_id())
+	_requirement_context[count_key] = _requirement_context.get(count_key, 0) + 1
 
 func _log(parts: Array) -> void:
 	if not logging_enabled:
