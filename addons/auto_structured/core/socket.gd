@@ -45,3 +45,63 @@ func is_compatible_with(other: Socket) -> bool:
 	if socket_type == null or other == null or other.socket_type == null:
 		return false
 	return socket_type.is_compatible_with(other.socket_type)
+
+var socket_id: String:
+	set(value):
+		_set_socket_id(value)
+	get:
+		return _get_socket_id()
+
+var compatible_sockets: Array[String]:
+	set(value):
+		_set_compatible_sockets(value)
+	get:
+		return _get_compatible_sockets()
+
+func add_compatible_socket(id: String) -> void:
+	if socket_type == null:
+		socket_type = SocketType.new()
+	socket_type.add_compatible_type(String(id))
+
+func remove_compatible_socket(id: String) -> void:
+	if socket_type == null:
+		return
+	socket_type.remove_compatible_type(String(id))
+
+func _get_socket_id() -> String:
+	if socket_type == null:
+		return ""
+	return String(socket_type.type_id)
+
+func _set_socket_id(value: String) -> void:
+	var trimmed := String(value).strip_edges()
+	if trimmed == "":
+		socket_type = null
+		return
+	if socket_type != null and socket_type.type_id == trimmed:
+		return
+	var new_type := SocketType.new()
+	new_type.type_id = trimmed
+	socket_type = new_type
+
+func _get_compatible_sockets() -> Array[String]:
+	if socket_type == null:
+		return []
+	var ids: Array[String] = []
+	ids.assign(socket_type.compatible_types)
+	return ids
+
+func _set_compatible_sockets(values: Array) -> void:
+	if socket_type == null:
+		socket_type = SocketType.new()
+	var sanitized: Array[String] = []
+	var seen: Dictionary = {}
+	for value in values:
+		var clean := String(value).strip_edges()
+		if clean == "":
+			continue
+		if seen.has(clean):
+			continue
+		seen[clean] = true
+		sanitized.append(clean)
+	socket_type.compatible_types = sanitized

@@ -2,7 +2,6 @@ class_name WfcGrid extends RefCounted
 
 const WfcCell = preload("res://addons/auto_structured/core/wfc/wfc_cell.gd")
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
-const WfcStrategyBase = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_base.gd")
 
 ## 3D grid of WFC cells for procedural generation.
 ## Optimized: Flat array storage instead of Dictionary for better performance
@@ -10,7 +9,6 @@ var _cells: Array[WfcCell] = []
 var size: Vector3i
 var all_tiles: Array[Tile] = []
 var all_tile_variants: Array[Dictionary] = []  # All possible tile+rotation combinations
-var _strategy: WfcStrategyBase = null
 
 ## Performance optimization: Priority queue (min-heap) for entropy selection
 var _entropy_heap: Array = []  # Array of { "entropy": float, "seq": int, "cell": WfcCell }
@@ -325,12 +323,6 @@ func _variant_meets_tile_requirements(variant: Dictionary, cell_position: Vector
 
 	return true
 
-
-func set_strategy(strategy: WfcStrategyBase) -> void:
-	_strategy = strategy
-	_recalculate_cell_weights()
-
-
 func _recalculate_cell_weights() -> void:
 	if _cells.is_empty():
 		return
@@ -344,8 +336,6 @@ func _recalculate_cell_weights() -> void:
 				var pos = Vector3i(x, y, z)
 				var idx = _index(pos)
 				var weight := 1.0
-				if _strategy:
-					weight = max(_strategy.get_cell_weight(pos, size), 0.0)
 				_cell_weights[idx] = weight
 
 

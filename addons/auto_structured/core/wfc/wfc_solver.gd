@@ -3,13 +3,11 @@ class_name WfcSolver extends RefCounted
 const WfcGrid = preload("res://addons/auto_structured/core/wfc/wfc_grid.gd")
 const WfcCell = preload("res://addons/auto_structured/core/wfc/wfc_cell.gd")
 const WfcHelper = preload("res://addons/auto_structured/core/wfc/wfc_helper.gd")
-const WfcStrategyBase = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_base.gd")
-const WfcStrategyFillAll = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_fill_all.gd")
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
+const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
 
 var grid: WfcGrid
-var strategy: WfcStrategyBase
 var max_iterations: int = 10000
 
 ## Logging control: disable to run silently
@@ -55,11 +53,8 @@ var _visited_flags: PackedByteArray
 var _scratch_variants: Array[Dictionary] = []
 var _virtual_none_socket_cache: Dictionary = {}
 
-func _init(wfc_grid: WfcGrid, wfc_strategy: WfcStrategyBase = null, prewarm_cache: bool = true) -> void:
+func _init(wfc_grid: WfcGrid, prewarm_cache: bool = true) -> void:
 	grid = wfc_grid
-	strategy = wfc_strategy if wfc_strategy else WfcStrategyFillAll.new()
-	strategy.initialize(grid.size)
-	grid.set_strategy(strategy)
 	
 	# Auto-configure based on grid size
 	var total_cells = grid.size.x * grid.size.y * grid.size.z
@@ -154,28 +149,6 @@ func _apply_strategy_mask() -> void:
 			for z in range(grid.size.z):
 				var pos = Vector3i(x, y, z)
 				var cell = grid.get_cell(pos)
-				
-				# First check if this cell should be part of the solve at all
-				if not strategy.should_collapse_cell(cell.position, grid.size):
-					# Mark as empty
-					cell.mark_empty()
-					_remaining_cells -= 1  # Don't count empty cells
-				else:
-					# Cell will be collapsed - apply semantic tag filtering
-					var tags = strategy.get_cell_tags(cell.position, grid.size)
-					if not tags.is_empty():
-						var before_count = cell.possible_tile_variants.size()
-						cell.filter_variants_by_tags(tags)
-						
-						# If filtering removed all variants, mark as empty
-						if cell.possible_tile_variants.is_empty():
-							cell.mark_empty()
-							_remaining_cells -= 1
-							cells_filtered_out += 1
-							
-							# Track which tag combinations are causing filtering
-							var tag_key = ", ".join(tags)
-							tag_usage_stats[tag_key] = tag_usage_stats.get(tag_key, 0) + 1
 	
 	# Warning if many cells were filtered out due to missing tags
 	if cells_filtered_out > 0:
@@ -255,7 +228,6 @@ func solve(run_synchronously: bool = false) -> bool:
 		if not propagate_result:
 			push_error("WFC: Propagation failed at ", cell.position)
 			push_error("  Collapsed to: ", cell.get_tile().name if cell.get_tile() else "unknown", " @ ", cell.get_rotation(), "°")
-			strategy.finalize()
 			return false
 
 		iterations += 1
@@ -278,8 +250,7 @@ func solve(run_synchronously: bool = false) -> bool:
 	_log(["  Total iterations: ", iterations])
 	_log(["  Time elapsed: %.2f seconds" % elapsed_seconds])
 	_log(["  Avg iterations/sec: %.0f" % (iterations / max(elapsed_seconds, 0.001))])
-	
-	strategy.finalize()
+
 	return true
 
 func propagate(start_cell: WfcCell) -> bool:
@@ -558,11 +529,9 @@ func _get_virtual_none_socket(direction: Vector3i) -> Socket:
 		var socket := Socket.new()
 		socket.direction = direction
 		# Create a temporary "none" socket type
-		var none_type := grid.library.get_socket_type_by_id("none") if grid.library else null
-		if none_type == null:
-			none_type = preload("res://addons/auto_structured/core/socket_type.gd").new()
-			none_type.type_id = "none"
-			none_type.add_compatible_type("none")
+		var none_type: SocketType = SocketType.new()
+		none_type.type_id = "none"
+		none_type.add_compatible_type("none")
 		socket.socket_type = none_type
 		_virtual_none_socket_cache[key] = socket
 	return _virtual_none_socket_cache[key]

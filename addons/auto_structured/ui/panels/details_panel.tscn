@@ -3,8 +3,8 @@
 [ext_resource type="Script" uid="uid://cvlqe0gwq55qv" path="res://addons/auto_structured/ui/panels/details_panel.gd" id="1_i7yuf"]
 [ext_resource type="Texture2D" uid="uid://d04dma5ci7ufp" path="res://icon.svg" id="2_2ihjm"]
 [ext_resource type="Texture2D" uid="uid://bli807wmcfj7h" path="res://addons/auto_structured/assets/close.svg" id="2_qj0jw"]
-[ext_resource type="PackedScene" uid="uid://bs8l0gqo6l105" path="res://addons/auto_structured/ui/controls/tag_control.tscn" id="3_d84tf"]
 [ext_resource type="Texture2D" uid="uid://cklj47goa3tag" path="res://addons/auto_structured/assets/add.svg" id="3_mh04o"]
+[ext_resource type="PackedScene" uid="uid://b5w1pli4anuj" path="res://addons/auto_structured/ui/controls/tag_item_control.tscn" id="4_mh04o"]
 
 [node name="DetailsPanel" type="Control"]
 layout_mode = 3
@@ -45,6 +45,7 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 
 [node name="NameLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "NAME"
 horizontal_alignment = 1
@@ -53,7 +54,8 @@ horizontal_alignment = 1
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="ModulePreviewTexture" type="TextureRect" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer"]
+[node name="TileImage" type="TextureRect" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer"]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 texture = ExtResource("2_2ihjm")
@@ -64,36 +66,37 @@ stretch_mode = 5
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="TabContainer" type="TabContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer"]
+[node name="DetailsTabContainer" type="TabContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 current_tab = 0
 
-[node name="Generel" type="ScrollContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer"]
+[node name="Generel" type="ScrollContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/DetailsTabContainer"]
 layout_mode = 2
 metadata/_tab_index = 0
 
-[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel"]
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/DetailsTabContainer/Generel"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Label" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer"]
+[node name="SizeLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/DetailsTabContainer/Generel/VBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Size"
 
-[node name="HBoxContainer" type="HBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/DetailsTabContainer/Generel/VBoxContainer"]
 layout_mode = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer/HBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/DetailsTabContainer/Generel/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="XLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer/HBoxContainer/HBoxContainer"]
+[node name="XLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/DetailsTabContainer/Generel/VBoxContainer/HBoxContainer/HBoxContainer"]
 layout_mode = 2
 text = "X"
 
-[node name="XSpinBox" type="SpinBox" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer/HBoxContainer/HBoxContainer"]
+[node name="XSizeSpinBox" type="SpinBox" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/DetailsTabContainer/Generel/VBoxContainer/HBoxContainer/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -101,15 +104,15 @@ step = 0.1
 value = 1.0
 select_all_on_focus = true
 
-[node name="HBoxContainer2" type="HBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer/HBoxContainer"]
+[node name="HBoxContainer2" type="HBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/DetailsTabContainer/Generel/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="YLabel2" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer/HBoxContainer/HBoxContainer2"]
+[node name="YLabel2" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/DetailsTabContainer/Generel/VBoxContainer/HBoxContainer/HBoxContainer2"]
 layout_mode = 2
 text = "Y"
 
-[node name="YSpinBox" type="SpinBox" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer/HBoxContainer/HBoxContainer2"]
+[node name="YSizeSpinBox" type="SpinBox" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/DetailsTabContainer/Generel/VBoxContainer/HBoxContainer/HBoxContainer2"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -117,15 +120,15 @@ step = 0.1
 value = 1.0
 select_all_on_focus = true
 
-[node name="HBoxContainer3" type="HBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer/HBoxContainer"]
+[node name="HBoxContainer3" type="HBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/DetailsTabContainer/Generel/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="ZLabel3" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer/HBoxContainer/HBoxContainer3"]
+[node name="ZLabel3" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/DetailsTabContainer/Generel/VBoxContainer/HBoxContainer/HBoxContainer3"]
 layout_mode = 2
 text = "Z"
 
-[node name="ZSpinBox" type="SpinBox" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer/HBoxContainer/HBoxContainer3"]
+[node name="ZSizeSpinBox" type="SpinBox" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/DetailsTabContainer/Generel/VBoxContainer/HBoxContainer/HBoxContainer3"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -133,128 +136,57 @@ step = 0.1
 value = 1.0
 select_all_on_focus = true
 
-[node name="SymmetryLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Symmetry"
-
-[node name="SymmetryOptionButton" type="OptionButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-selected = 0
-item_count = 3
-popup/item_0/text = "None"
-popup/item_0/id = 0
-popup/item_1/text = "Rotation 180°"
-popup/item_1/id = 1
-popup/item_2/text = "Rotation 90°"
-popup/item_2/id = 2
-
-[node name="TagsContainer" type="VBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer"]
-unique_name_in_owner = true
+[node name="TagsWrapper" type="VBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/DetailsTabContainer/Generel/VBoxContainer"]
 layout_mode = 2
 
-[node name="AddTagContainer" type="HBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer/TagsContainer"]
+[node name="AddTagContainer" type="HBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/DetailsTabContainer/Generel/VBoxContainer/TagsWrapper"]
 custom_minimum_size = Vector2(121, 0)
 layout_mode = 2
 alignment = 1
 
-[node name="ZLabel3" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer/TagsContainer/AddTagContainer"]
+[node name="TagsLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/DetailsTabContainer/Generel/VBoxContainer/TagsWrapper/AddTagContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Tags"
 
-[node name="AddTagButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer/TagsContainer/AddTagContainer"]
+[node name="AddTagButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/DetailsTabContainer/Generel/VBoxContainer/TagsWrapper/AddTagContainer"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 texture_normal = ExtResource("3_mh04o")
 stretch_mode = 3
 
-[node name="TagControl" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer/TagsContainer" instance=ExtResource("3_d84tf")]
-layout_mode = 2
-
-[node name="TileToolbar" type="HBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer"]
+[node name="TagsContainer" type="VBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/DetailsTabContainer/Generel/VBoxContainer/TagsWrapper"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_constants/separation = 8
 
-[node name="CopyMenuButton" type="MenuButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer/TileToolbar"]
-unique_name_in_owner = true
+[node name="TagItemControl" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/DetailsTabContainer/Generel/VBoxContainer/TagsWrapper/TagsContainer" instance=ExtResource("4_mh04o")]
 layout_mode = 2
-text = "Copy/Paste"
-item_count = 10
-popup/item_0/text = "Copy Entire Tile"
-popup/item_0/id = 0
-popup/item_1/text = "Paste Entire Tile"
-popup/item_1/id = 1
-popup/item_2/id = -1
-popup/item_2/separator = true
-popup/item_3/text = "Copy Tags"
-popup/item_3/id = 2
-popup/item_4/text = "Paste Tags"
-popup/item_4/id = 3
-popup/item_5/text = "Copy Requirements"
-popup/item_5/id = 4
-popup/item_6/text = "Paste Requirements"
-popup/item_6/id = 5
-popup/item_7/id = -1
-popup/item_7/separator = true
-popup/item_8/text = "Copy All Sockets"
-popup/item_8/id = 6
-popup/item_9/text = "Paste All Sockets"
-popup/item_9/id = 7
 
-[node name="PresetMenuButton" type="MenuButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer/TileToolbar"]
-unique_name_in_owner = true
+[node name="TagItemControl2" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/DetailsTabContainer/Generel/VBoxContainer/TagsWrapper/TagsContainer" instance=ExtResource("4_mh04o")]
 layout_mode = 2
-text = "Presets"
 
-[node name="TileToolbarSpacer" type="Control" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer/TileToolbar"]
+[node name="TagItemControl3" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/DetailsTabContainer/Generel/VBoxContainer/TagsWrapper/TagsContainer" instance=ExtResource("4_mh04o")]
 layout_mode = 2
-size_flags_horizontal = 3
 
-[node name="Requirements" type="ScrollContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer"]
+[node name="Requirements" type="ScrollContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/DetailsTabContainer"]
 visible = false
 layout_mode = 2
 metadata/_tab_index = 1
 
-[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Requirements"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="RequirementsContainer" type="VBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Requirements/VBoxContainer"]
-unique_name_in_owner = true
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/DetailsTabContainer/Requirements"]
 layout_mode = 2
 
-[node name="AddRequirementButton" type="Button" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Requirements/VBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "+ Add Requirement"
-
-[node name="Sockets" type="ScrollContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer"]
+[node name="Sockets" type="ScrollContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/DetailsTabContainer"]
 visible = false
 layout_mode = 2
 metadata/_tab_index = 2
 
-[node name="SocketsContent" type="VBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Sockets"]
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/DetailsTabContainer/Sockets"]
 layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="SocketToolbar" type="HBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Sockets/SocketsContent"]
-layout_mode = 2
-
-[node name="SocketWizardButton" type="Button" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Sockets/SocketsContent/SocketToolbar"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Socket Wizard…"
-
-[node name="SocketsContainer" type="VBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Sockets/SocketsContent"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
 
 [node name="CloseButton" type="TextureButton" parent="Panel/MarginContainer"]
+unique_name_in_owner = true
 z_index = 2
 custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
@@ -262,37 +194,3 @@ size_flags_horizontal = 8
 size_flags_vertical = 0
 texture_normal = ExtResource("2_qj0jw")
 stretch_mode = 3
-
-[node name="TilePresetSaveDialog" type="AcceptDialog" parent="."]
-unique_name_in_owner = true
-title = "Save Tile Preset"
-ok_button_text = "Save"
-dialog_text = "Enter a name for the preset"
-
-[node name="TilePresetNameEdit" type="LineEdit" parent="TilePresetSaveDialog"]
-unique_name_in_owner = true
-placeholder_text = "Preset name"
-
-[node name="TilePresetDeleteDialog" type="ConfirmationDialog" parent="."]
-unique_name_in_owner = true
-oversampling_override = 1.0
-title = "Delete Tile Preset"
-size = Vector2i(236, 100)
-ok_button_text = "Delete"
-dialog_text = "Select a preset to delete"
-
-[node name="TilePresetDeleteOption" type="OptionButton" parent="TilePresetDeleteDialog"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(220, 0)
-anchors_preset = 10
-anchor_right = 1.0
-offset_left = 8.0
-offset_top = 8.0
-offset_right = -8.0
-offset_bottom = 51.0
-size_flags_horizontal = 3
-
-[connection signal="value_changed" from="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer/HBoxContainer/HBoxContainer/XSpinBox" to="." method="set_tile_x_size"]
-[connection signal="value_changed" from="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer/HBoxContainer/HBoxContainer2/YSpinBox" to="." method="set_tile_y_size"]
-[connection signal="value_changed" from="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/SettingsContainer/TabContainer/Generel/VBoxContainer/HBoxContainer/HBoxContainer3/ZSpinBox" to="." method="set_tile_z_size"]
-[connection signal="pressed" from="Panel/MarginContainer/CloseButton" to="." method="close_details"]

@@ -1,0 +1,25 @@
+[gd_scene load_steps=3 format=3 uid="uid://b5w1pli4anuj"]
+
+[ext_resource type="Texture2D" uid="uid://c45ah2jrtar3s" path="res://addons/auto_structured/assets/remove.svg" id="1_0vhk2"]
+[ext_resource type="Script" uid="uid://c1t3ifbdrao37" path="res://addons/auto_structured/ui/controls/tag_item_control.gd" id="1_ij6tq"]
+
+[node name="HBoxContainer" type="HBoxContainer"]
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 31.0
+grow_horizontal = 2
+script = ExtResource("1_ij6tq")
+
+[node name="TagEdit" type="LineEdit" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Tag"
+flat = true
+
+[node name="DeleteButton" type="TextureButton" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+texture_normal = ExtResource("1_0vhk2")
+stretch_mode = 3

@@ -1,19 +1,23 @@
 {
-    // See https://go.microsoft.com/fwlink/?LinkId=733558
-    // for the documentation about the tasks.json format
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "Run Godot Test",
-            "type": "shell",
-            "command": "godot",
-            "args": [
-                "--headless",
-                "--path",
-                "\"d:/Repos/auto-structured\"",
-                "--script",
-                "\"res://addons/auto_structured/tests/run_tests.gd\""
-            ]
-        }
-    ]
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run Godot Test",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoLogo",
+        "-NoProfile",
+        "-Command",
+        "& { cd 'D:/Repos/auto-structured'; godot --headless --path . --script 'res://addons/auto_structured/tests/run_tests.gd' }"
+      ],
+      "presentation": {
+        "reveal": "always",
+        "echo": true,
+        "focus": true,
+        "panel": "dedicated"
+      },
+      "problemMatcher": []
+    }
+  ]
 }

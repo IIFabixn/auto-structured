@@ -66,6 +66,7 @@ z_index = 1
 layout_mode = 2
 
 [node name="NewButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 tooltip_text = "Start new generation"
@@ -73,7 +74,8 @@ disabled = true
 texture_normal = ExtResource("2_8vq50")
 stretch_mode = 3
 
-[node name="EditPreviewSettingsButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
+[node name="EditButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 tooltip_text = "Opens a dialog to configure ..."
@@ -86,6 +88,7 @@ size_flags_horizontal = 3
 theme_override_styles/separator = SubResource("StyleBoxEmpty_qo023")
 
 [node name="StepButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 tooltip_text = "Step: Collapse one cell"
@@ -94,6 +97,7 @@ texture_normal = ExtResource("3_8vq50")
 stretch_mode = 3
 
 [node name="SolveButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 tooltip_text = "Solve: Generate until complete"
@@ -102,6 +106,7 @@ texture_normal = ExtResource("3_flumd")
 stretch_mode = 3
 
 [node name="MenuButton" type="MenuButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 tooltip_text = "Additional options"
@@ -137,7 +142,7 @@ render_target_update_mode = 4
 
 [node name="PreviewCamera" type="Camera3D" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/Panel/SubViewportContainer/PreviewViewport"]
 unique_name_in_owner = true
-transform = Transform3D(0.98374504, 0.04648845, -0.17344894, 0, 0.9659079, 0.25888634, 0.17957088, -0.25467816, 0.95020705, -1.7344892, 2.5888631, 9.502069)
+transform = Transform3D(0.98374504, 0.04648845, -0.1734489, 0, 0.96590793, 0.25888634, 0.17957087, -0.2546782, 0.950207, -1.7344892, 2.5888631, 9.502069)
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/Panel/SubViewportContainer/PreviewViewport"]
 transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 5, 0)
@@ -162,16 +167,15 @@ theme_override_constants/margin_top = 4
 theme_override_constants/margin_right = 4
 theme_override_constants/margin_bottom = 4
 
-[node name="ViewportOptions" type="MenuButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/Panel/MarginContainer"]
+[node name="ViewportMenuButton" type="MenuButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/Panel/MarginContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 icon = ExtResource("6_kwnk8")
 flat = false
 icon_alignment = 1
-item_count = 14
+item_count = 17
 popup/item_0/text = "Auto Rotate"
 popup/item_0/checkable = 1
-popup/item_0/checked = true
 popup/item_0/id = 0
 popup/item_1/text = "Reset Viewport"
 popup/item_1/icon = ExtResource("3_qo023")
@@ -210,8 +214,11 @@ popup/item_12/id = 2
 popup/item_13/text = "Show Origin"
 popup/item_13/checkable = 1
 popup/item_13/id = 3
-
-[connection signal="pressed" from="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar/NewButton" to="." method="_on_new_button_pressed"]
-[connection signal="pressed" from="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar/EditPreviewSettingsButton" to="." method="on_edit_preview_settings_pressed"]
-[connection signal="pressed" from="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar/StepButton" to="." method="_on_step_button_pressed"]
-[connection signal="pressed" from="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar/SolveButton" to="." method="_on_solve_button_pressed"]
+popup/item_14/id = -1
+popup/item_14/separator = true
+popup/item_15/text = "Show Grid"
+popup/item_15/checkable = 1
+popup/item_15/id = 2
+popup/item_16/text = "Show Origin"
+popup/item_16/checkable = 1
+popup/item_16/id = 3
