@@ -1,10 +1,9 @@
-[gd_scene load_steps=6 format=3 uid="uid://b2e8dr8sqw65c"]
+[gd_scene load_steps=5 format=3 uid="uid://b2e8dr8sqw65c"]
 
 [ext_resource type="Script" uid="uid://cvlqe0gwq55qv" path="res://addons/auto_structured/ui/panels/details_panel.gd" id="1_i7yuf"]
 [ext_resource type="Texture2D" uid="uid://d04dma5ci7ufp" path="res://icon.svg" id="2_2ihjm"]
 [ext_resource type="Texture2D" uid="uid://bli807wmcfj7h" path="res://addons/auto_structured/assets/close.svg" id="2_qj0jw"]
 [ext_resource type="Texture2D" uid="uid://cklj47goa3tag" path="res://addons/auto_structured/assets/add.svg" id="3_mh04o"]
-[ext_resource type="PackedScene" uid="uid://b5w1pli4anuj" path="res://addons/auto_structured/ui/controls/tag_item_control.tscn" id="4_mh04o"]
 
 [node name="DetailsPanel" type="Control"]
 layout_mode = 3
@@ -44,6 +43,14 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
+[node name="TileImage" type="TextureRect" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+texture = ExtResource("2_2ihjm")
+expand_mode = 1
+stretch_mode = 5
+
 [node name="NameLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -53,14 +60,6 @@ horizontal_alignment = 1
 [node name="VSplitContainer" type="VSplitContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
-
-[node name="TileImage" type="TextureRect" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(32, 32)
-layout_mode = 2
-texture = ExtResource("2_2ihjm")
-expand_mode = 1
-stretch_mode = 5
 
 [node name="DetailsTabContainer" type="TabContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer"]
 unique_name_in_owner = true
@@ -154,15 +153,6 @@ stretch_mode = 3
 
 [node name="TagsContainer" type="VBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer/TagsWrapper"]
 unique_name_in_owner = true
-layout_mode = 2
-
-[node name="TagItemControl" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer/TagsWrapper/TagsContainer" instance=ExtResource("4_mh04o")]
-layout_mode = 2
-
-[node name="TagItemControl2" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer/TagsWrapper/TagsContainer" instance=ExtResource("4_mh04o")]
-layout_mode = 2
-
-[node name="TagItemControl3" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer/TagsWrapper/TagsContainer" instance=ExtResource("4_mh04o")]
 layout_mode = 2
 
 [node name="Sockets" type="ScrollContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer"]
