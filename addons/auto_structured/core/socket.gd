@@ -1,7 +1,6 @@
 @tool
 class_name Socket extends Resource
 
-const Requirement = preload("res://addons/auto_structured/core/requirements/requirement.gd")
 const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
 
 ## The type of this socket
@@ -15,11 +14,6 @@ const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
 		else:
 			push_warning("Socket: Invalid direction %s. Must be cardinal direction." % value)
 			direction = Vector3i.UP
-
-## Requirements that the neighboring tile must satisfy to connect to this socket
-## Example: TagRequirement("stone") means only tiles with "stone" tag can connect here
-## Use RotationRequirement to require minimum rotation angles
-@export var requirements: Array[Requirement] = []
 
 static func is_valid_direction(dir: Vector3i) -> bool:
 	"""Check if direction is one of the 6 cardinal directions."""
@@ -71,7 +65,7 @@ func remove_compatible_socket(id: String) -> void:
 func _get_socket_id() -> String:
 	if socket_type == null:
 		return ""
-	return String(socket_type.type_id)
+	return socket_type.type_id
 
 func _set_socket_id(value: String) -> void:
 	var trimmed := String(value).strip_edges()

@@ -43,7 +43,6 @@ func _init(grid_size: Vector3i, tiles: Array[Tile]) -> void:
 			for z in range(size.z):
 				var pos = Vector3i(x, y, z)
 				var cell = WfcCell.new(pos, all_tile_variants)
-				_apply_tile_requirements(cell)
 				_cells[_index(pos)] = cell
 
 	_cell_weights.resize(total_cells)
@@ -118,8 +117,8 @@ func get_lowest_entropy_cell() -> WfcCell:
 		
 		var cell: WfcCell = item["cell"]
 		
-		# Skip if cell is now collapsed or empty
-		if cell.is_collapsed() or cell.is_empty():
+		# Skip if cell is now collapsed
+		if cell.is_collapsed():
 			continue
 		
 		# Cell is valid - return it
@@ -133,7 +132,7 @@ func get_lowest_entropy_cell() -> WfcCell:
 func mark_cell_entropy_changed(cell: WfcCell) -> void:
 	"""Call this whenever a cell's entropy changes (after constraint propagation).
 	Adds the cell to the heap so it can be selected later."""
-	if cell.is_collapsed() or cell.is_empty():
+	if cell.is_collapsed():
 		return
 	
 	_heap_push(cell)
@@ -148,7 +147,7 @@ func initialize_heap() -> void:
 		_recalculate_cell_weights()
 	
 	for cell in _cells:
-		if not cell.is_collapsed() and not cell.is_empty():
+		if not cell.is_collapsed():
 			_heap_push(cell)
 
 
@@ -232,7 +231,7 @@ func _heap_less_than(a_idx: int, b_idx: int) -> bool:
 	elif a["entropy"] > b["entropy"]:
 		return false
 
-	# Then compare by strategy weight priority (lower value = higher weight)
+	# Then compare by weight priority (lower value = higher weight)
 	var a_weight_priority: float = a.get("weight_priority", 0.0)
 	var b_weight_priority: float = b.get("weight_priority", 0.0)
 	if a_weight_priority < b_weight_priority:
@@ -277,51 +276,11 @@ func reset() -> void:
 	"""Reset all cells to their initial uncollapsed state."""
 	for cell in _cells:
 		cell.reset(all_tile_variants)
-		_apply_tile_requirements(cell)
 	
 	# Clear heap - will be reinitialized on next solve
 	_entropy_heap.clear()
 	_heap_seq = 0
 	_recalculate_cell_weights()
-
-
-func _apply_tile_requirements(cell: WfcCell) -> void:
-	"""Filter a cell's variants based on tile-level requirements."""
-	if cell == null:
-		return
-
-	var filtered: Array[Dictionary] = []
-	for variant in all_tile_variants:
-		if _variant_meets_tile_requirements(variant, cell.position):
-			filtered.append(variant)
-
-	cell.possible_tile_variants = filtered
-
-
-func _variant_meets_tile_requirements(variant: Dictionary, cell_position: Vector3i) -> bool:
-	var tile: Tile = variant.get("tile")
-	if tile == null:
-		return false
-
-	var tile_requirements: Array = tile.requirements
-	if tile_requirements.is_empty():
-		return true
-
-	var context: Dictionary = {
-		"module": tile,
-		"tags": tile.tags,
-		"grid": self,
-		"grid_size": size,
-		"rotation_degrees": variant.get("rotation_degrees", 0)
-	}
-
-	for requirement in tile_requirements:
-		if requirement == null:
-			continue
-		if not requirement.evaluate(cell_position, context):
-			return false
-
-	return true
 
 func _recalculate_cell_weights() -> void:
 	if _cells.is_empty():

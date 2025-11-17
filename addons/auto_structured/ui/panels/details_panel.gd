@@ -14,9 +14,6 @@ const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.gd")
-const Requirement = preload("res://addons/auto_structured/core/requirements/requirement.gd")
-const TagRequirement = preload("res://addons/auto_structured/core/requirements/tag_requirement.gd")
-
 const TagItemControl = preload("res://addons/auto_structured/ui/controls/tag_item_control.gd")
 
 @onready var close_button: TextureButton = %CloseButton
@@ -27,7 +24,6 @@ const TagItemControl = preload("res://addons/auto_structured/ui/controls/tag_ite
 @onready var tab_container: TabContainer = %DetailsTabContainer
 @onready var general_tab: Control = %DetailsTabContainer/Generel
 @onready var sockets_tab: Control = %DetailsTabContainer/Sockets
-@onready var requirements_tab: Control = %DetailsTabContainer/Requirements
 
 @onready var x_size_spinbox: SpinBox = %XSizeSpinBox
 @onready var y_size_spinbox: SpinBox = %YSizeSpinBox

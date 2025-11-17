@@ -69,12 +69,6 @@ func _init(wfc_grid: WfcGrid, prewarm_cache: bool = true) -> void:
 	# Initialize remaining cells counter
 	_remaining_cells = total_cells
 	
-	# Pre-mark cells that should not be filled according to strategy
-	_apply_strategy_mask()
-	
-	# Run initial constraint propagation to update neighbors of empty cells
-	_propagate_empty_cells()
-	
 	# Optionally pre-warm the compatibility cache for better performance on large grids
 	if prewarm_cache and grid.all_tile_variants.size() < 200:  # Only for reasonable variant counts
 		_prewarm_compatibility_cache()
@@ -138,31 +132,6 @@ func _auto_configure(total_cells: int) -> void:
 		propagation_batch_size = 10
 		max_iterations = 1000000
 		progress_report_interval_ms = 500
-
-func _apply_strategy_mask() -> void:
-	"""Mark cells as empty if strategy says they shouldn't be collapsed, and apply semantic tags"""
-	var cells_filtered_out = 0
-	var tag_usage_stats = {}  # Track which tags are filtering out cells
-	
-	for x in range(grid.size.x):
-		for y in range(grid.size.y):
-			for z in range(grid.size.z):
-				var pos = Vector3i(x, y, z)
-				var cell = grid.get_cell(pos)
-	
-	# Warning if many cells were filtered out due to missing tags
-	if cells_filtered_out > 0:
-		push_warning("[WFC Solver] %d cells filtered out due to missing tile tags!" % cells_filtered_out)
-		push_warning("  Required tag combinations:")
-		for tag_combo in tag_usage_stats:
-			push_warning("    - [%s]: %d cells" % [tag_combo, tag_usage_stats[tag_combo]])
-		push_warning("  -> Add these tags to your tiles, or use a strategy without tag requirements (e.g., 'Fill All')")
-
-func _propagate_empty_cells() -> void:
-	"""Propagate constraints from all empty cells to ensure neighbors understand empty adjacency"""
-	# Empty cells don't constrain their neighbors in WFC
-	# This is handled automatically during propagation
-	pass
 
 func solve(run_synchronously: bool = false) -> bool:
 	_log(["[WFC Solver] Starting solve..."])
@@ -280,10 +249,6 @@ func propagate(start_cell: WfcCell) -> bool:
 		if _enable_yielding and propagation_batch_size > 0 and cells_processed % propagation_batch_size == 0:
 			await Engine.get_main_loop().process_frame
 		
-		# Skip propagation if this cell is empty (marked by strategy)
-		if current_cell.is_empty():
-			continue
-		
 		# Check if current cell has contradiction before propagating from it
 		if current_cell.has_contradiction():
 			push_error("  Cell ", current_cell.position, " has contradiction (0 variants) when trying to propagate from it")
@@ -292,10 +257,6 @@ func propagate(start_cell: WfcCell) -> bool:
 		for direction in directions:
 			var neighbor = grid.get_neighbor_in_direction(current_cell.position, direction)
 			if not neighbor:
-				continue
-			
-			# Skip if neighbor is empty (strategy-masked cell)
-			if neighbor.is_empty():
 				continue
 			
 			# Skip if neighbor is already collapsed with a tile
@@ -356,10 +317,6 @@ func get_valid_variants_for_neighbor(source_cell: WfcCell, neighbor_cell: WfcCel
 	Returns:
 		Array of dictionaries with keys: "tile" (Tile), "rotation_degrees" (int)
 	"""
-	# If source cell is empty (strategy-masked), all neighbor variants are valid
-	if source_cell.is_empty():
-		return neighbor_cell.possible_tile_variants  # No copy needed
-
 	# Reuse scratch array to avoid allocations
 	_scratch_variants.clear()
 	
@@ -434,13 +391,10 @@ func are_variants_compatible(source_tile: Tile, source_rotation: int, neighbor_t
 	# Get sockets on neighbor tile that face back toward source (in local space)
 	var neighbor_sockets = _get_sockets_or_none(neighbor_tile, neighbor_local_direction)
 
-	var has_socket_requirements = _sockets_have_requirements(source_sockets) or _sockets_have_requirements(neighbor_sockets)
-
-	if not has_socket_requirements:
-		# Check cache first (O(1) array access)
-		var cached = _compatibility_cache[src_id][neigh_id][dir_index]
-		if cached != null:
-			return cached
+	# Check cache first (O(1) array access)
+	var cached = _compatibility_cache[src_id][neigh_id][dir_index]
+	if cached != null:
+		return cached
 	
 	var result = false
 
@@ -448,18 +402,13 @@ func are_variants_compatible(source_tile: Tile, source_rotation: int, neighbor_t
 		for neighbor_socket in neighbor_sockets:
 			if not _sockets_are_compatible(source_socket, neighbor_socket):
 				continue
-			if not _socket_requirements_pass(source_socket, source_tile, source_rotation, source_position, neighbor_tile, neighbor_rotation, neighbor_position, direction):
-				continue
-			if not _socket_requirements_pass(neighbor_socket, neighbor_tile, neighbor_rotation, neighbor_position, source_tile, source_rotation, source_position, -direction):
-				continue
 			result = true
 			break
 		if result:
 			break
 	
-	# Cache the result (fast array write) when no per-socket requirements influence compatibility
-	if not has_socket_requirements:
-		_compatibility_cache[src_id][neigh_id][dir_index] = result
+	# Cache the result (fast array write)
+	_compatibility_cache[src_id][neigh_id][dir_index] = result
 	return result
 
 func reset() -> void:
@@ -485,35 +434,6 @@ func _log(parts: Array) -> void:
 	for part in parts:
 		text += str(part)
 	print(text)
-
-func _sockets_have_requirements(sockets: Array[Socket]) -> bool:
-	for socket in sockets:
-		if socket != null and not socket.requirements.is_empty():
-			return true
-	return false
-
-func _socket_requirements_pass(socket: Socket, host_tile: Tile, host_rotation: int, host_position: Vector3i, other_tile: Tile, other_rotation: int, other_position: Vector3i, direction: Vector3i) -> bool:
-	if socket == null or socket.requirements.is_empty():
-		return true
-
-	var context: Dictionary = {
-		"module": other_tile,
-		"tags": other_tile.tags,
-		"rotation_degrees": other_rotation,
-		"grid": grid,
-		"neighbor_position": other_position,
-		"direction": direction,
-		"self_module": host_tile,
-		"self_rotation_degrees": host_rotation,
-		"self_position": host_position
-	}
-
-	for requirement in socket.requirements:
-		if requirement == null:
-			continue
-		if not requirement.evaluate(host_position, context):
-			return false
-	return true
 
 func _get_sockets_or_none(tile: Tile, local_direction: Vector3i) -> Array[Socket]:
 	var sockets := tile.get_sockets_in_direction(local_direction)

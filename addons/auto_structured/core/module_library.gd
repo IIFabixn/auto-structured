@@ -7,7 +7,7 @@ const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
 @export var library_name: String = "My Building Set"
 @export var tiles: Array[Tile] = []
 @export var socket_types: Array[SocketType] = []  ## Registered socket types for this library
-@export var cell_world_size: Vector3 = Vector3(2, 3, 2)
+@export var cell_world_size: Vector3 = Vector3(1, 1, 1)  ## Size of each grid cell in world units
 
 func ensure_defaults() -> void:
 	"""

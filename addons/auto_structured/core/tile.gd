@@ -2,22 +2,13 @@
 class_name Tile extends Resource
 
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
-const Requirement = preload("res://addons/auto_structured/core/requirements/requirement.gd")
 
 @export var name: String = ""
 @export var mesh: Mesh = null
 @export var scene: PackedScene = null
 @export var size: Vector3i = Vector3i.ONE  ## Size of the tile in grid units (default 1x1x1). Must be integer.
 @export var tags: Array[String] = []
-@export var requirements: Array[Requirement] = []
 
-enum Symmetry {
-	NONE,
-	ROTATION_180,
-	ROTATION_90
-}
-
-@export var symmetry: Symmetry = Symmetry.NONE
 @export var sockets: Array[Socket] = []:
 	set(value):
 		sockets = value
@@ -25,6 +16,10 @@ enum Symmetry {
 
 ## Precomputed socket cache for O(1) lookups by direction
 var _sockets_by_dir: Dictionary = {}
+
+## Cache for face signatures to avoid expensive recomputation
+var _cached_face_signatures: Dictionary = {}
+var _face_cache_valid: bool = false
 
 func _rebuild_socket_cache() -> void:
 	"""Rebuild the socket cache whenever sockets are modified. Called automatically."""
@@ -187,15 +182,8 @@ func ensure_all_sockets(library = null) -> void:
 			add_socket(new_socket)
 
 func get_unique_rotations() -> Array[int]:
-	"""Return the list of unique Y-axis rotations for this tile based on symmetry."""
-	match symmetry:
-		Symmetry.NONE:
-			return [0, 90, 180, 270]
-		Symmetry.ROTATION_180:
-			return [0, 90]
-		Symmetry.ROTATION_90:
-			return [0]
-	return [0, 90, 180, 270]
+	"""Return the list of rotations supported by this tile."""
+	return [0]
 
 func get_socket_by_direction(direction: Vector3i) -> Socket:
 	"""

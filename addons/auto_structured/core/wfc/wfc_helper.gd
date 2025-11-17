@@ -167,24 +167,18 @@ static func get_opposite_direction(direction: Vector3i) -> Vector3i:
 	return -direction
 
 
-## Check if two sockets can connect considering their compatibility and requirements.
+## Check if two sockets can connect considering their compatibility.
 ##
 ## Args:
 ##   socket1: First socket
 ##   socket2: Second socket
-##   tile1: Tile that socket1 belongs to (for requirement evaluation)
-##   tile2: Tile that socket2 belongs to (for requirement evaluation)
 ##
 ## Returns:
 ##   true if sockets can connect, false otherwise
-static func can_sockets_connect(socket1: Socket, socket2: Socket, tile1: Tile, tile2: Tile) -> bool:
+static func can_sockets_connect(socket1: Socket, socket2: Socket, _tile1: Tile, _tile2: Tile) -> bool:
 	# Check bidirectional compatibility
 	if not socket1.is_compatible_with(socket2) or not socket2.is_compatible_with(socket1):
 		return false
-	
-	# TODO: Check socket requirements
-	# socket1.requirements should be satisfied by tile2
-	# socket2.requirements should be satisfied by tile1
 	
 	return true
 
@@ -198,7 +192,7 @@ static func can_sockets_connect(socket1: Socket, socket2: Socket, tile1: Tile, t
 ##   required_direction: The direction it needs to face after rotation (Vector3)
 ##
 ## Returns:
-##   true if the socket can be rotated to align and meets rotation requirements, false otherwise
+##   true if the socket can be rotated to align with the required direction, false otherwise
 static func can_socket_align_with_rotation(socket: Socket, required_direction: Vector3) -> bool:
 	var socket_dir = Vector3(socket.direction)
 	
@@ -274,25 +268,11 @@ static func find_compatible_tiles(source_socket: Socket, all_tiles: Array[Tile],
 					continue
 				
 				# This rotation makes the socket face the right way
-				# Check socket requirements with rotation context
-				var context = {
-					"rotation_degrees": rotation_deg,
-					"tags": tile.tags if tile else []
-				}
-				
-				var requirements_met = true
-				for requirement in tile_socket.requirements:
-					if not requirement.evaluate(Vector3i.ZERO, context):
-						requirements_met = false
-						break
-				
-				if requirements_met:
-					# Add this rotation variant with the rotation angle stored
-					matching_sockets.append({
-						"socket": tile_socket,
-						"rotation_degrees": rotation_deg
-					})
-					break  # Only add each socket once (first valid rotation)
+				matching_sockets.append({
+					"socket": tile_socket,
+					"rotation_degrees": rotation_deg
+				})
+				break  # Only add each socket once (first valid rotation)
 		
 		# Add all matching sockets from this tile
 		if matching_sockets.size() > 0:

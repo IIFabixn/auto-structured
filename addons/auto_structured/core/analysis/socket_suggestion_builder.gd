@@ -4,6 +4,7 @@ class_name SocketSuggestionBuilder
 const Tile := preload("res://addons/auto_structured/core/tile.gd")
 const ModuleLibrary := preload("res://addons/auto_structured/core/module_library.gd")
 const Socket := preload("res://addons/auto_structured/core/socket.gd")
+const SocketType := preload("res://addons/auto_structured/core/socket_type.gd")
 const MeshOutlineAnalyzer := preload("res://addons/auto_structured/core/analysis/mesh_outline_analyzer.gd")
 
 static func build_suggestions(tile: Tile, library: ModuleLibrary, allow_self_match: bool = false) -> Array:

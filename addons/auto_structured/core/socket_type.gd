@@ -7,15 +7,6 @@ class_name SocketType extends Resource
 ## Optional human-friendly name shown in editors
 @export var display_name: String = ""
 
-## Optional category/group label (e.g. "Floor", "Wall")
-@export var category: String = ""
-
-## Optional descriptive text shown in tooltips
-@export_multiline var description: String = ""
-
-## Optional tint color used by UI (defaults to neutral gray)
-@export var color: Color = Color(0.65, 0.65, 0.7, 1.0)
-
 ## IDs of other types this type can connect to
 @export var compatible_types: Array[String] = []
 
@@ -57,9 +48,6 @@ func set_compatible_types(ids: Array[String]) -> void:
 func get_display_name() -> String:
 	var clean := display_name.strip_edges()
 	return clean if clean != "" else type_id
-
-func get_description() -> String:
-	return description.strip_edges()
 
 func is_compatible_with(other: SocketType) -> bool:
 	return other != null and other.type_id in compatible_types
