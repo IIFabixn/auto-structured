@@ -19,6 +19,7 @@ func _enter_tree() -> void:
 	add_control_to_bottom_panel(structure_viewport, "Auto Structured")
 
 func _exit_tree() -> void:
+	print("Auto Structured Plugin Disabled")
 	# Cleanup of the plugin goes here.
 	remove_control_from_bottom_panel(structure_viewport)
 	structure_viewport.queue_free()
