@@ -18,6 +18,15 @@ var max_iterations: int = 10000
 ## Interval for progress reporting (ms). 0 = disabled.
 var progress_report_interval_ms: int = 2000
 
+## Enable backtracking on contradictions.
+var enable_backtracking: bool = true
+
+## Maximum depth of backtrack stack.
+var max_backtrack_depth: int = 10
+
+## Save checkpoint every N collapses.
+var backtrack_checkpoint_frequency: int = 5
+
 
 ## Preset for small grids (< 10K cells)
 static func small_grid() -> WfcSolverConfig:
@@ -75,4 +84,9 @@ static func custom(yield_ms: int, batch_size: int, prewarm: bool = true) -> WfcS
 func apply_to_solver(solver: WfcSolver) -> void:
 	"""Apply this configuration to a solver instance."""
 	solver.max_iterations = max_iterations
-	# Note: yield_interval and batch_size would need to be added as solver properties
+	solver.yield_interval_ms = yield_interval_ms
+	solver.propagation_batch_size = propagation_batch_size
+	solver.progress_report_interval_ms = progress_report_interval_ms
+	solver.enable_backtracking = enable_backtracking
+	solver.max_backtrack_depth = max_backtrack_depth
+	solver.backtrack_checkpoint_frequency = backtrack_checkpoint_frequency

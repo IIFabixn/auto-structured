@@ -13,7 +13,9 @@ var all_tile_variants: Array[Dictionary] = []  # All possible tile+rotation comb
 ## Performance optimization: Priority queue (min-heap) for entropy selection
 var _entropy_heap: Array = []  # Array of { "entropy": float, "seq": int, "cell": WfcCell }
 var _heap_seq: int = 0  # Monotonic counter for tie-breaking in heap
-var _cell_weights: PackedFloat32Array = PackedFloat32Array()
+
+## Heap optimization: Track cells in heap to avoid duplicates
+var _cells_in_heap: Dictionary = {}  # cell -> true
 
 ## Helper function to convert 3D position to flat array index
 func _index(pos: Vector3i) -> int:
@@ -44,14 +46,11 @@ func _init(grid_size: Vector3i, tiles: Array[Tile]) -> void:
 				var pos = Vector3i(x, y, z)
 				var cell = WfcCell.new(pos, all_tile_variants)
 				_cells[_index(pos)] = cell
-
-	_cell_weights.resize(total_cells)
-	for i in range(total_cells):
-		_cell_weights[i] = 1.0
 	
 	# Initialize heap - will be populated when solver needs it
 	_entropy_heap.clear()
 	_heap_seq = 0
+	_cells_in_heap.clear()
 
 func generate_all_variants(tiles: Array[Tile]) -> Array[Dictionary]:
 	"""Generate all possible tile+rotation combinations."""
@@ -142,9 +141,7 @@ func initialize_heap() -> void:
 	"""Initialize the heap with all uncollapsed cells. Call once at start of solve."""
 	_entropy_heap.clear()
 	_heap_seq = 0
-
-	if _cell_weights.size() != _cells.size():
-		_recalculate_cell_weights()
+	_cells_in_heap.clear()
 	
 	for cell in _cells:
 		if not cell.is_collapsed():
@@ -154,16 +151,19 @@ func initialize_heap() -> void:
 ## Binary min-heap operations (keyed by entropy, then by sequence number for stability)
 
 func _heap_push(cell: WfcCell) -> void:
-	"""Add a cell to the min-heap."""
-	var weight_priority: float = _get_weight_priority(cell)
+	"""Add a cell to the min-heap. Avoids duplicates."""
+	# Skip if cell already in heap (prevents duplicate entries)
+	if _cells_in_heap.has(cell):
+		return
+	
 	var item = {
 		"entropy": cell.get_entropy(),
-		"weight_priority": weight_priority,
 		"seq": _heap_seq,
 		"cell": cell
 	}
 	_heap_seq += 1
 	_entropy_heap.append(item)
+	_cells_in_heap[cell] = true
 	_heap_sift_up(_entropy_heap.size() - 1)
 
 
@@ -173,6 +173,10 @@ func _heap_pop() -> Dictionary:
 		return {}
 	
 	var root = _entropy_heap[0]
+	var root_cell = root.get("cell")
+	if root_cell:
+		_cells_in_heap.erase(root_cell)
+	
 	var last = _entropy_heap.pop_back()
 	
 	if not _entropy_heap.is_empty():
@@ -230,14 +234,6 @@ func _heap_less_than(a_idx: int, b_idx: int) -> bool:
 		return true
 	elif a["entropy"] > b["entropy"]:
 		return false
-
-	# Then compare by weight priority (lower value = higher weight)
-	var a_weight_priority: float = a.get("weight_priority", 0.0)
-	var b_weight_priority: float = b.get("weight_priority", 0.0)
-	if a_weight_priority < b_weight_priority:
-		return true
-	elif a_weight_priority > b_weight_priority:
-		return false
 	
 	# Tie-break by sequence (for stability and randomization)
 	return a["seq"] < b["seq"]
@@ -280,26 +276,4 @@ func reset() -> void:
 	# Clear heap - will be reinitialized on next solve
 	_entropy_heap.clear()
 	_heap_seq = 0
-	_recalculate_cell_weights()
-
-func _recalculate_cell_weights() -> void:
-	if _cells.is_empty():
-		return
-
-	var total_cells = _cells.size()
-	_cell_weights.resize(total_cells)
-
-	for x in range(size.x):
-		for y in range(size.y):
-			for z in range(size.z):
-				var pos = Vector3i(x, y, z)
-				var idx = _index(pos)
-				var weight := 1.0
-				_cell_weights[idx] = weight
-
-
-func _get_weight_priority(cell: WfcCell) -> float:
-	var idx = _index(cell.position)
-	if idx < 0 or idx >= _cell_weights.size():
-		return -1.0
-	return -_cell_weights[idx]
+	_cells_in_heap.clear()

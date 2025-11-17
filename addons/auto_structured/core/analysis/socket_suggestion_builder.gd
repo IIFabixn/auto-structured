@@ -51,7 +51,7 @@ static func analyze_faces(tile: Tile, library: ModuleLibrary, allow_self_match: 
 				if best_within.is_empty() or float(detail.get("score", INF)) < float(best_within.get("detail", {}).get("score", INF)):
 					best_within = candidate
 		if not best_within.is_empty():
-			info["suggestion"] = _candidate_to_suggestion(direction, best_within)
+			info["suggestion"] = _candidate_to_suggestion(direction, best_within, library)
 			info["within_tolerance"] = true
 			info["best_candidate"] = best_within
 		else:
@@ -74,7 +74,7 @@ static func _find_best_match_for_face(tile: Tile, direction: Vector3i, face: Dic
 			best_candidate = candidate
 	if best_candidate.is_empty():
 		return {}
-	return _candidate_to_suggestion(direction, best_candidate)
+	return _candidate_to_suggestion(direction, best_candidate, library)
 
 static func _compare_faces(face_a: Dictionary, face_b: Dictionary) -> Variant:
 	var detail := _compare_faces_detailed(face_a, face_b)
@@ -131,6 +131,9 @@ static func _gather_candidates(tile: Tile, direction: Vector3i, face: Dictionary
 		if detail.is_empty():
 			continue
 		var partner_socket := other_tile.get_socket_by_direction(opposite)
+		# Skip candidates without valid socket types
+		if partner_socket == null or partner_socket.socket_type == null:
+			continue
 		var candidate := {
 			"tile": other_tile,
 			"opposite": opposite,
@@ -142,18 +145,23 @@ static func _gather_candidates(tile: Tile, direction: Vector3i, face: Dictionary
 		candidates.append(candidate)
 	return candidates
 
-static func _candidate_to_suggestion(direction: Vector3i, candidate: Dictionary) -> Dictionary:
+static func _candidate_to_suggestion(direction: Vector3i, candidate: Dictionary, library: ModuleLibrary) -> Dictionary:
 	var partner_socket: Socket = candidate.get("partner_socket")
-	if partner_socket == null:
+	if partner_socket == null or partner_socket.socket_type == null:
 		return {}
-	var partner_socket_id := partner_socket.socket_id.strip_edges()
+	var partner_socket_type: SocketType = partner_socket.socket_type
+	var partner_socket_id := partner_socket_type.type_id.strip_edges()
 	if partner_socket_id == "" or partner_socket_id == "none":
 		return {}
+	# Ensure the partner socket type is registered in the library
+	if library:
+		library.register_socket_type(partner_socket_type)
 	var compatible_ids: Array[String] = []
-	compatible_ids.assign(partner_socket.compatible_sockets)
+	compatible_ids.assign(partner_socket_type.compatible_types)
 	return {
 		"direction": direction,
 		"socket_id": partner_socket_id,
+		"socket_type": partner_socket_type,
 		"compatible": compatible_ids,
 		"partner_tile": candidate.get("tile"),
 		"partner_direction": candidate.get("opposite"),

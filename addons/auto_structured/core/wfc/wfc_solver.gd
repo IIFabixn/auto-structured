@@ -13,20 +13,33 @@ var max_iterations: int = 10000
 ## Logging control: disable to run silently
 var logging_enabled: bool = true
 
-## Performance tuning: How often to yield (ms), 0 = disabled
-var yield_interval_ms: int = 16
+## Progress callback: Called periodically with progress info, signature: func(dict) -> void
+## Dictionary contains: {"progress": float, "cells_collapsed": int, "total_cells": int, "iterations": int, "elapsed_ms": int}
+var progress_callback: Callable = Callable()
 
-## Performance tuning: Cells to process before yielding in propagation, 0 = disabled
-var propagation_batch_size: int = 50
-
-## Performance tuning: Interval for progress reports (ms), 0 = disabled
-var progress_report_interval_ms: int = 2000
-
-## Performance tuning: Enable/disable yielding entirely for maximum speed
-var _enable_yielding: bool = true
+## Progress reporting: How often to call progress_callback (in iterations), 0 = disabled
+var progress_report_frequency: int = 100
 
 ## Performance tracking: Remaining uncollapsed cells
 var _remaining_cells: int = 0
+
+## Backtracking: Enable/disable backtracking on contradictions
+var enable_backtracking: bool = true
+
+## Backtracking: Maximum depth of backtrack stack
+var max_backtrack_depth: int = 10
+
+## Backtracking: Checkpoint frequency (save every N collapses)
+var backtrack_checkpoint_frequency: int = 5
+
+## Backtracking: State stack for contradiction recovery
+var _backtrack_stack: Array[Dictionary] = []
+
+## Backtracking: Counter for checkpoint frequency
+var _collapses_since_checkpoint: int = 0
+
+## Backtracking: Total number of backtracks performed
+var _total_backtracks: int = 0
 
 ## Performance optimization: Fast compatibility cache using arrays instead of Dictionary
 ## 3D array: [source_variant_id][neighbor_variant_id][direction_index] = bool
@@ -51,7 +64,6 @@ var _visited_flags: PackedByteArray
 
 ## Performance optimization: Scratch array for valid variants (reusable)
 var _scratch_variants: Array[Dictionary] = []
-var _virtual_none_socket_cache: Dictionary = {}
 
 func _init(wfc_grid: WfcGrid, prewarm_cache: bool = true) -> void:
 	grid = wfc_grid
@@ -60,7 +72,8 @@ func _init(wfc_grid: WfcGrid, prewarm_cache: bool = true) -> void:
 	var total_cells = grid.size.x * grid.size.y * grid.size.z
 	_auto_configure(total_cells)
 	
-	# Initialize fast data structures
+	# Initialize tile variant weights
+	_initialize_variant_weights()	# Initialize fast data structures
 	_directions = WfcHelper.get_cardinal_directions()
 	_build_variant_ids()
 	_initialize_fast_cache()
@@ -113,40 +126,31 @@ func _get_cell_index(pos: Vector3i) -> int:
 func _auto_configure(total_cells: int) -> void:
 	"""Automatically configure performance settings based on grid size."""
 	if total_cells < 10000:  # Small grid
-		yield_interval_ms = 50
-		propagation_batch_size = 100
 		max_iterations = 20000
-		progress_report_interval_ms = 5000
+		progress_report_frequency = 500
 	elif total_cells < 50000:  # Medium grid
-		yield_interval_ms = 16
-		propagation_batch_size = 50
 		max_iterations = 100000
-		progress_report_interval_ms = 2000
+		progress_report_frequency = 200
 	elif total_cells < 200000:  # Large grid
-		yield_interval_ms = 8
-		propagation_batch_size = 25
 		max_iterations = 500000
-		progress_report_interval_ms = 1000
+		progress_report_frequency = 100
 	else:  # Very large grid
-		yield_interval_ms = 4
-		propagation_batch_size = 10
 		max_iterations = 1000000
-		progress_report_interval_ms = 500
+		progress_report_frequency = 50
 
-func solve(run_synchronously: bool = false) -> bool:
+func _initialize_variant_weights() -> void:
+	"""Initialize weights for all tile variants. Default weight is 1.0."""
+	for variant in grid.all_tile_variants:
+		if not variant.has("weight"):
+			variant["weight"] = 1.0
+
+func solve() -> bool:
+	"""Solve the WFC puzzle synchronously. Use progress_callback for updates."""
 	_log(["[WFC Solver] Starting solve..."])
 	_log(["  Grid size: ", grid.size])
 	_log(["  Total cells: ", grid.get_cell_count()])
 	_log(["  Cells to collapse: ", _remaining_cells])
 	_log(["  Max iterations: ", max_iterations])
-	
-	# Configure yielding
-	_enable_yielding = not run_synchronously
-	if run_synchronously:
-		_log(["  Running SYNCHRONOUSLY (no yielding) for maximum speed"])
-	else:
-		_log(["  Yield interval: ", yield_interval_ms, "ms"])
-		_log(["  Propagation batch size: ", propagation_batch_size])
 	
 	# CRITICAL: Initialize entropy heap for O(log N) cell selection
 	_log(["  Initializing entropy heap..."])
@@ -156,73 +160,99 @@ func solve(run_synchronously: bool = false) -> bool:
 	_log(["  Heap initialized in ", heap_time, "ms"])
 	
 	var iterations = 0
-	var last_yield_time = Time.get_ticks_msec()
-	var last_progress_time = Time.get_ticks_msec()
 	var start_time = Time.get_ticks_msec()
+	_backtrack_stack.clear()
+	_collapses_since_checkpoint = 0
+	_total_backtracks = 0
 
 	while _remaining_cells > 0:
 		if iterations >= max_iterations:
 			push_error("WFC: Max iterations reached (", max_iterations, ")")
 			push_error("  Completed iterations: ", iterations)
+			if _total_backtracks > 0:
+				push_error("  Total backtracks: ", _total_backtracks)
 			return false
 
-		# Yield periodically to keep UI responsive (only if not synchronous)
-		var current_time = Time.get_ticks_msec()
-		if _enable_yielding and yield_interval_ms > 0 and current_time - last_yield_time > yield_interval_ms:
-			await Engine.get_main_loop().process_frame
-			last_yield_time = Time.get_ticks_msec()
-
-		# Skip full grid scan - contradictions are caught during propagation
+		# Report progress periodically
+		if progress_callback.is_valid() and progress_report_frequency > 0 and iterations % progress_report_frequency == 0:
+			var current_time = Time.get_ticks_msec()
+			var total_cells = grid.get_cell_count()
+			var collapsed_cells = total_cells - _remaining_cells
+			var progress_data = {
+				"progress": (collapsed_cells / float(total_cells)) * 100.0,
+				"cells_collapsed": collapsed_cells,
+				"total_cells": total_cells,
+				"iterations": iterations,
+				"elapsed_ms": current_time - start_time,
+				"backtracks": _total_backtracks
+			}
+			progress_callback.call(progress_data)
 
 		# Observe: Pick cell with lowest entropy
-		var cell_selection_start = Time.get_ticks_msec()
 		var cell = grid.get_lowest_entropy_cell()
 		if not cell:
 			_log(["[WFC Solver] No more cells to collapse (fully collapsed)"])
 			break
 
+		# Save checkpoint before collapsing (if backtracking enabled)
+		if enable_backtracking and _collapses_since_checkpoint >= backtrack_checkpoint_frequency:
+			if _backtrack_stack.size() < max_backtrack_depth:
+				var snapshot = _create_snapshot()
+				_backtrack_stack.append(snapshot)
+				_collapses_since_checkpoint = 0
+			else:
+				# Stack full - remove oldest checkpoint
+				_backtrack_stack.pop_front()
+				var snapshot = _create_snapshot()
+				_backtrack_stack.append(snapshot)
+				_collapses_since_checkpoint = 0
+
 		if not cell.collapse():
-			push_error("WFC: Failed to collapse cell at ", cell.position)
-			return false
+			if enable_backtracking and not _backtrack_stack.is_empty():
+				_log(["  Cell collapse failed at ", cell.position, " - attempting backtrack"])
+				if not _attempt_backtrack():
+					push_error("WFC: Failed to collapse cell at ", cell.position, " and backtracking exhausted")
+					return false
+				iterations += 1
+				continue
+			else:
+				push_error("WFC: Failed to collapse cell at ", cell.position)
+				return false
 
 		# Propagate: Update neighbors based on the collapsed cell
-		var propagate_start = Time.get_ticks_msec()
-		var propagate_result = await propagate(cell)
-		var propagate_time = Time.get_ticks_msec() - propagate_start
-		
-		# Log slow propagations
-		if propagate_time > 1000:
-			_log(["  [WARNING] Iteration ", iterations + 1, " propagation took ", propagate_time, "ms"])
+		var propagate_result = propagate(cell)
 		
 		if not propagate_result:
-			push_error("WFC: Propagation failed at ", cell.position)
-			push_error("  Collapsed to: ", cell.get_tile().name if cell.get_tile() else "unknown", " @ ", cell.get_rotation(), "°")
-			return false
+			# Contradiction detected - try backtracking
+			if enable_backtracking and not _backtrack_stack.is_empty():
+				_log(["  Propagation failed at ", cell.position, " - attempting backtrack"])
+				if not _attempt_backtrack():
+					push_error("WFC: Propagation failed at ", cell.position)
+					push_error("  Collapsed to: ", cell.get_tile().name if cell.get_tile() else "unknown", " @ ", cell.get_rotation(), "°")
+					return false
+				iterations += 1
+				continue
+			else:
+				push_error("WFC: Propagation failed at ", cell.position)
+				push_error("  Collapsed to: ", cell.get_tile().name if cell.get_tile() else "unknown", " @ ", cell.get_rotation(), "°")
+				return false
 
 		iterations += 1
 		_remaining_cells -= 1  # We collapsed one more cell
-		
-		# Progress reporting at configured interval
-		if progress_report_interval_ms > 0:
-			current_time = Time.get_ticks_msec()
-			if current_time - last_progress_time > progress_report_interval_ms:
-				var total_cells = grid.get_cell_count()
-				var collapsed_cells = total_cells - _remaining_cells
-				var progress = (collapsed_cells / float(total_cells)) * 100.0
-				var elapsed_seconds = (current_time - start_time) / 1000.0
-				var progress_message = "[%.1fs] WFC Progress: %.2f%% (%d/%d cells, %d iterations)" % [elapsed_seconds, progress, collapsed_cells, total_cells, iterations]
-				_log([progress_message])
-				last_progress_time = current_time
+		_collapses_since_checkpoint += 1
 
 	var elapsed_seconds = (Time.get_ticks_msec() - start_time) / 1000.0
 	_log(["[WFC Solver] Solve completed successfully!"])
 	_log(["  Total iterations: ", iterations])
+	if _total_backtracks > 0:
+		_log(["  Total backtracks: ", _total_backtracks])
 	_log(["  Time elapsed: %.2f seconds" % elapsed_seconds])
 	_log(["  Avg iterations/sec: %.0f" % (iterations / max(elapsed_seconds, 0.001))])
 
 	return true
 
 func propagate(start_cell: WfcCell) -> bool:
+	"""Propagate constraints from a collapsed cell to its neighbors."""
 	var propagation_queue: Array[WfcCell] = [start_cell]
 	
 	# Reset visited flags (fast memset)
@@ -231,23 +261,11 @@ func propagate(start_cell: WfcCell) -> bool:
 	# Use pre-computed cardinal directions
 	var directions = _directions
 	
-	# Yield periodically during propagation to prevent lag
-	var cells_processed = 0
-	var max_queue_size = 1
-
 	# CRITICAL OPTIMIZATION: Use index-based traversal instead of pop_front() which is O(n)
 	var head := 0
 	while head < propagation_queue.size():
-		# Track max queue size for diagnostics
-		if propagation_queue.size() > max_queue_size:
-			max_queue_size = propagation_queue.size()
 		var current_cell = propagation_queue[head]
 		head += 1
-		
-		# Yield during large propagation cascades (batch-based, no time check, only if yielding enabled)
-		cells_processed += 1
-		if _enable_yielding and propagation_batch_size > 0 and cells_processed % propagation_batch_size == 0:
-			await Engine.get_main_loop().process_frame
 		
 		# Check if current cell has contradiction before propagating from it
 		if current_cell.has_contradiction():
@@ -297,10 +315,6 @@ func propagate(start_cell: WfcCell) -> bool:
 				
 				# CRITICAL: Update heap when cell entropy changes
 				grid.mark_cell_entropy_changed(neighbor)
-
-	# Log propagation stats only for very large cascades (reduce spam)
-	if cells_processed > 500 or max_queue_size > 200:
-		_log(["    [Propagation] Processed ", cells_processed, " cells, max queue: ", max_queue_size])
 	
 	return true
 
@@ -315,25 +329,17 @@ func get_valid_variants_for_neighbor(source_cell: WfcCell, neighbor_cell: WfcCel
 		direction: Direction from source to neighbor (Vector3i)
 	
 	Returns:
-		Array of dictionaries with keys: "tile" (Tile), "rotation_degrees" (int)
+		Array of dictionaries with keys: "tile" (Tile), "rotation_degrees" (int), "weight" (float)
 	"""
 	# Reuse scratch array to avoid allocations
 	_scratch_variants.clear()
 	
-	# Pre-fetch to avoid repeated access
-	var source_variants: Array[Dictionary] = []
-	var source_count: int = 0
-	if source_cell.is_collapsed():
-		var collapsed_variant := source_cell.get_variant()
-		if collapsed_variant.is_empty():
-			return neighbor_cell.possible_tile_variants
-		source_variants.append(collapsed_variant)
-		source_count = 1
-	else:
-		source_variants = source_cell.possible_tile_variants
-		source_count = source_variants.size()
-		if source_count == 0:
-			return neighbor_cell.possible_tile_variants
+	# Get source variants (always use possible_tile_variants now)
+	var source_variants = source_cell.possible_tile_variants
+	var source_count = source_variants.size()
+	if source_count == 0:
+		return neighbor_cell.possible_tile_variants
+	
 	var neighbor_variants = neighbor_cell.possible_tile_variants
 	var neighbor_count = neighbor_variants.size()
 
@@ -382,28 +388,32 @@ func are_variants_compatible(source_tile: Tile, source_rotation: int, neighbor_t
 	var local_direction = WfcHelper.rotate_direction(direction, source_rotation_basis.inverse())
 
 	# Get sockets on source tile that face toward neighbor (in local space)
-	var source_sockets = _get_sockets_or_none(source_tile, local_direction)
+	var source_sockets = source_tile.get_sockets_in_direction(local_direction)
 
 	# Rotate the opposite direction by the neighbor tile's rotation
 	var neighbor_rotation_basis: Basis = _rotation_basis_cache[neighbor_rotation]
 	var neighbor_local_direction = WfcHelper.rotate_direction(-direction, neighbor_rotation_basis.inverse())
 
 	# Get sockets on neighbor tile that face back toward source (in local space)
-	var neighbor_sockets = _get_sockets_or_none(neighbor_tile, neighbor_local_direction)
+	var neighbor_sockets = neighbor_tile.get_sockets_in_direction(neighbor_local_direction)
+	
+	# If either tile has no sockets in this direction, they're incompatible
+	if source_sockets.is_empty() or neighbor_sockets.is_empty():
+		_compatibility_cache[src_id][neigh_id][dir_index] = false
+		return false
 
 	# Check cache first (O(1) array access)
 	var cached = _compatibility_cache[src_id][neigh_id][dir_index]
 	if cached != null:
 		return cached
 	
+	# Check if any socket pair is compatible
 	var result = false
-
 	for source_socket in source_sockets:
 		for neighbor_socket in neighbor_sockets:
-			if not _sockets_are_compatible(source_socket, neighbor_socket):
-				continue
-			result = true
-			break
+			if source_socket.is_compatible_with(neighbor_socket) and neighbor_socket.is_compatible_with(source_socket):
+				result = true
+				break
 		if result:
 			break
 	
@@ -412,8 +422,28 @@ func are_variants_compatible(source_tile: Tile, source_rotation: int, neighbor_t
 	return result
 
 func reset() -> void:
+	"""Reset the grid to initial state. Cache is preserved."""
 	grid.reset()
+	_backtrack_stack.clear()
+	_total_backtracks = 0
+	_collapses_since_checkpoint = 0
 	# Note: Keep cache - it's valid across resets with same tiles
+
+func set_tile_weight(tile: Tile, rotation: int, weight: float) -> void:
+	"""Set the weight/frequency for a specific tile+rotation variant.
+	Higher weights make the tile more likely to appear.
+	Must be called before solve() to take effect."""
+	for variant in grid.all_tile_variants:
+		if variant["tile"] == tile and variant["rotation_degrees"] == rotation:
+			variant["weight"] = weight
+			return
+	push_warning("Tile variant not found: ", tile.name, " @ ", rotation, "°")
+
+func set_tile_weight_all_rotations(tile: Tile, weight: float) -> void:
+	"""Set the weight for a tile across all its rotations."""
+	for variant in grid.all_tile_variants:
+		if variant["tile"] == tile:
+			variant["weight"] = weight
 
 func get_cache_stats() -> Dictionary:
 	"""Get statistics about the compatibility cache for debugging/optimization."""
@@ -421,10 +451,12 @@ func get_cache_stats() -> Dictionary:
 	var cache_entries = n * n * 6  # Full 3D array size
 	return {
 		"cache_size": cache_entries,
-		"estimated_memory_kb": cache_entries * 0.001  # 1 byte per bool entry
+		"estimated_memory_kb": cache_entries * 0.001,  # 1 byte per bool entry
+		"variants": n
 	}
 
 func set_logging_enabled(enabled: bool) -> void:
+	"""Enable or disable logging output."""
 	logging_enabled = enabled
 
 func _log(parts: Array) -> void:
@@ -434,40 +466,6 @@ func _log(parts: Array) -> void:
 	for part in parts:
 		text += str(part)
 	print(text)
-
-func _get_sockets_or_none(tile: Tile, local_direction: Vector3i) -> Array[Socket]:
-	var sockets := tile.get_sockets_in_direction(local_direction)
-	if sockets.is_empty():
-		var fallback: Array[Socket] = []
-		fallback.append(_get_virtual_none_socket(local_direction))
-		return fallback
-	return sockets
-
-func _get_virtual_none_socket(direction: Vector3i) -> Socket:
-	var key := str(direction)
-	if not _virtual_none_socket_cache.has(key):
-		var socket := Socket.new()
-		socket.direction = direction
-		# Create a temporary "none" socket type
-		var none_type: SocketType = SocketType.new()
-		none_type.type_id = "none"
-		none_type.add_compatible_type("none")
-		socket.socket_type = none_type
-		_virtual_none_socket_cache[key] = socket
-	return _virtual_none_socket_cache[key]
-
-func _sockets_are_compatible(source_socket: Socket, neighbor_socket: Socket) -> bool:
-	if source_socket == null or neighbor_socket == null:
-		return false
-	var source_type_id = source_socket.socket_type.type_id if source_socket.socket_type else ""
-	var neighbor_type_id = neighbor_socket.socket_type.type_id if neighbor_socket.socket_type else ""
-	if source_type_id == "none" and neighbor_type_id == "none":
-		return true
-	if source_type_id == "none":
-		return neighbor_socket.socket_type != null and "none" in neighbor_socket.socket_type.compatible_types
-	if neighbor_type_id == "none":
-		return source_socket.socket_type != null and "none" in source_socket.socket_type.compatible_types
-	return source_socket.is_compatible_with(neighbor_socket) and neighbor_socket.is_compatible_with(source_socket)
 
 func _prewarm_compatibility_cache() -> void:
 	"""Pre-compute compatibility for all tile variant pairs in all directions.
@@ -547,3 +545,82 @@ func _validate_tile_compatibility() -> void:
 			push_warning("  - ", isolated_variants[i])
 		if isolated_variants.size() > 5:
 			push_warning("  ... and ", isolated_variants.size() - 5, " more")
+
+func _create_snapshot() -> Dictionary:
+	"""Create a snapshot of the current grid state for backtracking."""
+	var snapshot := {
+		"remaining_cells": _remaining_cells,
+		"collapses_since_checkpoint": _collapses_since_checkpoint,
+		"cell_states": [],
+		"heap_state": _copy_heap_state(),
+		"visited_flags": _visited_flags.duplicate()
+	}
+	
+	for cell in grid.get_all_cells():
+		var cell_state := {
+			"position": cell.position,
+			"possible_variants": [],
+			"entropy_valid": cell._entropy_valid,
+			"cached_entropy": cell._cached_entropy
+		}
+		
+		# Store references to variants (variants are shared, no deep copy needed)
+		for variant in cell.possible_tile_variants:
+			cell_state["possible_variants"].append(variant)
+		
+		snapshot["cell_states"].append(cell_state)
+	
+	return snapshot
+
+func _copy_heap_state() -> Dictionary:
+	"""Create a copy of the current heap state."""
+	return {
+		"heap": grid._entropy_heap.duplicate(true),
+		"seq": grid._heap_seq,
+		"cells_in_heap": grid._cells_in_heap.duplicate()
+	}
+
+func _restore_snapshot(snapshot: Dictionary) -> void:
+	"""Restore grid state from a snapshot."""
+	_remaining_cells = snapshot["remaining_cells"]
+	_collapses_since_checkpoint = snapshot["collapses_since_checkpoint"]
+	var cell_states: Array = snapshot["cell_states"]
+	
+	# Restore cell states
+	for i in range(cell_states.size()):
+		var cell_state: Dictionary = cell_states[i]
+		var cell = grid.get_cell(cell_state["position"])
+		if cell == null:
+			continue
+		
+		cell.possible_tile_variants.clear()
+		for variant in cell_state["possible_variants"]:
+			cell.possible_tile_variants.append(variant)
+		
+		cell._entropy_valid = cell_state["entropy_valid"]
+		cell._cached_entropy = cell_state["cached_entropy"]
+	
+	# Restore heap state
+	_restore_heap_state(snapshot["heap_state"])
+	
+	# Restore visited flags
+	_visited_flags = snapshot["visited_flags"].duplicate()
+
+func _restore_heap_state(heap_state: Dictionary) -> void:
+	"""Restore the heap from saved state."""
+	grid._entropy_heap = heap_state["heap"].duplicate(true)
+	grid._heap_seq = heap_state["seq"]
+	grid._cells_in_heap = heap_state["cells_in_heap"].duplicate()
+
+func _attempt_backtrack() -> bool:
+	"""Attempt to backtrack to the last checkpoint and try a different path."""
+	if _backtrack_stack.is_empty():
+		return false
+	
+	var snapshot = _backtrack_stack.pop_back()
+	_restore_snapshot(snapshot)
+	_total_backtracks += 1
+	_collapses_since_checkpoint = 0
+	
+	_log(["  Backtracked to checkpoint (backtracks: ", _total_backtracks, ", stack depth: ", _backtrack_stack.size(), ")"])
+	return true
