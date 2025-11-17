@@ -15,6 +15,7 @@ const Socket = preload("res://addons/auto_structured/core/socket.gd")
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.gd")
 const TagItemControl = preload("res://addons/auto_structured/ui/controls/tag_item_control.gd")
+const AutoStructuredUndoRedo = preload("res://addons/auto_structured/core/undo_redo_manager.gd")
 
 @onready var close_button: TextureButton = %CloseButton
 
@@ -31,3 +32,12 @@ const TagItemControl = preload("res://addons/auto_structured/ui/controls/tag_ite
 
 @onready var tags_list: VBoxContainer = %TagsContainer
 @onready var add_tag_button: TextureButton = %AddTagButton
+
+var undo_redo_manager: AutoStructuredUndoRedo
+
+func setup_undo_redo(undo_redo: AutoStructuredUndoRedo) -> void:
+	"""
+	Initialize the undo/redo system for this panel.
+	Should be called by the parent viewport after instantiation.
+	"""
+	undo_redo_manager = undo_redo
