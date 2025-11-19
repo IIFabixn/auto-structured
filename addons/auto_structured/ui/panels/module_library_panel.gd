@@ -12,6 +12,8 @@ signal tile_selected(tile: Tile)
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.gd")
 const AutoStructuredUndoRedo = preload("res://addons/auto_structured/core/undo_redo_manager.gd")
+const TileItemScene = preload("res://addons/auto_structured/ui/controls/module_library_panel/tile_item.tscn")
+const TileItem = preload("res://addons/auto_structured/ui/controls/module_library_panel/tile_item.gd")
 
 const CREATE = 0
 const RENAME = 1
@@ -22,7 +24,7 @@ const DELETE = 3
 @onready var library_menu_button: MenuButton = %LibraryMenuButton
 @onready var search_tile_edit: LineEdit = %SearchTileEdit
 @onready var add_tile_button: TextureButton = %AddTileButton
-@onready var tile_list: ItemList = %TileList
+@onready var tile_grid: GridContainer = %TileGrid
 
 var undo_redo_manager: AutoStructuredUndoRedo
 var current_library: ModuleLibrary = null
@@ -41,6 +43,10 @@ func _ready() -> void:
 	# Connect library dropdown
 	if library_option_button:
 		library_option_button.item_selected.connect(_on_library_selected)
+	
+	# Connect search field
+	if search_tile_edit:
+		search_tile_edit.text_changed.connect(_on_search_text_changed)
 	
 	# Auto-load first library if available
 	if not available_libraries.is_empty():
@@ -233,9 +239,6 @@ func _save_library() -> void:
 	library_saved.emit(current_library)
 	
 	print("Saved library: %s" % save_path)
-	
-	# Show confirmation
-	_show_info("Library '%s' saved successfully." % lib_name)
 
 func _delete_library() -> void:
 	"""Delete the current library after confirmation."""
@@ -465,18 +468,37 @@ func _on_tiles_imported(tiles: Array) -> void:
 
 func _update_tile_list() -> void:
 	"""Update the tile list display."""
-	if not tile_list:
+	if not tile_grid:
 		return
 	
-	tile_list.clear()
+	for child in tile_grid.get_children():
+		child.queue_free()
 	
 	if current_library == null:
 		return
 	
-	# Add tiles to list
+	# Get search filter
+	var search_text = ""
+	if search_tile_edit:
+		search_text = search_tile_edit.text.strip_edges().to_lower()
+	
+	# Add tiles to list (filtered by search)
 	for tile in current_library.tiles:
-		tile_list.add_item(tile.name)
-		# TODO: Add thumbnail icon
+		# Apply search filter
+		if not search_text.is_empty() and not tile.name.to_lower().contains(search_text):
+			continue
+		
+		var scene = TileItemScene.instantiate()
+		if scene is TileItem:
+			tile_grid.add_child(scene)
+			scene.tile = tile
+			scene.tile_selected.connect(func(t: Tile):
+				tile_selected.emit(t)
+			)
+
+func _on_search_text_changed(new_text: String) -> void:
+	"""Handle search text change."""
+	_update_tile_list()
 
 func _on_library_selected(index: int) -> void:
 	"""Handle library selection from dropdown."""

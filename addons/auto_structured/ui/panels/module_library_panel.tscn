@@ -1,8 +1,9 @@
-[gd_scene load_steps=6 format=3 uid="uid://c7ady62any2b0"]
+[gd_scene load_steps=7 format=3 uid="uid://c7ady62any2b0"]
 
 [ext_resource type="Script" uid="uid://d0fv7bhim0no5" path="res://addons/auto_structured/ui/panels/module_library_panel.gd" id="1_4xkd7"]
 [ext_resource type="Texture2D" uid="uid://bp051udsevt4u" path="res://addons/auto_structured/assets/icon_GUI_tab_menu_hl.svg" id="2_4xkd7"]
 [ext_resource type="Texture2D" uid="uid://cklj47goa3tag" path="res://addons/auto_structured/assets/add.svg" id="3_hnxsx"]
+[ext_resource type="PackedScene" uid="uid://ydse0h453ap8" path="res://addons/auto_structured/ui/controls/module_library_panel/tile_item.tscn" id="4_nydso"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_mwgey"]
 
@@ -56,13 +57,30 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
+selected = 0
 fit_to_longest_item = false
+item_count = 1
+popup/item_0/text = "Test"
+popup/item_0/id = 0
 
 [node name="LibraryMenuButton" type="MenuButton" parent="Panel/MarginContainer/VBoxContainer/VBoxContainer/LibrarySelectorBar"]
 unique_name_in_owner = true
 layout_mode = 2
 icon = ExtResource("2_4xkd7")
 switch_on_hover = true
+item_count = 6
+popup/item_0/text = "New Library"
+popup/item_0/id = 0
+popup/item_1/id = -1
+popup/item_1/separator = true
+popup/item_2/text = "Rename Library"
+popup/item_2/id = 1
+popup/item_3/text = "Save Library"
+popup/item_3/id = 2
+popup/item_4/id = -1
+popup/item_4/separator = true
+popup/item_5/text = "Delete Library"
+popup/item_5/id = 3
 
 [node name="HBoxContainer" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/VBoxContainer"]
 layout_mode = 2
@@ -88,14 +106,22 @@ size_flags_vertical = 3
 theme_override_styles/panel = SubResource("StyleBoxEmpty_mwgey")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_jmuhx")
 
-[node name="TileList" type="ItemList" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer"]
+[node name="TileGrid" type="GridContainer" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-focus_mode = 0
-auto_width = true
-auto_height = true
-max_columns = 2
-same_column_width = true
-fixed_column_width = 560
-icon_mode = 0
+size_flags_vertical = 3
+columns = 2
+
+[node name="VBoxContainer" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer/TileGrid" instance=ExtResource("4_nydso")]
+layout_mode = 2
+
+[node name="VBoxContainer2" type="VBoxContainer" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer/TileGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+
+[node name="Label" type="Label" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer/TileGrid/VBoxContainer2"]
+layout_mode = 2
+text = "asd"
+horizontal_alignment = 1

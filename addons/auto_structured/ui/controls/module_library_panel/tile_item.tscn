@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=3 uid="uid://ydse0h453ap8"]
+
+[ext_resource type="Script" uid="uid://bf870hdj4gl67" path="res://addons/auto_structured/ui/controls/module_library_panel/tile_item.gd" id="1_5ia27"]
+[ext_resource type="Texture2D" uid="uid://d04dma5ci7ufp" path="res://icon.svg" id="1_ivovs"]
+
+[node name="TileItem" type="VBoxContainer"]
+size_flags_horizontal = 3
+alignment = 1
+script = ExtResource("1_5ia27")
+
+[node name="TileImage" type="TextureRect" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+texture = ExtResource("1_ivovs")
+stretch_mode = 4
+
+[node name="TileNameLabel" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+text = "asd"
+horizontal_alignment = 1

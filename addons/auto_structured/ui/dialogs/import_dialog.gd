@@ -220,12 +220,13 @@ func _import_tile_from_config(config: Dictionary) -> Tile:
     for tag in tags:
         tile.add_tag(tag)
     
-    # Apply template if selected
-    var template_id = config.get("template_id", -1)
-    if template_id >= 0:
+    # Apply template if selected (ID 0 = none, 1+ = template)
+    var template_id = config.get("template_id", 0)
+    if template_id > 0:
+        var template_index = template_id - 1  # Convert ID to array index
         var templates = LibraryPresets.get_socket_templates()
-        if template_id < templates.size():
-            var template = templates[template_id]
+        if template_index >= 0 and template_index < templates.size():
+            var template = templates[template_index]
             LibraryPresets.apply_socket_template(tile, template, _library)
     
     # Apply symmetry detection

@@ -2,6 +2,7 @@
 class_name BatchControls extends VBoxContainer
 
 const LibraryPresets = preload("res://addons/auto_structured/core/library_presets.gd")
+const SocketTemplate = preload("res://addons/auto_structured/ui/utils/socket_template.gd")
 
 @onready var xSpinBox : SpinBox = %XSizeSpinBox
 @onready var ySpinBox : SpinBox = %YSizeSpinBox
@@ -109,6 +110,11 @@ func setup(library) -> void:
     # Repopulate template dropdown with library templates
     _populate_template_dropdown()
     
+    # Register socket types from all templates so they appear in socket menus
+    var templates = LibraryPresets.get_socket_templates()
+    for template in templates:
+        _register_template_socket_types(template)
+    
     # If _ready has already been called, reconnect the tag menu
     # This ensures the library reference is available when menu opens
     if is_node_ready() and tagsMenuButton:
@@ -167,6 +173,25 @@ func _on_tag_menu_item_pressed(id: int) -> void:
     else:
         _tags.append(tag)
     _update_tags_display()
+
+func _register_template_socket_types(template: SocketTemplate) -> void:
+    """Register socket types from template in library."""
+    if not template or not _library:
+        return
+    
+    # Register all socket types from template entries
+    for entry_data in template.entries:
+        var entry = SocketTemplate.normalize_entry(entry_data)
+        var socket_id: String = entry["socket_id"]
+        var compatible: Array = entry["compatible"]
+        
+        # Register socket type in library
+        var socket_type = _library.ensure_socket_type(socket_id)
+        if socket_type:
+            # Update compatibility
+            for compat_id in compatible:
+                if not socket_type.compatible_types.has(compat_id):
+                    socket_type.compatible_types.append(compat_id)
 
 func _update_tags_display() -> void:
     """Update the tags menu button text."""

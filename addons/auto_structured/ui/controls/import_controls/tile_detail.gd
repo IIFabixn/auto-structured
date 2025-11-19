@@ -38,7 +38,7 @@ var _tags: Array[String] = []
 var _has_override: bool = false
 var _library = null  # Reference to module library
 var _socket_config: Dictionary = {}
-var _current_template_id: int = -1  # Track current template selection
+var _current_template_id: int = 0  # Track current template selection (0 = none, 1+ = template index)
 
 func _ready() -> void:
     """Initialize the tile detail."""
@@ -65,8 +65,18 @@ func setup(path: String, library = null) -> void:
     _library = library
     var file_name = path.get_file().get_basename()
     
+    # Clear any previous state
+    _socket_config.clear()
+    
+    # Disconnect template signal temporarily to prevent unwanted triggers during setup
+    if templateOptionButton and templateOptionButton.item_selected.is_connected(_on_template_selected):
+        templateOptionButton.item_selected.disconnect(_on_template_selected)
+    
     # Repopulate template dropdown with library templates
     _populate_template_dropdown()
+    
+    # Update socket menu texts to show initial state (all "none")
+    _update_all_socket_menu_texts()
     
     if nameLabel:
         nameLabel.text = file_name
@@ -173,13 +183,17 @@ func _populate_template_dropdown() -> void:
         return
     
     templateOptionButton.clear()
-    templateOptionButton.add_item("None", -1)
+    templateOptionButton.add_item("None (No Template)", 0)  # Use 0 for None since negative IDs don't work
     
     var templates = LibraryPresets.get_socket_templates()
     for i in range(templates.size()):
         var template = templates[i]
-        templateOptionButton.add_item(template.template_name, i)
+        templateOptionButton.add_item(template.template_name, i + 1)  # Offset by 1
         templateOptionButton.set_item_tooltip(i + 1, template.description)
+    
+    # Explicitly select "None" (index 0, ID 0)
+    templateOptionButton.selected = 0
+    _current_template_id = 0  # 0 means no template selected
     
     # Connect to template selection change
     if not templateOptionButton.item_selected.is_connected(_on_template_selected):
@@ -189,21 +203,28 @@ func _on_template_selected(index: int) -> void:
     """Handle template selection change."""
     var new_template_id = templateOptionButton.get_item_id(index)
     
-    # If override is not active, just track the selection
+    # If override is not active, just track the selection and update display
     if not _has_override:
         _current_template_id = new_template_id
+        _socket_config.clear()
+        _update_all_socket_menu_texts()
         return
     
-    # Check if we're changing from one template to another (both are actual templates, not "None")
-    var is_changing_templates = _current_template_id != -1 and new_template_id != -1 and _current_template_id != new_template_id
+    # Check if template is actually changing
+    if _current_template_id == new_template_id:
+        return
+    
+    # Only show confirmation if we're changing AWAY from a template
+    # (template -> none or template -> different template)
+    var is_changing_away_from_template = _current_template_id > 0
     
     # Check if there's custom socket configuration
     var has_socket_config = not _socket_config.is_empty()
     
     # Show confirmation if:
-    # 1. Changing from one template to another template, OR
-    # 2. There's existing socket configuration
-    if is_changing_templates or has_socket_config:
+    # 1. Changing away from a template (will lose template sockets), OR
+    # 2. There's existing manual socket configuration
+    if is_changing_away_from_template or has_socket_config:
         # Show confirmation dialog
         var dialog = ConfirmationDialog.new()
         dialog.dialog_text = "Changing the template will override your current socket configuration. Continue?"
@@ -255,13 +276,14 @@ func _update_all_socket_menu_texts() -> void:
             _update_socket_menu_text(menu)
 
 func _get_selected_template_id() -> int:
-    """Get the selected template ID (-1 for None)."""
+    """Get the selected template ID (0 for None, 1+ for templates)."""
     if not templateOptionButton:
-        return -1
+        return 0
     
     var selected_idx = templateOptionButton.selected
     if selected_idx < 0:
-        return -1
+        return 0
+    
     return templateOptionButton.get_item_id(selected_idx)
 
 func _select_template_by_id(template_id: int) -> void:
@@ -416,7 +438,7 @@ func _populate_socket_menu(menu: MenuButton) -> void:
     var current_sockets: Array = []
     if _socket_config.has(direction):
         current_sockets = _socket_config[direction]
-    elif _current_template_id != -1:
+    elif _current_template_id > 0:
         # If no manual config but template is selected, show what the template will create
         current_sockets = _get_template_sockets_for_direction(direction)
     
@@ -471,7 +493,7 @@ func _on_socket_menu_item_pressed(id: int, menu: MenuButton) -> void:
     if direction == Vector3i.ZERO:
         return
     
-    var socket_types = _library.get_all_socket_types()
+    var socket_types = _library.get_socket_type_resources()
     if id < 0 or id >= socket_types.size():
         return
     
@@ -495,14 +517,15 @@ func _on_socket_menu_item_pressed(id: int, menu: MenuButton) -> void:
 
 func _get_template_sockets_for_direction(direction: Vector3i) -> Array:
     """Get socket type IDs that the current template defines for a direction."""
-    if _current_template_id == -1:
+    if _current_template_id == 0:
         return []
     
+    var template_index = _current_template_id - 1  # Adjust from ID to array index
     var templates = LibraryPresets.get_socket_templates()
-    if _current_template_id < 0 or _current_template_id >= templates.size():
+    if template_index < 0 or template_index >= templates.size():
         return []
     
-    var template = templates[_current_template_id]
+    var template = templates[template_index]
     var socket_ids: Array = []
     
     for entry_data in template.entries:
@@ -526,16 +549,16 @@ func _update_socket_menu_text(menu: MenuButton) -> void:
     var socket_ids: Array = []
     if _socket_config.has(direction) and not _socket_config[direction].is_empty():
         socket_ids = _socket_config[direction]
-    elif _current_template_id != -1:
+    elif _current_template_id > 0:
         socket_ids = _get_template_sockets_for_direction(direction)
     
     # Update menu text
     if socket_ids.is_empty():
-        menu.text = "%s: none" % direction_name
+        menu.text = "None"
     elif socket_ids.size() == 1:
-        menu.text = "%s: %s" % [direction_name, socket_ids[0]]
+        menu.text = "%s" % [socket_ids[0]]
     else:
-        menu.text = "%s: %d types" % [direction_name, socket_ids.size()]
+        menu.text = "%d types" % [socket_ids.size()]
 
 func _on_add_socket_type_pressed() -> void:
     """Handle add socket type button press."""
