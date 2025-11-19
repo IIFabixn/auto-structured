@@ -1,0 +1,114 @@
+[gd_scene load_steps=3 format=3 uid="uid://du74fcrodqjeg"]
+
+[ext_resource type="Texture2D" uid="uid://cklj47goa3tag" path="res://addons/auto_structured/assets/add.svg" id="1_0hym0"]
+[ext_resource type="Script" uid="uid://cv4ey5ixa42bf" path="res://addons/auto_structured/ui/controls/import_controls/batch_controls.gd" id="1_rw1uv"]
+
+[node name="BatchControls" type="VBoxContainer"]
+script = ExtResource("1_rw1uv")
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 2
+text = "Batch Settings"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="GridContainer" type="GridContainer" parent="VBoxContainer"]
+layout_mode = 2
+columns = 2
+
+[node name="SizeLabel" type="Label" parent="VBoxContainer/GridContainer"]
+layout_mode = 2
+text = "Size"
+
+[node name="SizeContainer" type="HBoxContainer" parent="VBoxContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="XSizeSpinBox" type="SpinBox" parent="VBoxContainer/GridContainer/SizeContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="YSizeSpinBox" type="SpinBox" parent="VBoxContainer/GridContainer/SizeContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ZSizeSpinBox" type="SpinBox" parent="VBoxContainer/GridContainer/SizeContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TemplateLabel" type="Label" parent="VBoxContainer/GridContainer"]
+layout_mode = 2
+text = "Template"
+
+[node name="TemplateContainer" type="HBoxContainer" parent="VBoxContainer/GridContainer"]
+layout_mode = 2
+
+[node name="TemplateOptionButton" type="OptionButton" parent="VBoxContainer/GridContainer/TemplateContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+item_count = 1
+popup/item_0/text = "Test"
+popup/item_0/id = 0
+
+[node name="AddTemplateButton" type="TextureButton" parent="VBoxContainer/GridContainer/TemplateContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+texture_normal = ExtResource("1_0hym0")
+stretch_mode = 3
+
+[node name="TagsLabel" type="Label" parent="VBoxContainer/GridContainer"]
+layout_mode = 2
+text = "Tags"
+
+[node name="TagsContainer" type="HBoxContainer" parent="VBoxContainer/GridContainer"]
+layout_mode = 2
+
+[node name="TagsMenuButton" type="MenuButton" parent="VBoxContainer/GridContainer/TagsContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "dungeon, stone, .. +4"
+flat = false
+
+[node name="AddTagButton" type="TextureButton" parent="VBoxContainer/GridContainer/TagsContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+texture_normal = ExtResource("1_0hym0")
+stretch_mode = 3
+
+[node name="AutoSymmetryDetectCheckBox" type="CheckBox" parent="VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Auto-detect symmetry"
+
+[node name="RotationalVarianceCheckBox" type="CheckBox" parent="VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Generate rotational variants"
+
+[node name="SelfMatchCheckBox" type="CheckBox" parent="VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Include self-match"
+
+[node name="ButtonsContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="ApplyAllButton" type="Button" parent="VBoxContainer/ButtonsContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Apply to All"
+
+[node name="ApplySelectedButton" type="Button" parent="VBoxContainer/ButtonsContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Apply to Selected (2)"

@@ -1,0 +1,253 @@
+[gd_scene load_steps=4 format=3 uid="uid://4ww4tre3f5lf"]
+
+[ext_resource type="Script" uid="uid://dln85pjx582m7" path="res://addons/auto_structured/ui/controls/import_controls/tile_detail.gd" id="1_7mers"]
+[ext_resource type="Texture2D" uid="uid://cklj47goa3tag" path="res://addons/auto_structured/assets/add.svg" id="1_jiuvt"]
+[ext_resource type="Texture2D" uid="uid://c34jwa30cwwl1" path="res://addons/auto_structured/assets/collapse.svg" id="2_7mers"]
+
+[node name="VBoxContainer" type="VBoxContainer"]
+offset_top = 486.0
+offset_right = 363.0
+offset_bottom = 486.0
+script = ExtResource("1_7mers")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CheckedCheckBox" type="CheckBox" parent="HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="NameLabel" type="Label" parent="HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "wall_01"
+
+[node name="OverrideCheckButton" type="CheckButton" parent="HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Override"
+
+[node name="DetailsContainer" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="SizeContainer" type="HBoxContainer" parent="DetailsContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="DetailsContainer/SizeContainer"]
+layout_mode = 2
+text = "Size"
+
+[node name="XSizeSpinBox" type="SpinBox" parent="DetailsContainer/SizeContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="YSizeSpinBox" type="SpinBox" parent="DetailsContainer/SizeContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ZSizeSpinBox" type="SpinBox" parent="DetailsContainer/SizeContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TemplateContainer" type="HBoxContainer" parent="DetailsContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="DetailsContainer/TemplateContainer"]
+layout_mode = 2
+text = "Template"
+
+[node name="TemplateOptionButton" type="OptionButton" parent="DetailsContainer/TemplateContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+item_count = 1
+popup/item_0/text = "Test"
+popup/item_0/id = 0
+
+[node name="AddTemplateButton" type="TextureButton" parent="DetailsContainer/TemplateContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+texture_normal = ExtResource("1_jiuvt")
+stretch_mode = 3
+
+[node name="TagsContainer" type="HBoxContainer" parent="DetailsContainer"]
+layout_mode = 2
+
+[node name="TagsLabel" type="Label" parent="DetailsContainer/TagsContainer"]
+layout_mode = 2
+text = "Tags"
+
+[node name="TagsMenuButton" type="MenuButton" parent="DetailsContainer/TagsContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "dungeon, stone, .. +4"
+icon = ExtResource("2_7mers")
+flat = false
+icon_alignment = 2
+
+[node name="AddTagButton" type="TextureButton" parent="DetailsContainer/TagsContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+texture_normal = ExtResource("1_jiuvt")
+stretch_mode = 3
+
+[node name="FoldableContainer" type="FoldableContainer" parent="DetailsContainer"]
+layout_mode = 2
+title = "Advance"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="DetailsContainer/FoldableContainer"]
+layout_mode = 2
+
+[node name="SocketsLabel" type="Label" parent="DetailsContainer/FoldableContainer/VBoxContainer"]
+layout_mode = 2
+text = "Sockets:"
+
+[node name="SocketsContainer" type="GridContainer" parent="DetailsContainer/FoldableContainer/VBoxContainer"]
+layout_mode = 2
+columns = 2
+
+[node name="UpSocketLabel" type="Label" parent="DetailsContainer/FoldableContainer/VBoxContainer/SocketsContainer"]
+layout_mode = 2
+text = "Up"
+
+[node name="UpSocketMenuButton" type="MenuButton" parent="DetailsContainer/FoldableContainer/VBoxContainer/SocketsContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "None"
+icon = ExtResource("2_7mers")
+alignment = 0
+icon_alignment = 2
+item_count = 2
+popup/item_0/text = "Test"
+popup/item_0/checkable = 1
+popup/item_0/id = 0
+popup/item_1/text = "test"
+popup/item_1/checkable = 1
+popup/item_1/id = 1
+
+[node name="DownSocketLabel" type="Label" parent="DetailsContainer/FoldableContainer/VBoxContainer/SocketsContainer"]
+layout_mode = 2
+text = "Down"
+
+[node name="DownSocketMenuButton" type="MenuButton" parent="DetailsContainer/FoldableContainer/VBoxContainer/SocketsContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "wall_connection
+"
+icon = ExtResource("2_7mers")
+alignment = 0
+icon_alignment = 2
+item_count = 2
+popup/item_0/text = "Test"
+popup/item_0/checkable = 1
+popup/item_0/id = 0
+popup/item_1/text = "test"
+popup/item_1/checkable = 1
+popup/item_1/id = 1
+
+[node name="LeftSocketLabel" type="Label" parent="DetailsContainer/FoldableContainer/VBoxContainer/SocketsContainer"]
+layout_mode = 2
+text = "Left"
+
+[node name="LeftSocketMenuButton" type="MenuButton" parent="DetailsContainer/FoldableContainer/VBoxContainer/SocketsContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Any"
+icon = ExtResource("2_7mers")
+alignment = 0
+icon_alignment = 2
+item_count = 2
+popup/item_0/text = "Test"
+popup/item_0/checkable = 1
+popup/item_0/id = 0
+popup/item_1/text = "test"
+popup/item_1/checkable = 1
+popup/item_1/id = 1
+
+[node name="RightSocketLabel" type="Label" parent="DetailsContainer/FoldableContainer/VBoxContainer/SocketsContainer"]
+layout_mode = 2
+text = "Right"
+
+[node name="RightSocketMenuButton" type="MenuButton" parent="DetailsContainer/FoldableContainer/VBoxContainer/SocketsContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "wall_connection, corner_connection"
+icon = ExtResource("2_7mers")
+alignment = 0
+icon_alignment = 2
+item_count = 2
+popup/item_0/text = "Test"
+popup/item_0/checkable = 1
+popup/item_0/id = 0
+popup/item_1/text = "test"
+popup/item_1/checkable = 1
+popup/item_1/id = 1
+
+[node name="FrontSocketLabel" type="Label" parent="DetailsContainer/FoldableContainer/VBoxContainer/SocketsContainer"]
+layout_mode = 2
+text = "Front"
+
+[node name="FrontSocketMenuButton" type="MenuButton" parent="DetailsContainer/FoldableContainer/VBoxContainer/SocketsContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "wall_connection
+"
+icon = ExtResource("2_7mers")
+alignment = 0
+icon_alignment = 2
+item_count = 2
+popup/item_0/text = "Test"
+popup/item_0/checkable = 1
+popup/item_0/id = 0
+popup/item_1/text = "test"
+popup/item_1/checkable = 1
+popup/item_1/id = 1
+
+[node name="BackSocketLabel" type="Label" parent="DetailsContainer/FoldableContainer/VBoxContainer/SocketsContainer"]
+layout_mode = 2
+text = "Back"
+
+[node name="BackSocketMenuButton" type="MenuButton" parent="DetailsContainer/FoldableContainer/VBoxContainer/SocketsContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "wall_connection"
+icon = ExtResource("2_7mers")
+alignment = 0
+icon_alignment = 2
+item_count = 2
+popup/item_0/text = "Test"
+popup/item_0/checkable = 1
+popup/item_0/id = 0
+popup/item_1/text = "test"
+popup/item_1/checkable = 1
+popup/item_1/id = 1
+
+[node name="AutoSymmetryDetectionCheckBox" type="CheckBox" parent="DetailsContainer/FoldableContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Auto-detect symmetry"
+
+[node name="RotationalVarianceCheckBox" type="CheckBox" parent="DetailsContainer/FoldableContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Generate rotational variants"
+
+[node name="SelfMatchCheckBox" type="CheckBox" parent="DetailsContainer/FoldableContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Include self-match"

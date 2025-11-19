@@ -1,5 +1,6 @@
 @tool
 class_name SelectionManager extends RefCounted
+
 ## Centralized selection state management for tiles and sockets.
 ##
 ## Provides a single source of truth for what tile/socket is currently selected

@@ -47,24 +47,16 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 4
-theme_override_constants/margin_top = 4
-theme_override_constants/margin_right = 4
-theme_override_constants/margin_bottom = 4
 
-[node name="ScrollContainer" type="ScrollContainer" parent="Panel/MarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer"]
 layout_mode = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer/ScrollContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-
-[node name="TopBar" type="HBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer"]
+[node name="TopBar" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer"]
 z_index = 1
 layout_mode = 2
+size_flags_vertical = 0
 
-[node name="NewButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
+[node name="NewButton" type="TextureButton" parent="Panel/MarginContainer/VBoxContainer/TopBar"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
@@ -73,7 +65,7 @@ disabled = true
 texture_normal = ExtResource("2_8vq50")
 stretch_mode = 3
 
-[node name="EditButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
+[node name="EditButton" type="TextureButton" parent="Panel/MarginContainer/VBoxContainer/TopBar"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
@@ -81,12 +73,12 @@ tooltip_text = "Opens a dialog to configure ..."
 texture_normal = ExtResource("3_kwnk8")
 stretch_mode = 3
 
-[node name="VSeparator3" type="VSeparator" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
+[node name="VSeparator3" type="VSeparator" parent="Panel/MarginContainer/VBoxContainer/TopBar"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/separator = SubResource("StyleBoxEmpty_qo023")
 
-[node name="StepButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
+[node name="StepButton" type="TextureButton" parent="Panel/MarginContainer/VBoxContainer/TopBar"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
@@ -95,7 +87,7 @@ disabled = true
 texture_normal = ExtResource("3_8vq50")
 stretch_mode = 3
 
-[node name="SolveButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
+[node name="SolveButton" type="TextureButton" parent="Panel/MarginContainer/VBoxContainer/TopBar"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
@@ -104,7 +96,7 @@ disabled = true
 texture_normal = ExtResource("3_flumd")
 stretch_mode = 3
 
-[node name="MenuButton" type="MenuButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/TopBar"]
+[node name="MenuButton" type="MenuButton" parent="Panel/MarginContainer/VBoxContainer/TopBar"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
@@ -112,58 +104,67 @@ tooltip_text = "Additional options"
 icon = ExtResource("6_kwnk8")
 icon_alignment = 1
 
-[node name="Panel" type="Panel" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer"]
-clip_contents = true
+[node name="SplitContainer" type="VSplitContainer" parent="Panel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="SubViewportContainer" type="SubViewportContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/Panel"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="PanelContainer" type="PanelContainer" parent="Panel/MarginContainer/VBoxContainer/SplitContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="Panel/MarginContainer/VBoxContainer/SplitContainer/PanelContainer"]
+layout_mode = 2
+size_flags_vertical = 3
 stretch = true
 
-[node name="PreviewViewport" type="SubViewport" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/Panel/SubViewportContainer"]
+[node name="PreviewViewport" type="SubViewport" parent="Panel/MarginContainer/VBoxContainer/SplitContainer/PanelContainer/SubViewportContainer"]
 unique_name_in_owner = true
 own_world_3d = true
 world_3d = SubResource("World3D_s3do3")
 handle_input_locally = false
-size = Vector2i(1144, 604)
+size = Vector2i(1152, 492)
 render_target_update_mode = 4
 
-[node name="PreviewCamera" type="Camera3D" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/Panel/SubViewportContainer/PreviewViewport"]
+[node name="PreviewCamera" type="Camera3D" parent="Panel/MarginContainer/VBoxContainer/SplitContainer/PanelContainer/SubViewportContainer/PreviewViewport"]
 unique_name_in_owner = true
 transform = Transform3D(0.98374504, 0.04648845, -0.1734489, 0, 0.96590793, 0.25888634, 0.17957087, -0.2546782, 0.950207, -1.7344892, 2.5888631, 9.502069)
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/Panel/SubViewportContainer/PreviewViewport"]
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Panel/MarginContainer/VBoxContainer/SplitContainer/PanelContainer/SubViewportContainer/PreviewViewport"]
 transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 5, 0)
 shadow_enabled = true
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/Panel/SubViewportContainer/PreviewViewport"]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Panel/MarginContainer/VBoxContainer/SplitContainer/PanelContainer/SubViewportContainer/PreviewViewport"]
 environment = SubResource("Environment_rgf8d")
 
-[node name="MarginContainer" type="MarginContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/Panel"]
-layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -40.0
-offset_top = -40.0
-grow_horizontal = 0
-grow_vertical = 0
+[node name="MarginContainer" type="MarginContainer" parent="Panel/MarginContainer/VBoxContainer/SplitContainer/PanelContainer"]
+layout_mode = 2
 theme_override_constants/margin_left = 4
 theme_override_constants/margin_top = 4
 theme_override_constants/margin_right = 4
 theme_override_constants/margin_bottom = 4
 
-[node name="ViewportMenuButton" type="MenuButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/Panel/MarginContainer"]
+[node name="ViewportMenuButton" type="MenuButton" parent="Panel/MarginContainer/VBoxContainer/SplitContainer/PanelContainer/MarginContainer"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 8
 icon = ExtResource("6_kwnk8")
 flat = false
 icon_alignment = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer/VBoxContainer/SplitContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/MarginContainer/VBoxContainer/SplitContainer/VBoxContainer"]
+layout_mode = 2
+text = "Make a choise"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Panel/MarginContainer/VBoxContainer/SplitContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 81)
+layout_mode = 2
+
+[node name="StepOptionsContainer" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/SplitContainer/VBoxContainer/ScrollContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 3

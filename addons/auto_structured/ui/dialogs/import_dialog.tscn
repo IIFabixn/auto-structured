@@ -1,0 +1,58 @@
+[gd_scene load_steps=3 format=3 uid="uid://5e2kbcet8of4"]
+
+[ext_resource type="Script" uid="uid://cg6cxpgcxekue" path="res://addons/auto_structured/ui/dialogs/import_dialog.gd" id="1_b6i1b"]
+[ext_resource type="PackedScene" uid="uid://du74fcrodqjeg" path="res://addons/auto_structured/ui/controls/import_controls/batch_controls_container.tscn" id="2_bryyu"]
+
+[node name="ConfirmationDialog" type="ConfirmationDialog"]
+oversampling_override = 1.0
+title = "Import X Tiles"
+initial_position = 1
+size = Vector2i(800, 400)
+visible = true
+ok_button_text = "Import"
+script = ExtResource("1_b6i1b")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="."]
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 792.0
+offset_bottom = 351.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="BatchControls" parent="ScrollContainer/VBoxContainer" instance=ExtResource("2_bryyu")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="HSeparator" type="HSeparator" parent="ScrollContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ScrollContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="ScrollContainer/VBoxContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="TilesContLabel" type="Label" parent="ScrollContainer/VBoxContainer/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Tiles (4)"
+
+[node name="SelectAllButton" type="Button" parent="ScrollContainer/VBoxContainer/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Select All"
+
+[node name="DeselectAllButton" type="Button" parent="ScrollContainer/VBoxContainer/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Deselect All"
+
+[node name="TilesListContainer" type="VBoxContainer" parent="ScrollContainer/VBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
