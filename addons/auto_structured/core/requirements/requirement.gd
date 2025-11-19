@@ -44,3 +44,12 @@ func get_failure_reason() -> String:
 ## Override to provide a detailed description of what this requirement does.
 func get_description() -> String:
 	return "No description available"
+
+func get_config_control() -> Control:
+	"""
+	Return a Control node for configuring this requirement's parameters in the UI.
+	Override in subclasses to provide custom configuration UI.
+	"""
+	var label = Label.new()
+	label.text = "No configuration available for " + display_name
+	return label

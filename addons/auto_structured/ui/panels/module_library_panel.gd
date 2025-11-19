@@ -7,11 +7,11 @@ signal library_selected(library_name: String)
 signal library_deleted(library_name: String)
 signal library_renamed(old_name: String, new_name: String)
 signal library_saved(library: ModuleLibrary)
-signal tile_selected(tile: Tile)
 
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.gd")
 const AutoStructuredUndoRedo = preload("res://addons/auto_structured/core/undo_redo_manager.gd")
+const SelectionManager = preload("res://addons/auto_structured/core/events/selection_manager.gd")
 const TileItemScene = preload("res://addons/auto_structured/ui/controls/module_library_panel/tile_item.tscn")
 const TileItem = preload("res://addons/auto_structured/ui/controls/module_library_panel/tile_item.gd")
 
@@ -27,6 +27,7 @@ const DELETE = 3
 @onready var tile_grid: GridContainer = %TileGrid
 
 var undo_redo_manager: AutoStructuredUndoRedo
+var selection_manager: SelectionManager
 var current_library: ModuleLibrary = null
 var available_libraries: Dictionary = {}  # library_name -> file_path
 
@@ -61,6 +62,13 @@ func setup_undo_redo(undo_redo: AutoStructuredUndoRedo) -> void:
 	Should be called by the parent viewport after instantiation.
 	"""
 	undo_redo_manager = undo_redo
+
+func setup_selection_manager(manager: SelectionManager) -> void:
+	"""
+	Initialize the selection manager event bus.
+	Should be called by the parent viewport after instantiation.
+	"""
+	selection_manager = manager
 
 ## ============================================================================
 ## Library Menu Setup and Handling
@@ -500,7 +508,9 @@ func _update_tile_list() -> void:
 			tile_grid.add_child(scene)
 			scene.tile = tile
 			scene.tile_selected.connect(func(t: Tile):
-				tile_selected.emit(t)
+				# Use event bus for decoupled communication
+				if selection_manager:
+					selection_manager.select_tile(t)
 			)
 			scene.tile_deleted.connect(func(t: Tile):
 				current_library.remove_tile(t)

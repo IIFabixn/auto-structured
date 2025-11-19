@@ -30,3 +30,21 @@ func get_description() -> String:
 func reset() -> void:
 	"""Reset the counter (called at the start of generation)."""
 	_current_count = 0
+
+func get_config_control() -> Control:
+	var hbox = HBoxContainer.new()
+	
+	var label = Label.new()
+	label.text = "Max Count:"
+	label.custom_minimum_size.x = 80
+	hbox.add_child(label)
+	
+	var spinbox = SpinBox.new()
+	spinbox.min_value = 1
+	spinbox.max_value = 1000
+	spinbox.value = max_count
+	spinbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	spinbox.value_changed.connect(func(val: float): max_count = int(val))
+	hbox.add_child(spinbox)
+	
+	return hbox

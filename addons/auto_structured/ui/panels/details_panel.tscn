@@ -1,9 +1,11 @@
-[gd_scene load_steps=5 format=3 uid="uid://b2e8dr8sqw65c"]
+[gd_scene load_steps=7 format=3 uid="uid://b2e8dr8sqw65c"]
 
 [ext_resource type="Script" uid="uid://cvlqe0gwq55qv" path="res://addons/auto_structured/ui/panels/details_panel.gd" id="1_i7yuf"]
 [ext_resource type="Texture2D" uid="uid://d04dma5ci7ufp" path="res://icon.svg" id="2_2ihjm"]
 [ext_resource type="Texture2D" uid="uid://bli807wmcfj7h" path="res://addons/auto_structured/assets/close.svg" id="2_qj0jw"]
 [ext_resource type="Texture2D" uid="uid://cklj47goa3tag" path="res://addons/auto_structured/assets/add.svg" id="3_mh04o"]
+[ext_resource type="Texture2D" uid="uid://c34jwa30cwwl1" path="res://addons/auto_structured/assets/collapse.svg" id="3_qj0jw"]
+[ext_resource type="PackedScene" uid="uid://cdbfw1qjhikto" path="res://addons/auto_structured/ui/controls/details_panel_controls/requirement_item.tscn" id="6_qj0jw"]
 
 [node name="DetailsPanel" type="Control"]
 layout_mode = 3
@@ -22,6 +24,22 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+
+[node name="CloseButton" type="TextureButton" parent="Panel"]
+unique_name_in_owner = true
+z_index = 5
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -44.0
+offset_bottom = 44.0
+grow_horizontal = 0
+size_flags_horizontal = 8
+size_flags_vertical = 0
+texture_normal = ExtResource("2_qj0jw")
+stretch_mode = 3
 
 [node name="MarginContainer" type="MarginContainer" parent="Panel"]
 layout_mode = 1
@@ -43,23 +61,28 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="TileImage" type="TextureRect" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(32, 32)
-layout_mode = 2
-texture = ExtResource("2_2ihjm")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="NameLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "NAME"
-horizontal_alignment = 1
-
 [node name="VSplitContainer" type="VSplitContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer"]
+layout_mode = 2
+
+[node name="NameLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "NAME"
+horizontal_alignment = 1
+
+[node name="TileImage" type="TextureRect" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("2_2ihjm")
+expand_mode = 3
+stretch_mode = 5
 
 [node name="DetailsTabContainer" type="TabContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer"]
 unique_name_in_owner = true
@@ -77,98 +100,205 @@ size_flags_horizontal = 3
 
 [node name="SizeLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer"]
 layout_mode = 2
-size_flags_horizontal = 3
 text = "Size"
 
-[node name="HBoxContainer" type="HBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer"]
-layout_mode = 2
-
-[node name="HBoxContainer" type="HBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer/HBoxContainer"]
+[node name="SizeContainer" type="HBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="XLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer/HBoxContainer/HBoxContainer"]
-layout_mode = 2
-text = "X"
-
-[node name="XSizeSpinBox" type="SpinBox" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer/HBoxContainer/HBoxContainer"]
+[node name="XSizeSpinBox" type="SpinBox" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer/SizeContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-step = 0.1
 value = 1.0
-select_all_on_focus = true
+prefix = "x"
 
-[node name="HBoxContainer2" type="HBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer/HBoxContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="YLabel2" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer/HBoxContainer/HBoxContainer2"]
-layout_mode = 2
-text = "Y"
-
-[node name="YSizeSpinBox" type="SpinBox" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer/HBoxContainer/HBoxContainer2"]
+[node name="YSizeSpinBox" type="SpinBox" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer/SizeContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-step = 0.1
 value = 1.0
-select_all_on_focus = true
+prefix = "y"
 
-[node name="HBoxContainer3" type="HBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer/HBoxContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="ZLabel3" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer/HBoxContainer/HBoxContainer3"]
-layout_mode = 2
-text = "Z"
-
-[node name="ZSizeSpinBox" type="SpinBox" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer/HBoxContainer/HBoxContainer3"]
+[node name="ZSizeSpinBox" type="SpinBox" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer/SizeContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-step = 0.1
 value = 1.0
-select_all_on_focus = true
+prefix = "z"
 
-[node name="TagsWrapper" type="VBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer"]
+[node name="TagsContainer" type="HBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer"]
 layout_mode = 2
 
-[node name="AddTagContainer" type="HBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer/TagsWrapper"]
-custom_minimum_size = Vector2(121, 0)
-layout_mode = 2
-alignment = 1
-
-[node name="TagsLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer/TagsWrapper/AddTagContainer"]
+[node name="TagsLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer/TagsContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Tags"
 
-[node name="AddTagButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer/TagsWrapper/AddTagContainer"]
+[node name="AddTagButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer/TagsContainer"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 texture_normal = ExtResource("3_mh04o")
 stretch_mode = 3
 
-[node name="TagsContainer" type="VBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer/TagsWrapper"]
+[node name="TagsMenuButton" type="MenuButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer"]
 unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "None"
+icon = ExtResource("3_qj0jw")
+flat = false
+icon_alignment = 2
+
+[node name="WeightLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer"]
+layout_mode = 2
+text = "Weight"
+
+[node name="WeightSpinBox" type="SpinBox" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 0.01
+step = 0.01
+value = 0.01
+
+[node name="RotationSymmetryLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer"]
+layout_mode = 2
+text = "Rotation Symmetry"
+
+[node name="RotationSymmetryOptionsButton" type="OptionButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Requirements" type="ScrollContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer"]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Requirements"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="AddRequirementMenuButton" type="MenuButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Requirements/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Add Requirement"
+icon = ExtResource("3_mh04o")
+icon_alignment = 2
+
+[node name="RequirementsContainer" type="VBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Requirements/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="HBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Requirements/VBoxContainer/RequirementsContainer" instance=ExtResource("6_qj0jw")]
 layout_mode = 2
 
 [node name="Sockets" type="ScrollContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer"]
 visible = false
 layout_mode = 2
-metadata/_tab_index = 1
+metadata/_tab_index = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets"]
 layout_mode = 2
+size_flags_horizontal = 3
 
-[node name="CloseButton" type="TextureButton" parent="Panel/MarginContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Add Sockert"
+
+[node name="AddSocketButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/HBoxContainer"]
 unique_name_in_owner = true
-z_index = 2
-custom_minimum_size = Vector2(44, 44)
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 size_flags_horizontal = 8
-size_flags_vertical = 0
-texture_normal = ExtResource("2_qj0jw")
+texture_normal = ExtResource("3_mh04o")
 stretch_mode = 3
+
+[node name="HSeparator" type="HSeparator" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer"]
+layout_mode = 2
+
+[node name="SocketsContainer" type="GridContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 2
+
+[node name="UpSocketLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
+layout_mode = 2
+text = "Up"
+
+[node name="UpSocketMenuButton" type="MenuButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+icon = ExtResource("3_qj0jw")
+alignment = 0
+icon_alignment = 2
+
+[node name="DownSocketLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
+layout_mode = 2
+text = "Down"
+
+[node name="DownSocketMenuButton" type="MenuButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "
+"
+icon = ExtResource("3_qj0jw")
+alignment = 0
+icon_alignment = 2
+
+[node name="LeftSocketLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
+layout_mode = 2
+text = "Left"
+
+[node name="LeftSocketMenuButton" type="MenuButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+icon = ExtResource("3_qj0jw")
+alignment = 0
+icon_alignment = 2
+
+[node name="RightSocketLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
+layout_mode = 2
+text = "Right"
+
+[node name="RightSocketMenuButton" type="MenuButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+icon = ExtResource("3_qj0jw")
+alignment = 0
+icon_alignment = 2
+
+[node name="FrontSocketLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
+layout_mode = 2
+text = "Front"
+
+[node name="FrontSocketMenuButton" type="MenuButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "
+"
+icon = ExtResource("3_qj0jw")
+alignment = 0
+icon_alignment = 2
+
+[node name="BackSocketLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
+layout_mode = 2
+text = "Back"
+
+[node name="BackSocketMenuButton" type="MenuButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+icon = ExtResource("3_qj0jw")
+alignment = 0
+icon_alignment = 2

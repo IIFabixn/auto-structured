@@ -2,7 +2,7 @@
 class_name BatchControls extends VBoxContainer
 
 const LibraryPresets = preload("res://addons/auto_structured/core/library_presets.gd")
-const SocketTemplate = preload("res://addons/auto_structured/ui/utils/socket_template.gd")
+const SocketTemplate = preload("res://addons/auto_structured/utils/socket_template.gd")
 
 @onready var xSpinBox : SpinBox = %XSizeSpinBox
 @onready var ySpinBox : SpinBox = %YSizeSpinBox

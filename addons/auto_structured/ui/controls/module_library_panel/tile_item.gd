@@ -30,7 +30,6 @@ func _gui_input(event: InputEvent) -> void:
 		return
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			print("TileItem: Tile %s selected" % _tile.name)
 			tile_selected.emit(_tile)
 		if event.button_index == MOUSE_BUTTON_RIGHT:
 			var global_pos = get_global_mouse_position()
@@ -39,7 +38,6 @@ func _gui_input(event: InputEvent) -> void:
 
 func _on_popup_menu_id_pressed(id: int) -> void:
 	if id == DELETE and _tile:
-		print("TileItem: Tile %s delete requested via popup" % _tile.name)
 		tile_deleted.emit(_tile)
 		queue_free()
 
@@ -127,6 +125,7 @@ func _generate_thumbnail() -> void:
 	viewport.size = Vector2i(64, 64)
 	viewport.transparent_bg = true
 	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	viewport.own_world_3d = true  # Each viewport gets its own isolated 3D world
 	
 	# Add to tree first
 	add_child(viewport)

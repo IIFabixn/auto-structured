@@ -20,6 +20,10 @@ const LibraryPresets = preload("res://addons/auto_structured/core/library_preset
 @onready var tagsMenuButton : MenuButton = %TagsMenuButton
 @onready var addTagButton : TextureButton = %AddTagButton
 
+@onready var autoSymmetryDetectionCheckBox : CheckBox = %AutoSymmetryDetectionCheckBox
+@onready var rotationalVarianceCheckBox : CheckBox = %RotationalVarianceCheckBox
+@onready var selfMatchCheckBox : CheckBox = %SelfMatchCheckBox
+
 @onready var addSocketTypeButton : TextureButton = %AddSocketTypeButton
 
 @onready var upSocketMenuButton : MenuButton = %UpSocketMenuButton
@@ -28,10 +32,6 @@ const LibraryPresets = preload("res://addons/auto_structured/core/library_preset
 @onready var rightSocketMenuButton : MenuButton = %RightSocketMenuButton
 @onready var frontSocketMenuButton : MenuButton = %FrontSocketMenuButton
 @onready var backSocketMenuButton : MenuButton = %BackSocketMenuButton
-
-@onready var autoSymmetryDetectionCheckBox : CheckBox = %AutoSymmetryDetectionCheckBox
-@onready var rotationalVarianceCheckBox : CheckBox = %RotationalVarianceCheckBox
-@onready var selfMatchCheckBox : CheckBox = %SelfMatchCheckBox
 
 var file_path: String = ""
 var _tags: Array[String] = []

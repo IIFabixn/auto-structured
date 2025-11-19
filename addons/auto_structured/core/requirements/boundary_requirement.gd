@@ -80,3 +80,45 @@ func get_description() -> String:
 		BoundaryMode.INTERIOR_ONLY:
 			return "Interior only (%s)" % axis_str
 	return super.get_description()
+
+func get_config_control() -> Control:
+	var vbox = VBoxContainer.new()
+	
+	# Mode selector
+	var mode_hbox = HBoxContainer.new()
+	var mode_label = Label.new()
+	mode_label.text = "Mode:"
+	mode_label.custom_minimum_size.x = 80
+	mode_hbox.add_child(mode_label)
+	
+	var mode_option = OptionButton.new()
+	mode_option.add_item("Must Touch", BoundaryMode.MUST_TOUCH)
+	mode_option.add_item("Must Not Touch", BoundaryMode.MUST_NOT_TOUCH)
+	mode_option.add_item("Corner Only", BoundaryMode.CORNER_ONLY)
+	mode_option.add_item("Interior Only", BoundaryMode.INTERIOR_ONLY)
+	mode_option.select(mode)
+	mode_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	mode_option.item_selected.connect(func(idx: int): mode = idx)
+	mode_hbox.add_child(mode_option)
+	vbox.add_child(mode_hbox)
+	
+	# Axis checkboxes
+	var x_check = CheckBox.new()
+	x_check.text = "Check X Boundaries"
+	x_check.button_pressed = check_x_boundaries
+	x_check.toggled.connect(func(pressed: bool): check_x_boundaries = pressed)
+	vbox.add_child(x_check)
+	
+	var z_check = CheckBox.new()
+	z_check.text = "Check Z Boundaries"
+	z_check.button_pressed = check_z_boundaries
+	z_check.toggled.connect(func(pressed: bool): check_z_boundaries = pressed)
+	vbox.add_child(z_check)
+	
+	var y_check = CheckBox.new()
+	y_check.text = "Check Y Boundaries"
+	y_check.button_pressed = check_y_boundaries
+	y_check.toggled.connect(func(pressed: bool): check_y_boundaries = pressed)
+	vbox.add_child(y_check)
+	
+	return vbox

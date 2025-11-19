@@ -63,3 +63,47 @@ func get_description() -> String:
 		TagMode.HAS_NONE:
 			return "Must not have: %s" % tag_str
 	return super.get_description()
+
+func get_config_control() -> Control:
+	var vbox = VBoxContainer.new()
+	
+	# Mode selector
+	var mode_hbox = HBoxContainer.new()
+	var mode_label = Label.new()
+	mode_label.text = "Mode:"
+	mode_label.custom_minimum_size.x = 80
+	mode_hbox.add_child(mode_label)
+	
+	var mode_option = OptionButton.new()
+	mode_option.add_item("Has All", TagMode.HAS_ALL)
+	mode_option.add_item("Has Any", TagMode.HAS_ANY)
+	mode_option.add_item("Has None", TagMode.HAS_NONE)
+	mode_option.select(mode)
+	mode_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	mode_option.item_selected.connect(func(idx: int): mode = idx)
+	mode_hbox.add_child(mode_option)
+	vbox.add_child(mode_hbox)
+	
+	# Tags input
+	var tags_hbox = HBoxContainer.new()
+	var tags_label = Label.new()
+	tags_label.text = "Tags:"
+	tags_label.custom_minimum_size.x = 80
+	tags_hbox.add_child(tags_label)
+	
+	var tags_edit = LineEdit.new()
+	tags_edit.placeholder_text = "tag1, tag2, tag3"
+	tags_edit.text = ", ".join(required_tags)
+	tags_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tags_edit.text_changed.connect(func(text: String):
+		var tags_array: Array[String] = []
+		for tag in text.split(","):
+			var trimmed = tag.strip_edges()
+			if not trimmed.is_empty():
+				tags_array.append(trimmed)
+		required_tags = tags_array
+	)
+	tags_hbox.add_child(tags_edit)
+	vbox.add_child(tags_hbox)
+	
+	return vbox

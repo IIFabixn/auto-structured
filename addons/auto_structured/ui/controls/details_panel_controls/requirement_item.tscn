@@ -1,0 +1,29 @@
+[gd_scene load_steps=3 format=3 uid="uid://cdbfw1qjhikto"]
+
+[ext_resource type="Texture2D" uid="uid://c45ah2jrtar3s" path="res://addons/auto_structured/assets/remove.svg" id="1_fkon1"]
+[ext_resource type="Script" uid="uid://12tc7l77qvxa" path="res://addons/auto_structured/ui/controls/details_panel_controls/requirement_item.gd" id="1_jpv1l"]
+
+[node name="HBoxContainer" type="VBoxContainer"]
+size_flags_horizontal = 3
+script = ExtResource("1_jpv1l")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="NameLabel" type="Label" parent="HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "NAME"
+
+[node name="DeleteButton" type="TextureButton" parent="HBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+texture_normal = ExtResource("1_fkon1")
+stretch_mode = 3
+
+[node name="ConfigContainer" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2

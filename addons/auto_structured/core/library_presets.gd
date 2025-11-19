@@ -5,7 +5,7 @@ extends RefCounted
 ## Static utility class providing built-in presets for module libraries.
 ## Includes socket templates, tag presets, size presets, and socket type sets.
 
-const SocketTemplate = preload("res://addons/auto_structured/ui/utils/socket_template.gd")
+const SocketTemplate = preload("res://addons/auto_structured/utils/socket_template.gd")
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
 const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
