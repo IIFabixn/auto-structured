@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://du74fcrodqjeg"]
+[gd_scene load_steps=4 format=3 uid="uid://du74fcrodqjeg"]
 
 [ext_resource type="Texture2D" uid="uid://cklj47goa3tag" path="res://addons/auto_structured/assets/add.svg" id="1_0hym0"]
 [ext_resource type="Script" uid="uid://cv4ey5ixa42bf" path="res://addons/auto_structured/ui/controls/import_controls/batch_controls.gd" id="1_rw1uv"]
+[ext_resource type="Texture2D" uid="uid://c34jwa30cwwl1" path="res://addons/auto_structured/assets/collapse.svg" id="3_bgivc"]
 
 [node name="BatchControls" type="VBoxContainer"]
 script = ExtResource("1_rw1uv")
@@ -29,16 +30,19 @@ size_flags_horizontal = 3
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
+value = 1.0
 
 [node name="YSizeSpinBox" type="SpinBox" parent="VBoxContainer/GridContainer/SizeContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
+value = 1.0
 
 [node name="ZSizeSpinBox" type="SpinBox" parent="VBoxContainer/GridContainer/SizeContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
+value = 1.0
 
 [node name="TemplateLabel" type="Label" parent="VBoxContainer/GridContainer"]
 layout_mode = 2
@@ -51,9 +55,16 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-item_count = 1
-popup/item_0/text = "Test"
+selected = 0
+item_count = 4
+popup/item_0/text = "None"
 popup/item_0/id = 0
+popup/item_1/text = "Floor - 4 Way"
+popup/item_1/id = 0
+popup/item_2/text = "Wall - Straight"
+popup/item_2/id = 1
+popup/item_3/text = "Corner - L Shape"
+popup/item_3/id = 2
 
 [node name="AddTemplateButton" type="TextureButton" parent="VBoxContainer/GridContainer/TemplateContainer"]
 unique_name_in_owner = true
@@ -73,8 +84,10 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-text = "dungeon, stone, .. +4"
+text = "None"
+icon = ExtResource("3_bgivc")
 flat = false
+icon_alignment = 2
 
 [node name="AddTagButton" type="TextureButton" parent="VBoxContainer/GridContainer/TagsContainer"]
 unique_name_in_owner = true

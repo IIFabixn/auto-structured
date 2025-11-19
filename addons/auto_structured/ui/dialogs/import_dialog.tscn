@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://5e2kbcet8of4"]
 
 [ext_resource type="Script" uid="uid://cg6cxpgcxekue" path="res://addons/auto_structured/ui/dialogs/import_dialog.gd" id="1_b6i1b"]
-[ext_resource type="PackedScene" uid="uid://du74fcrodqjeg" path="res://addons/auto_structured/ui/controls/import_controls/batch_controls_container.tscn" id="2_bryyu"]
+[ext_resource type="PackedScene" uid="uid://du74fcrodqjeg" path="res://addons/auto_structured/ui/controls/import_controls/batch_controls.tscn" id="2_bryyu"]
 
 [node name="ConfirmationDialog" type="ConfirmationDialog"]
 oversampling_override = 1.0

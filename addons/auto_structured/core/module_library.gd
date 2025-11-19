@@ -31,6 +31,7 @@ signal library_changed
 @export var library_name: String = "My Building Set"
 @export var tiles: Array[Tile] = []
 @export var socket_types: Array[SocketType] = []  ## Registered socket types for this library
+@export var available_tags: Array[String] = []  ## Available tags for tiles in this library
 @export var cell_world_size: Vector3 = Vector3(1, 1, 1)  ## Size of each grid cell in world units
 
 func ensure_defaults() -> void:
@@ -62,6 +63,18 @@ func get_tile_by_name(name: String) -> Tile:
 
 func get_tiles_with_tag(tag: String) -> Array[Tile]:
 	return tiles.filter(func(t): return t.tags.has(tag))
+
+func add_available_tag(tag: String) -> void:
+	"""Add a tag to the available tags pool."""
+	var clean_tag = tag.strip_edges()
+	if not clean_tag.is_empty() and not available_tags.has(clean_tag):
+		available_tags.append(clean_tag)
+		available_tags.sort()
+		library_changed.emit()
+
+func get_available_tags() -> Array[String]:
+	"""Get all available tags for this library."""
+	return available_tags.duplicate()
 
 func get_all_unique_socket_ids() -> Array[String]:
 	"""

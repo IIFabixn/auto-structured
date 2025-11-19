@@ -5,14 +5,12 @@
 [ext_resource type="Texture2D" uid="uid://c34jwa30cwwl1" path="res://addons/auto_structured/assets/collapse.svg" id="2_7mers"]
 
 [node name="VBoxContainer" type="VBoxContainer"]
-offset_top = 486.0
-offset_right = 363.0
-offset_bottom = 486.0
+offset_right = 362.0
+offset_bottom = 517.0
 script = ExtResource("1_7mers")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="."]
 layout_mode = 2
-size_flags_horizontal = 3
 
 [node name="CheckedCheckBox" type="CheckBox" parent="HBoxContainer"]
 unique_name_in_owner = true
@@ -31,69 +29,83 @@ text = "Override"
 
 [node name="DetailsContainer" type="VBoxContainer" parent="."]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
 
-[node name="SizeContainer" type="HBoxContainer" parent="DetailsContainer"]
+[node name="GridContainer" type="GridContainer" parent="DetailsContainer"]
 layout_mode = 2
+columns = 2
 
-[node name="Label" type="Label" parent="DetailsContainer/SizeContainer"]
+[node name="Label" type="Label" parent="DetailsContainer/GridContainer"]
 layout_mode = 2
 text = "Size"
 
-[node name="XSizeSpinBox" type="SpinBox" parent="DetailsContainer/SizeContainer"]
+[node name="SizeContainer" type="HBoxContainer" parent="DetailsContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="XSizeSpinBox" type="SpinBox" parent="DetailsContainer/GridContainer/SizeContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="YSizeSpinBox" type="SpinBox" parent="DetailsContainer/SizeContainer"]
+[node name="YSizeSpinBox" type="SpinBox" parent="DetailsContainer/GridContainer/SizeContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="ZSizeSpinBox" type="SpinBox" parent="DetailsContainer/SizeContainer"]
+[node name="ZSizeSpinBox" type="SpinBox" parent="DetailsContainer/GridContainer/SizeContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="TemplateContainer" type="HBoxContainer" parent="DetailsContainer"]
-layout_mode = 2
-
-[node name="Label" type="Label" parent="DetailsContainer/TemplateContainer"]
+[node name="Label2" type="Label" parent="DetailsContainer/GridContainer"]
 layout_mode = 2
 text = "Template"
 
-[node name="TemplateOptionButton" type="OptionButton" parent="DetailsContainer/TemplateContainer"]
+[node name="TemplateContainer" type="HBoxContainer" parent="DetailsContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TemplateOptionButton" type="OptionButton" parent="DetailsContainer/GridContainer/TemplateContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-item_count = 1
-popup/item_0/text = "Test"
+selected = 0
+item_count = 4
+popup/item_0/text = "None"
 popup/item_0/id = 0
+popup/item_1/text = "Floor - 4 Way"
+popup/item_1/id = 0
+popup/item_2/text = "Wall - Straight"
+popup/item_2/id = 1
+popup/item_3/text = "Corner - L Shape"
+popup/item_3/id = 2
 
-[node name="AddTemplateButton" type="TextureButton" parent="DetailsContainer/TemplateContainer"]
+[node name="AddTemplateButton" type="TextureButton" parent="DetailsContainer/GridContainer/TemplateContainer"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 texture_normal = ExtResource("1_jiuvt")
 stretch_mode = 3
 
-[node name="TagsContainer" type="HBoxContainer" parent="DetailsContainer"]
-layout_mode = 2
-
-[node name="TagsLabel" type="Label" parent="DetailsContainer/TagsContainer"]
+[node name="TagsLabel" type="Label" parent="DetailsContainer/GridContainer"]
 layout_mode = 2
 text = "Tags"
 
-[node name="TagsMenuButton" type="MenuButton" parent="DetailsContainer/TagsContainer"]
+[node name="TagsContainer" type="HBoxContainer" parent="DetailsContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TagsMenuButton" type="MenuButton" parent="DetailsContainer/GridContainer/TagsContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-text = "dungeon, stone, .. +4"
 icon = ExtResource("2_7mers")
 flat = false
 icon_alignment = 2
 
-[node name="AddTagButton" type="TextureButton" parent="DetailsContainer/TagsContainer"]
+[node name="AddTagButton" type="TextureButton" parent="DetailsContainer/GridContainer/TagsContainer"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
@@ -102,18 +114,31 @@ stretch_mode = 3
 
 [node name="FoldableContainer" type="FoldableContainer" parent="DetailsContainer"]
 layout_mode = 2
+folded = true
 title = "Advance"
 
 [node name="VBoxContainer" type="VBoxContainer" parent="DetailsContainer/FoldableContainer"]
+visible = false
 layout_mode = 2
 
-[node name="SocketsLabel" type="Label" parent="DetailsContainer/FoldableContainer/VBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="DetailsContainer/FoldableContainer/VBoxContainer"]
 layout_mode = 2
+
+[node name="SocketsLabel" type="Label" parent="DetailsContainer/FoldableContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
 text = "Sockets:"
+
+[node name="AddSocketTypeButton" type="TextureButton" parent="DetailsContainer/FoldableContainer/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+texture_normal = ExtResource("1_jiuvt")
+stretch_mode = 3
 
 [node name="SocketsContainer" type="GridContainer" parent="DetailsContainer/FoldableContainer/VBoxContainer"]
 layout_mode = 2
-columns = 2
+columns = 4
 
 [node name="UpSocketLabel" type="Label" parent="DetailsContainer/FoldableContainer/VBoxContainer/SocketsContainer"]
 layout_mode = 2

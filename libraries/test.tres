@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ModuleLibrary" load_steps=6 format=3 uid="uid://dc816b44bgrjl"]
+
+[ext_resource type="Script" uid="uid://n5qundf42kiu" path="res://addons/auto_structured/core/module_library.gd" id="1_8lv1h"]
+[ext_resource type="Script" uid="uid://bb8jmn884hdv7" path="res://addons/auto_structured/core/socket_type.gd" id="2_gy8lu"]
+[ext_resource type="Script" uid="uid://c7f03neubtkf3" path="res://addons/auto_structured/core/tile.gd" id="3_ey63r"]
+
+[sub_resource type="Resource" id="Resource_7i2i1"]
+script = ExtResource("2_gy8lu")
+type_id = "none"
+
+[sub_resource type="Resource" id="Resource_ussj3"]
+script = ExtResource("2_gy8lu")
+type_id = "any"
+
+[resource]
+script = ExtResource("1_8lv1h")
+library_name = "Test"
+socket_types = Array[ExtResource("2_gy8lu")]([SubResource("Resource_7i2i1"), SubResource("Resource_ussj3")])
+available_tags = Array[String](["wood"])

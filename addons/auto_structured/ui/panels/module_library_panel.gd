@@ -33,6 +33,21 @@ func _ready() -> void:
 	_setup_library_menu()
 	_scan_available_libraries()
 	_update_library_list()
+	
+	# Connect add tile button
+	if add_tile_button:
+		add_tile_button.pressed.connect(_on_add_tile_button_pressed)
+	
+	# Connect library dropdown
+	if library_option_button:
+		library_option_button.item_selected.connect(_on_library_selected)
+	
+	# Auto-load first library if available
+	if not available_libraries.is_empty():
+		var first_lib = available_libraries.keys()[0]
+		_load_library(first_lib)
+		_select_library_in_dropdown(first_lib)
+		_update_tile_list()
 
 func setup_undo_redo(undo_redo: AutoStructuredUndoRedo) -> void:
 	"""
@@ -378,3 +393,97 @@ func _show_info(message: String) -> void:
 	dialog.canceled.connect(dialog.queue_free)
 	add_child(dialog)
 	dialog.popup_centered()
+
+## ============================================================================
+## Tile Import
+## ============================================================================
+
+func _on_add_tile_button_pressed() -> void:
+	"""Handle add tile button press."""
+	if current_library == null:
+		_show_error("No library is currently loaded. Please create or select a library first.")
+		return
+	
+	# Step 1: Open Godot FileDialog for file selection
+	var file_dialog = FileDialog.new()
+	file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILES
+	file_dialog.add_filter("*.tscn,*.glb,*.gltf,*.obj,*.fbx", "3D Models")
+	file_dialog.title = "Select Tiles to Import"
+	file_dialog.files_selected.connect(_on_import_files_selected)
+	file_dialog.canceled.connect(file_dialog.queue_free)
+	add_child(file_dialog)
+	file_dialog.popup_centered_ratio(0.7)
+
+func _on_import_files_selected(files: PackedStringArray) -> void:
+	"""Handle file selection from file dialog."""
+	if files.is_empty():
+		return
+	
+	# Find and cleanup the file dialog first
+	for child in get_children():
+		if child is FileDialog:
+			child.queue_free()
+	
+	# Wait one frame for the FileDialog to be freed before opening ImportDialog
+	await get_tree().process_frame
+	
+	# Step 2: Open ImportDialog for configuration
+	var import_dialog_scene = load("res://addons/auto_structured/ui/dialogs/import_dialog.tscn")
+	if not import_dialog_scene:
+		_show_error("Failed to load import dialog scene.")
+		return
+	
+	var import_dialog = import_dialog_scene.instantiate()
+	if not import_dialog:
+		_show_error("Failed to instantiate import dialog.")
+		return
+	
+	import_dialog.setup(files, current_library)
+	import_dialog.tiles_imported.connect(_on_tiles_imported)
+	import_dialog.canceled.connect(import_dialog.queue_free)
+	import_dialog.confirmed.connect(import_dialog.queue_free)
+	
+	add_child(import_dialog)
+	import_dialog.popup_centered_ratio(0.8)
+
+func _on_tiles_imported(tiles: Array) -> void:
+	"""Handle imported tiles."""
+	if current_library == null:
+		return
+	
+	# Add tiles to library
+	for tile in tiles:
+		current_library.add_tile(tile)
+	
+	# Save library
+	_save_library()
+	
+	# Update tile list UI (to be implemented)
+	_update_tile_list()
+	
+	print("Added %d tiles to library '%s'" % [tiles.size(), current_library.library_name])
+
+func _update_tile_list() -> void:
+	"""Update the tile list display."""
+	if not tile_list:
+		return
+	
+	tile_list.clear()
+	
+	if current_library == null:
+		return
+	
+	# Add tiles to list
+	for tile in current_library.tiles:
+		tile_list.add_item(tile.name)
+		# TODO: Add thumbnail icon
+
+func _on_library_selected(index: int) -> void:
+	"""Handle library selection from dropdown."""
+	if index < 0 or index >= library_option_button.item_count:
+		return
+	
+	var lib_name = library_option_button.get_item_text(index)
+	_load_library(lib_name)
+	_update_tile_list()
+	library_selected.emit(lib_name)
