@@ -4,18 +4,16 @@
     {
       "label": "Run Godot Test",
       "type": "shell",
-      "command": "powershell",
-      "args": [
-        "-NoLogo",
-        "-NoProfile",
-        "-Command",
-        "& { cd 'D:/Repos/auto-structured'; godot --headless --path . --script 'res://addons/auto_structured/tests/run_tests.gd' }"
-      ],
+      "command": "powershell.exe -ExecutionPolicy Bypass -File \"${workspaceFolder}/run_tests.ps1\"",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
       "presentation": {
         "reveal": "always",
         "echo": true,
         "focus": true,
-        "panel": "dedicated"
+        "panel": "dedicated",
+        "clear": true
       },
       "problemMatcher": []
     }
