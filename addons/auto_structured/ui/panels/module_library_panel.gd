@@ -25,6 +25,14 @@ const DELETE = 3
 @onready var tile_list: ItemList = %TileList
 
 var undo_redo_manager: AutoStructuredUndoRedo
+var current_library: ModuleLibrary = null
+var available_libraries: Dictionary = {}  # library_name -> file_path
+
+func _ready() -> void:
+	"""Initialize the panel and set up connections."""
+	_setup_library_menu()
+	_scan_available_libraries()
+	_update_library_list()
 
 func setup_undo_redo(undo_redo: AutoStructuredUndoRedo) -> void:
 	"""
@@ -32,3 +40,341 @@ func setup_undo_redo(undo_redo: AutoStructuredUndoRedo) -> void:
 	Should be called by the parent viewport after instantiation.
 	"""
 	undo_redo_manager = undo_redo
+
+## ============================================================================
+## Library Menu Setup and Handling
+## ============================================================================
+
+func _setup_library_menu() -> void:
+	"""Configure the library menu button with options."""
+	var popup = library_menu_button.get_popup()
+	popup.clear()
+	popup.add_item("New Library", CREATE)
+	popup.add_separator()
+	popup.add_item("Rename Library", RENAME)
+	popup.add_item("Save Library", SAVE)
+	popup.add_separator()
+	popup.add_item("Delete Library", DELETE)
+	
+	popup.id_pressed.connect(_on_library_menu_id_pressed)
+
+func _on_library_menu_id_pressed(id: int) -> void:
+	"""Handle library menu item selection."""
+	match id:
+		CREATE:
+			_create_new_library()
+		RENAME:
+			_rename_library()
+		SAVE:
+			_save_library()
+		DELETE:
+			_delete_library()
+
+## ============================================================================
+## Library Management Functions
+## ============================================================================
+
+func _create_new_library() -> void:
+	"""Create a new module library."""
+	# Create dialog for library name input
+	var dialog = AcceptDialog.new()
+	dialog.title = "Create New Library"
+	dialog.dialog_text = "Enter library name:"
+	
+	var name_edit = LineEdit.new()
+	name_edit.placeholder_text = "My Library"
+	name_edit.custom_minimum_size = Vector2(300, 0)
+	dialog.add_child(name_edit)
+	
+	dialog.confirmed.connect(func():
+		var lib_name = name_edit.text.strip_edges()
+		if lib_name.is_empty():
+			_show_error("Library name cannot be empty.")
+			return
+		
+		if available_libraries.has(lib_name):
+			_show_error("A library with this name already exists.")
+			return
+		
+		# Create new library
+		var new_library = ModuleLibrary.new()
+		new_library.library_name = lib_name
+		new_library.ensure_defaults()
+		
+		# Save to disk
+		var save_path = _get_library_save_path(lib_name)
+		var error = ResourceSaver.save(new_library, save_path)
+		
+		if error != OK:
+			_show_error("Failed to save library: " + error_string(error))
+			return
+		
+		# Update tracking
+		available_libraries[lib_name] = save_path
+		current_library = new_library
+		
+		# Update UI
+		_update_library_list()
+		_select_library_in_dropdown(lib_name)
+		
+		# Emit signal
+		library_created.emit(new_library)
+		
+		print("Created library: %s at %s" % [lib_name, save_path])
+	)
+	
+	dialog.canceled.connect(dialog.queue_free)
+	dialog.confirmed.connect(dialog.queue_free)
+	
+	add_child(dialog)
+	dialog.popup_centered()
+	name_edit.grab_focus()
+
+func _rename_library() -> void:
+	"""Rename the current library."""
+	if current_library == null:
+		_show_error("No library is currently loaded.")
+		return
+	
+	var old_name = current_library.library_name
+	
+	# Create dialog for new library name
+	var dialog = AcceptDialog.new()
+	dialog.title = "Rename Library"
+	dialog.dialog_text = "Enter new name for '%s':" % old_name
+	
+	var name_edit = LineEdit.new()
+	name_edit.text = old_name
+	name_edit.custom_minimum_size = Vector2(300, 0)
+	dialog.add_child(name_edit)
+	
+	dialog.confirmed.connect(func():
+		var new_name = name_edit.text.strip_edges()
+		if new_name.is_empty():
+			_show_error("Library name cannot be empty.")
+			return
+		
+		if new_name == old_name:
+			return  # No change
+		
+		if available_libraries.has(new_name):
+			_show_error("A library with this name already exists.")
+			return
+		
+		# Update library name
+		current_library.library_name = new_name
+		
+		# Save at new path
+		var old_path = available_libraries[old_name]
+		var new_path = _get_library_save_path(new_name)
+		var error = ResourceSaver.save(current_library, new_path)
+		
+		if error != OK:
+			_show_error("Failed to save renamed library: " + error_string(error))
+			return
+		
+		# Remove old file
+		if old_path != new_path:
+			DirAccess.remove_absolute(old_path)
+		
+		# Update tracking
+		available_libraries.erase(old_name)
+		available_libraries[new_name] = new_path
+		
+		# Update UI
+		_update_library_list()
+		_select_library_in_dropdown(new_name)
+		
+		# Emit signal
+		library_renamed.emit(old_name, new_name)
+		
+		print("Renamed library: %s -> %s" % [old_name, new_name])
+	)
+	
+	dialog.canceled.connect(dialog.queue_free)
+	dialog.confirmed.connect(dialog.queue_free)
+	
+	add_child(dialog)
+	dialog.popup_centered()
+	name_edit.select_all()
+	name_edit.grab_focus()
+
+func _save_library() -> void:
+	"""Save the current library to disk."""
+	if current_library == null:
+		_show_error("No library is currently loaded.")
+		return
+	
+	var lib_name = current_library.library_name
+	var save_path = _get_library_save_path(lib_name)
+	
+	var error = ResourceSaver.save(current_library, save_path)
+	
+	if error != OK:
+		_show_error("Failed to save library: " + error_string(error))
+		return
+	
+	# Emit signal
+	library_saved.emit(current_library)
+	
+	print("Saved library: %s" % save_path)
+	
+	# Show confirmation
+	_show_info("Library '%s' saved successfully." % lib_name)
+
+func _delete_library() -> void:
+	"""Delete the current library after confirmation."""
+	if current_library == null:
+		_show_error("No library is currently loaded.")
+		return
+	
+	var lib_name = current_library.library_name
+	
+	# Create confirmation dialog
+	var dialog = ConfirmationDialog.new()
+	dialog.title = "Delete Library"
+	dialog.dialog_text = "Are you sure you want to delete '%s'?\nThis cannot be undone." % lib_name
+	
+	dialog.confirmed.connect(func():
+		# Get file path
+		var file_path = available_libraries.get(lib_name, "")
+		if file_path.is_empty():
+			_show_error("Library file path not found.")
+			return
+		
+		# Delete file
+		var error = DirAccess.remove_absolute(file_path)
+		if error != OK:
+			_show_error("Failed to delete library file: " + error_string(error))
+			return
+		
+		# Update tracking
+		available_libraries.erase(lib_name)
+		
+		# Clear current library if it's the deleted one
+		var was_current = (current_library.library_name == lib_name)
+		if was_current:
+			current_library = null
+		
+		# Update UI
+		_update_library_list()
+		
+		# Emit signal
+		library_deleted.emit(lib_name)
+		
+		print("Deleted library: %s" % lib_name)
+		
+		# Load first available library if we deleted the current one
+		if was_current and not available_libraries.is_empty():
+			var first_lib = available_libraries.keys()[0]
+			_load_library(first_lib)
+	)
+	
+	dialog.canceled.connect(dialog.queue_free)
+	dialog.confirmed.connect(dialog.queue_free)
+	
+	add_child(dialog)
+	dialog.popup_centered()
+
+## ============================================================================
+## Library Discovery and Loading
+## ============================================================================
+
+func _scan_available_libraries() -> void:
+	"""Scan for available library files."""
+	available_libraries.clear()
+	
+	var libraries_dir = "res://libraries/"
+	
+	# Create directory if it doesn't exist
+	if not DirAccess.dir_exists_absolute(libraries_dir):
+		DirAccess.make_dir_recursive_absolute(libraries_dir)
+	
+	# Scan for .tres files
+	var dir = DirAccess.open(libraries_dir)
+	if dir:
+		dir.list_dir_begin()
+		var file_name = dir.get_next()
+		
+		while file_name != "":
+			if not dir.current_is_dir() and file_name.ends_with(".tres"):
+				var file_path = libraries_dir + file_name
+				var resource = load(file_path)
+				
+				if resource is ModuleLibrary:
+					available_libraries[resource.library_name] = file_path
+			
+			file_name = dir.get_next()
+		
+		dir.list_dir_end()
+
+func _update_library_list() -> void:
+	"""Update the library dropdown with available libraries."""
+	library_option_button.clear()
+	
+	if available_libraries.is_empty():
+		library_option_button.add_item("(No Libraries)")
+		library_option_button.disabled = true
+		return
+	
+	library_option_button.disabled = false
+	
+	var lib_names = available_libraries.keys()
+	lib_names.sort()
+	
+	for lib_name in lib_names:
+		library_option_button.add_item(lib_name)
+
+func _select_library_in_dropdown(lib_name: String) -> void:
+	"""Select a specific library in the dropdown."""
+	for i in range(library_option_button.item_count):
+		if library_option_button.get_item_text(i) == lib_name:
+			library_option_button.selected = i
+			break
+
+func _load_library(lib_name: String) -> void:
+	"""Load a library by name."""
+	var file_path = available_libraries.get(lib_name, "")
+	if file_path.is_empty():
+		_show_error("Library '%s' not found." % lib_name)
+		return
+	
+	var library = load(file_path)
+	if not library is ModuleLibrary:
+		_show_error("Failed to load library '%s'." % lib_name)
+		return
+	
+	current_library = library
+	library_loaded.emit(library)
+	
+	print("Loaded library: %s" % lib_name)
+
+## ============================================================================
+## Utility Functions
+## ============================================================================
+
+func _get_library_save_path(lib_name: String) -> String:
+	"""Get the file path for saving a library."""
+	var safe_name = lib_name.to_lower().replace(" ", "_")
+	return "res://libraries/%s.tres" % safe_name
+
+func _show_error(message: String) -> void:
+	"""Show an error dialog."""
+	var dialog = AcceptDialog.new()
+	dialog.title = "Error"
+	dialog.dialog_text = message
+	dialog.confirmed.connect(dialog.queue_free)
+	dialog.canceled.connect(dialog.queue_free)
+	add_child(dialog)
+	dialog.popup_centered()
+	push_error(message)
+
+func _show_info(message: String) -> void:
+	"""Show an info dialog."""
+	var dialog = AcceptDialog.new()
+	dialog.title = "Info"
+	dialog.dialog_text = message
+	dialog.confirmed.connect(dialog.queue_free)
+	dialog.canceled.connect(dialog.queue_free)
+	add_child(dialog)
+	dialog.popup_centered()
