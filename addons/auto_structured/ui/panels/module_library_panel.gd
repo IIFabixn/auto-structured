@@ -137,9 +137,11 @@ func _create_new_library() -> void:
 		# Update UI
 		_update_library_list()
 		_select_library_in_dropdown(lib_name)
+		_update_tile_list()
 		
-		# Emit signal
+		# Emit signals
 		library_created.emit(new_library)
+		library_loaded.emit(new_library)
 		
 		print("Created library: %s at %s" % [lib_name, save_path])
 	)
@@ -286,6 +288,11 @@ func _delete_library() -> void:
 		if was_current and not available_libraries.is_empty():
 			var first_lib = available_libraries.keys()[0]
 			_load_library(first_lib)
+			_select_library_in_dropdown(first_lib)
+			_update_tile_list()
+		elif was_current:
+			# No libraries left, clear the tile list
+			_update_tile_list()
 	)
 	
 	dialog.canceled.connect(dialog.queue_free)
@@ -494,6 +501,11 @@ func _update_tile_list() -> void:
 			scene.tile = tile
 			scene.tile_selected.connect(func(t: Tile):
 				tile_selected.emit(t)
+			)
+			scene.tile_deleted.connect(func(t: Tile):
+				current_library.remove_tile(t)
+				_save_library()
+				_update_tile_list()
 			)
 
 func _on_search_text_changed(new_text: String) -> void:
