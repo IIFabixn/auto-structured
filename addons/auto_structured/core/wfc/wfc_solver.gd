@@ -1,3 +1,4 @@
+@tool
 class_name WfcSolver extends RefCounted
 
 const WfcGrid = preload("res://addons/auto_structured/core/wfc/wfc_grid.gd")

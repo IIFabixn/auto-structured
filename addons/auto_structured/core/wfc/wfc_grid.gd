@@ -1,3 +1,4 @@
+@tool
 class_name WfcGrid extends RefCounted
 
 const WfcCell = preload("res://addons/auto_structured/core/wfc/wfc_cell.gd")

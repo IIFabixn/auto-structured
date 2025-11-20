@@ -1,5 +1,6 @@
 @tool
 class_name DetailsPanel extends Control
+
 ## Panel for displaying and editing tile properties.
 ##
 ## Provides a clean API for showing tile details with proper state initialization.
@@ -14,11 +15,12 @@ const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.gd")
-const TagItemControl = preload("res://addons/auto_structured/ui/controls/tag_item_control.gd")
 const AutoStructuredUndoRedo = preload("res://addons/auto_structured/core/undo_redo_manager.gd")
 const SelectionManager = preload("res://addons/auto_structured/core/events/selection_manager.gd")
+const ValidationEventBus = preload("res://addons/auto_structured/core/events/validation_event_bus.gd")
 const RequirementItemScene = preload("res://addons/auto_structured/ui/controls/details_panel_controls/requirement_item.tscn")
 const RequirementItem = preload("res://addons/auto_structured/ui/controls/details_panel_controls/requirement_item.gd")
+const TileThumbnailGenerator = preload("res://addons/auto_structured/utils/thumbnail_generator.gd")
 
 @onready var close_button: TextureButton = %CloseButton
 
@@ -63,6 +65,7 @@ var _tile: Tile
 
 var undo_redo_manager: AutoStructuredUndoRedo
 var selection_manager: SelectionManager
+var validation_bus: ValidationEventBus
 var current_library: ModuleLibrary
 
 func _ready() -> void:
@@ -72,6 +75,18 @@ func _ready() -> void:
 	
 	# Setup rotation symmetry options
 	_setup_rotation_symmetry_options()
+	
+	# Connect size spinboxes
+	if x_size_spinbox:
+		x_size_spinbox.value_changed.connect(_on_x_size_changed)
+	if y_size_spinbox:
+		y_size_spinbox.value_changed.connect(_on_y_size_changed)
+	if z_size_spinbox:
+		z_size_spinbox.value_changed.connect(_on_z_size_changed)
+	
+	# Connect weight spinbox
+	if weight_spinbox:
+		weight_spinbox.value_changed.connect(_on_weight_changed)
 	
 	# Connect tag controls
 	if add_tag_button:
@@ -133,6 +148,13 @@ func setup_library(library: ModuleLibrary) -> void:
 	"""
 	current_library = library
 
+func setup_validation_bus(bus: ValidationEventBus) -> void:
+	"""
+	Initialize the validation event bus.
+	Should be called by the parent viewport after instantiation.
+	"""
+	validation_bus = bus
+
 func _on_tile_selected_via_eventbus(selected_tile: Tile, _previous_tile: Tile) -> void:
 	"""Handle tile selection from the event bus."""
 	if selected_tile:
@@ -182,6 +204,9 @@ func _update_ui() -> void:
 	
 	# Update preview image
 	_update_preview_image()
+	
+	# Validate tile
+	_validate_tile()
 
 func _update_tags_display() -> void:
 	"""Update the tags menu button text to show current tags."""
@@ -250,8 +275,9 @@ func _update_preview_image() -> void:
 	if not preview_image or not _tile:
 		return
 	
-	# TODO: Implement preview generation
-	# This could render the mesh/scene to a ViewportTexture
+	var texture = await TileThumbnailGenerator.generate_thumbnail(_tile, self, Vector2i(128, 128))
+	if texture:
+		preview_image.texture = texture
 
 func _on_requirement_modified(requirement) -> void:
 	"""Handle requirement modification."""
@@ -274,6 +300,38 @@ func _on_rotation_symmetry_changed(index: int) -> void:
 	
 	var selected_id = rotation_symmetry_options.get_item_id(index)
 	_tile.rotation_symmetry = selected_id
+	tile_modified.emit(_tile)
+
+func _on_x_size_changed(value: float) -> void:
+	"""Handle X size spinbox change."""
+	if not _tile:
+		return
+	_tile.size.x = int(value)
+	_validate_tile()
+	tile_modified.emit(_tile)
+
+func _on_y_size_changed(value: float) -> void:
+	"""Handle Y size spinbox change."""
+	if not _tile:
+		return
+	_tile.size.y = int(value)
+	_validate_tile()
+	tile_modified.emit(_tile)
+
+func _on_z_size_changed(value: float) -> void:
+	"""Handle Z size spinbox change."""
+	if not _tile:
+		return
+	_tile.size.z = int(value)
+	_validate_tile()
+	tile_modified.emit(_tile)
+
+func _on_weight_changed(value: float) -> void:
+	"""Handle weight spinbox change."""
+	if not _tile:
+		return
+	_tile.weight = value
+	_validate_tile()
 	tile_modified.emit(_tile)
 
 func _on_add_tag_pressed() -> void:
@@ -343,3 +401,27 @@ func _on_tag_menu_item_pressed(id: int) -> void:
 	
 	_update_tags_display()
 	tile_modified.emit(_tile)
+
+func _validate_tile() -> void:
+	"""Validate current tile and emit validation events."""
+	if not _tile or not validation_bus:
+		return
+	
+	# Clear previous validation
+	validation_bus.clear_validation(ValidationEventBus.Context.TILE)
+	
+	# Validate weight
+	if _tile.weight <= 0:
+		validation_bus.emit_warning("Weight should be greater than 0", _tile, ValidationEventBus.Context.TILE)
+	
+	# Validate size
+	if _tile.size.x <= 0 or _tile.size.y <= 0 or _tile.size.z <= 0:
+		validation_bus.emit_error("All size dimensions must be greater than 0", _tile, ValidationEventBus.Context.TILE)
+	
+	# Validate sockets (check if tile has at least one socket)
+	if _tile.sockets.is_empty():
+		validation_bus.emit_warning("Tile has no sockets defined", _tile, ValidationEventBus.Context.TILE)
+	
+	# Validate mesh or scene
+	if not _tile.mesh and not _tile.scene:
+		validation_bus.emit_error("Tile must have either a mesh or scene assigned", _tile, ValidationEventBus.Context.TILE)

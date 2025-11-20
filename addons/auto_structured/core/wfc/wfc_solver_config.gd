@@ -1,3 +1,4 @@
+@tool
 class_name WfcSolverConfig extends RefCounted
 ## Configuration settings for WFC solver performance tuning.
 ##

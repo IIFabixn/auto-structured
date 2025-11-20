@@ -149,6 +149,8 @@ size_flags_horizontal = 3
 text = "None"
 icon = ExtResource("3_qj0jw")
 flat = false
+alignment = 0
+clip_text = true
 icon_alignment = 2
 
 [node name="WeightLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer"]
@@ -169,6 +171,18 @@ text = "Rotation Symmetry"
 [node name="RotationSymmetryOptionsButton" type="OptionButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
+selected = 0
+item_count = 5
+popup/item_0/text = "Auto-detect"
+popup/item_0/id = 0
+popup/item_1/text = "Full (4 rotations)"
+popup/item_1/id = 1
+popup/item_2/text = "Half (2 rotations)"
+popup/item_2/id = 2
+popup/item_3/text = "Quarter (1 rotation)"
+popup/item_3/id = 3
+popup/item_4/text = "Custom"
+popup/item_4/id = 4
 
 [node name="Requirements" type="ScrollContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer"]
 visible = false

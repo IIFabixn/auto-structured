@@ -1,3 +1,4 @@
+@tool
 class_name WfcCell extends RefCounted
 
 const Tile = preload("res://addons/auto_structured/core/tile.gd")

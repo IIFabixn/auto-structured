@@ -1,5 +1,6 @@
 @tool
 class_name ValidationEventBus extends RefCounted
+
 ## Real-time validation event system with severity levels.
 ##
 ## Provides centralized validation feedback for tiles, sockets, libraries, and requirements.

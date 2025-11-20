@@ -503,20 +503,26 @@ func _update_tile_list() -> void:
 		if not search_text.is_empty() and not tile.name.to_lower().contains(search_text):
 			continue
 		
-		var scene = TileItemScene.instantiate()
-		if scene is TileItem:
-			tile_grid.add_child(scene)
-			scene.tile = tile
-			scene.tile_selected.connect(func(t: Tile):
-				# Use event bus for decoupled communication
-				if selection_manager:
-					selection_manager.select_tile(t)
-			)
-			scene.tile_deleted.connect(func(t: Tile):
-				current_library.remove_tile(t)
-				_save_library()
-				_update_tile_list()
-			)
+		var scene : TileItem = TileItemScene.instantiate()
+		tile_grid.add_child(scene)
+		scene.tile = tile
+		
+		if not scene.tile_selected.is_connected(_on_tile_item_selected):
+			scene.tile_selected.connect(_on_tile_item_selected)
+		if not scene.tile_deleted.is_connected(_on_tile_item_deleted):
+			scene.tile_deleted.connect(_on_tile_item_deleted)
+
+func _on_tile_item_selected(tile: Tile) -> void:
+	"""Handle tile selection from a tile item."""
+	if selection_manager:
+		selection_manager.select_tile(tile)
+
+func _on_tile_item_deleted(tile: Tile) -> void:
+	"""Handle tile deletion from a tile item."""
+	if current_library:
+		current_library.remove_tile(tile)
+		_save_library()
+		_update_tile_list()
 
 func _on_search_text_changed(new_text: String) -> void:
 	"""Handle search text change."""
