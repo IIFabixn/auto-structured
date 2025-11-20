@@ -10,6 +10,7 @@ signal closed
 signal tile_modified(tile: Tile)
 signal socket_preview_requested(socket: Socket)
 signal socket_editor_requested(tile: Tile, start_mode: int)
+signal request_preview(tile: Tile, socket: Socket)
 
 const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
@@ -47,12 +48,19 @@ const TileThumbnailGenerator = preload("res://addons/auto_structured/utils/thumb
 @onready var requirements_container: VBoxContainer = %RequirementsContainer
 
 @onready var add_socket_button: TextureButton = %AddSocketButton
+
 @onready var upSocketMenuButton: MenuButton = %UpSocketMenuButton
+@onready var previewUpSocketButton: TextureButton = %PreviewUpSocketButton
 @onready var downSocketMenuButton: MenuButton = %DownSocketMenuButton
+@onready var previewDownSocketButton: TextureButton = %PreviewDownSocketButton
 @onready var leftSocketMenuButton: MenuButton = %LeftSocketMenuButton
+@onready var previewLeftSocketButton: TextureButton = %PreviewLeftSocketButton
 @onready var rightSocketMenuButton: MenuButton = %RightSocketMenuButton
+@onready var previewRightSocketButton: TextureButton = %PreviewRightSocketButton
 @onready var frontSocketMenuButton: MenuButton = %FrontSocketMenuButton
+@onready var previewFrontSocketButton: TextureButton = %PreviewFrontSocketButton
 @onready var backSocketMenuButton: MenuButton = %BackSocketMenuButton
+@onready var previewBackSocketButton: TextureButton = %PreviewBackSocketButton
 
 var _tile: Tile
 @export var tile: Tile:
@@ -67,6 +75,15 @@ var undo_redo_manager: AutoStructuredUndoRedo
 var selection_manager: SelectionManager
 var validation_bus: ValidationEventBus
 var current_library: ModuleLibrary
+
+func _get_library() -> ModuleLibrary:
+	"""
+	Get the current library reference.
+	Returns null if no library is set - caller should handle this gracefully.
+	"""
+	if not current_library:
+		push_warning("DetailsPanel: No library reference - ensure setup_library() was called")
+	return current_library
 
 func _ready() -> void:
 	"""Initialize the panel and connect signals."""
@@ -99,6 +116,14 @@ func _ready() -> void:
 			popup.about_to_popup.connect(_on_tags_menu_about_to_popup)
 		if not popup.id_pressed.is_connected(_on_tag_menu_item_pressed):
 			popup.id_pressed.connect(_on_tag_menu_item_pressed)
+	
+	# Connect socket menu buttons and preview buttons
+	_setup_socket_button(upSocketMenuButton, previewUpSocketButton, Vector3i.UP)
+	_setup_socket_button(downSocketMenuButton, previewDownSocketButton, Vector3i.DOWN)
+	_setup_socket_button(leftSocketMenuButton, previewLeftSocketButton, Vector3i.LEFT)
+	_setup_socket_button(rightSocketMenuButton, previewRightSocketButton, Vector3i.RIGHT)
+	_setup_socket_button(frontSocketMenuButton, previewFrontSocketButton, Vector3i.FORWARD)
+	_setup_socket_button(backSocketMenuButton, previewBackSocketButton, Vector3i.BACK)
 	
 	# Start hidden until a tile is selected
 	hide()
@@ -228,8 +253,9 @@ func _on_tags_menu_about_to_popup() -> void:
 	
 	# Get all available tags from library (if available)
 	var available_tags: Array[String] = []
-	if current_library:
-		available_tags = current_library.get_available_tags()
+	var library = _get_library()
+	if library:
+		available_tags = library.get_available_tags()
 	
 	# If no library tags, at least show the tile's current tags
 	if available_tags.is_empty() and not _tile.tags.is_empty():
@@ -267,8 +293,38 @@ func _update_sockets_display() -> void:
 	if not _tile:
 		return
 	
-	# TODO: Implement socket display logic
-	# This will populate the 6 socket menu buttons based on tile's sockets
+	# Update all 6 directional socket menu buttons
+	_update_socket_menu_button_text(upSocketMenuButton, Vector3i.UP)
+	_update_socket_menu_button_text(downSocketMenuButton, Vector3i.DOWN)
+	_update_socket_menu_button_text(leftSocketMenuButton, Vector3i.LEFT)
+	_update_socket_menu_button_text(rightSocketMenuButton, Vector3i.RIGHT)
+	_update_socket_menu_button_text(frontSocketMenuButton, Vector3i.FORWARD)
+	_update_socket_menu_button_text(backSocketMenuButton, Vector3i.BACK)
+
+func _update_socket_menu_button_text(menu_button: MenuButton, direction: Vector3i) -> void:
+	"""Update a single socket menu button's text based on tile's sockets for that direction."""
+	if not menu_button or not _tile:
+		return
+	
+	# Get sockets for this direction
+	var sockets_in_direction = _tile.get_sockets_in_direction(direction)
+	
+	if sockets_in_direction.is_empty():
+		menu_button.text = "none"
+	else:
+		# Display socket type IDs as comma-separated list
+		var socket_type_ids: Array[String] = []
+		for socket in sockets_in_direction:
+			if socket.socket_type:
+				socket_type_ids.append(socket.socket_type.type_id)
+			else:
+				# Socket exists but has no type assigned - treat as "none"
+				socket_type_ids.append("none")
+		
+		if socket_type_ids.is_empty():
+			menu_button.text = "none"
+		else:
+			menu_button.text = ", ".join(socket_type_ids)
 
 func _update_preview_image() -> void:
 	"""Update the preview image/3D representation of the tile."""
@@ -359,8 +415,9 @@ func _on_add_tag_pressed() -> void:
 		if not tag_name.is_empty() and _tile:
 			if _tile.add_tag(tag_name):
 				# Add tag to library's available tags
-				if current_library:
-					current_library.add_available_tag(tag_name)
+				var library = _get_library()
+				if library:
+					library.add_available_tag(tag_name)
 				_update_tags_display()
 				tile_modified.emit(_tile)
 		dialog.queue_free()
@@ -383,8 +440,9 @@ func _on_tag_menu_item_pressed(id: int) -> void:
 	
 	# Get all available tags (same logic as popup)
 	var available_tags: Array[String] = []
-	if current_library:
-		available_tags = current_library.get_available_tags()
+	var library = _get_library()
+	if library:
+		available_tags = library.get_available_tags()
 	if available_tags.is_empty() and not _tile.tags.is_empty():
 		available_tags = _tile.tags.duplicate()
 	
@@ -401,6 +459,130 @@ func _on_tag_menu_item_pressed(id: int) -> void:
 	
 	_update_tags_display()
 	tile_modified.emit(_tile)
+
+func _setup_socket_button(menu_button: MenuButton, preview_button: TextureButton, direction: Vector3i) -> void:
+	"""Setup a socket menu button and its preview button for a specific direction."""
+	if not menu_button:
+		return
+	
+	# Connect menu button popup
+	var popup = menu_button.get_popup()
+	if popup:
+		# Store direction in metadata for later use
+		menu_button.set_meta("socket_direction", direction)
+		
+		if not popup.about_to_popup.is_connected(_on_socket_menu_about_to_popup.bind(direction)):
+			popup.about_to_popup.connect(_on_socket_menu_about_to_popup.bind(direction))
+		if not popup.id_pressed.is_connected(_on_socket_menu_item_pressed.bind(direction)):
+			popup.id_pressed.connect(_on_socket_menu_item_pressed.bind(direction))
+	
+	# Connect preview button
+	if preview_button:
+		preview_button.set_meta("socket_direction", direction)
+		if not preview_button.pressed.is_connected(_on_preview_socket_pressed.bind(direction)):
+			preview_button.pressed.connect(_on_preview_socket_pressed.bind(direction))
+
+func _on_socket_menu_about_to_popup(direction: Vector3i) -> void:
+	"""Populate socket menu when it's about to open."""
+	if not _tile:
+		return
+	
+	var library = _get_library()
+	if not library:
+		return
+	
+	# Find the menu button for this direction
+	var menu_button = _get_socket_menu_button_for_direction(direction)
+	if not menu_button:
+		return
+	
+	var popup = menu_button.get_popup()
+	popup.clear()
+	
+	# Get all available socket types from library
+	var socket_types = library.get_socket_type_resources()
+	
+	# Get current sockets for this direction
+	var current_sockets = _tile.get_sockets_in_direction(direction)
+	
+	# Add socket types to menu with checkboxes
+	for i in range(socket_types.size()):
+		var socket_type = socket_types[i]
+		popup.add_check_item(socket_type.get_display_name(), i)
+		
+		# Check if this socket type is already on the tile in this direction
+		for socket in current_sockets:
+			if socket.socket_type == socket_type:
+				popup.set_item_checked(i, true)
+				break
+
+func _on_socket_menu_item_pressed(id: int, direction: Vector3i) -> void:
+	"""Handle socket menu item press - toggle socket type on/off for this direction."""
+	if not _tile:
+		return
+	
+	var library = _get_library()
+	if not library:
+		return
+	
+	var socket_types = library.get_socket_type_resources()
+	if id < 0 or id >= socket_types.size():
+		return
+	
+	var socket_type = socket_types[id]
+	var current_sockets = _tile.get_sockets_in_direction(direction)
+	
+	# Check if this socket type already exists for this direction
+	var existing_socket: Socket = null
+	for socket in current_sockets:
+		if socket.socket_type == socket_type:
+			existing_socket = socket
+			break
+	
+	if existing_socket:
+		# Remove the socket
+		_tile.remove_socket(existing_socket)
+	else:
+		# Add new socket with this type
+		var new_socket = Socket.new()
+		new_socket.direction = direction
+		new_socket.socket_type = socket_type
+		_tile.add_socket(new_socket)
+	
+	_update_sockets_display()
+	tile_modified.emit(_tile)
+
+func _on_preview_socket_pressed(direction: Vector3i) -> void:
+	"""Handle preview socket button press - emit request_preview signal."""
+	if not _tile:
+		push_warning("Cannot preview socket: no tile selected")
+		return
+	
+	# Get the first socket in this direction to preview
+	var sockets_in_direction = _tile.get_sockets_in_direction(direction)
+	if sockets_in_direction.is_empty():
+		push_warning("No socket in direction %s to preview" % direction)
+		return
+	
+	# Emit request_preview signal with the tile and first socket in this direction
+	var socket = sockets_in_direction[0]
+	request_preview.emit(_tile, socket)
+
+func _get_socket_menu_button_for_direction(direction: Vector3i) -> MenuButton:
+	"""Get the menu button for a specific direction."""
+	if direction == Vector3i.UP:
+		return upSocketMenuButton
+	elif direction == Vector3i.DOWN:
+		return downSocketMenuButton
+	elif direction == Vector3i.LEFT:
+		return leftSocketMenuButton
+	elif direction == Vector3i.RIGHT:
+		return rightSocketMenuButton
+	elif direction == Vector3i.FORWARD:
+		return frontSocketMenuButton
+	elif direction == Vector3i.BACK:
+		return backSocketMenuButton
+	return null
 
 func _validate_tile() -> void:
 	"""Validate current tile and emit validation events."""
@@ -420,8 +602,8 @@ func _validate_tile() -> void:
 	
 	# Validate sockets (check if tile has at least one socket)
 	if _tile.sockets.is_empty():
-		validation_bus.emit_warning("Tile has no sockets defined", _tile, ValidationEventBus.Context.TILE)
+		validation_bus.emit_warning("%s has no sockets defined" %_tile.name, _tile, ValidationEventBus.Context.TILE)
 	
 	# Validate mesh or scene
 	if not _tile.mesh and not _tile.scene:
-		validation_bus.emit_error("Tile must have either a mesh or scene assigned", _tile, ValidationEventBus.Context.TILE)
+		validation_bus.emit_error("%s must have either a mesh or scene assigned" %_tile.name, _tile, ValidationEventBus.Context.TILE)

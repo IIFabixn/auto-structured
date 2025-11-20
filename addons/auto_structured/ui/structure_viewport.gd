@@ -48,6 +48,11 @@ func _propagate_systems() -> void:
 		# Connect to library changes to update details panel
 		if not module_library_control.library_loaded.is_connected(_on_library_loaded):
 			module_library_control.library_loaded.connect(_on_library_loaded)
+		
+		# If library is already loaded, propagate it now
+		if module_library_control.current_library and details_panel:
+			if details_panel.has_method("setup_library"):
+				details_panel.setup_library(module_library_control.current_library)
 	
 	if details_panel:
 		if details_panel.has_method("setup_undo_redo"):

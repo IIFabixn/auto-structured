@@ -229,6 +229,10 @@ func _import_tile_from_config(config: Dictionary) -> Tile:
             var template = templates[template_index]
             LibraryPresets.apply_socket_template(tile, template, _library)
     
+    # Ensure tile has default sockets if none were created
+    if tile.sockets.is_empty():
+        tile.ensure_all_sockets(_library)
+    
     # Apply symmetry detection
     if config.get("auto_detect_symmetry", true):
         tile.rotation_symmetry = Tile.RotationSymmetry.AUTO
