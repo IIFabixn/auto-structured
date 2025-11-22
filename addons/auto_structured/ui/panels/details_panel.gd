@@ -22,6 +22,12 @@ const ValidationEventBus = preload("res://addons/auto_structured/core/events/val
 const RequirementItemScene = preload("res://addons/auto_structured/ui/controls/details_panel_controls/requirement_item.tscn")
 const RequirementItem = preload("res://addons/auto_structured/ui/controls/details_panel_controls/requirement_item.gd")
 const TileThumbnailGenerator = preload("res://addons/auto_structured/utils/thumbnail_generator.gd")
+const AddRequirementAction = preload("res://addons/auto_structured/core/actions/add_requirement_action.gd")
+const RemoveRequirementAction = preload("res://addons/auto_structured/core/actions/remove_requirement_action.gd")
+const Requirement = preload("res://addons/auto_structured/core/requirements/requirement.gd")
+
+const REQUIREMENTS_DIR := "res://addons/auto_structured/core/requirements"
+const REQUIREMENT_MENU_META_TYPES := "requirement_type_defs"
 
 const SOCKET_MENU_ID_NONE := 1000000
 const SOCKET_MENU_ID_ANY := 1000001
@@ -80,6 +86,8 @@ var selection_manager: SelectionManager
 var validation_bus: ValidationEventBus
 var current_library: ModuleLibrary
 
+var _requirement_type_defs: Array = []
+
 func _get_library() -> ModuleLibrary:
 	"""
 	Get the current library reference.
@@ -96,6 +104,7 @@ func _ready() -> void:
 	
 	# Setup rotation symmetry options
 	_setup_rotation_symmetry_options()
+	_setup_requirement_menu()
 	
 	# Connect size spinboxes
 	if x_size_spinbox:
@@ -199,6 +208,8 @@ func _on_close_pressed() -> void:
 
 func _update_ui() -> void:
 	"""Update all UI elements to reflect the current tile's properties."""
+	if add_requirement_menu_button:
+		add_requirement_menu_button.disabled = _tile == null
 	if not _tile:
 		return
 	
@@ -359,8 +370,13 @@ func _on_requirement_deleted(requirement) -> void:
 	if not _tile:
 		return
 	
-	_tile.requirements.erase(requirement)
+	if undo_redo_manager:
+		var action := RemoveRequirementAction.new(undo_redo_manager, _tile, requirement)
+		action.execute()
+	else:
+		_tile.requirements.erase(requirement)
 	_update_requirements_display()
+	_validate_tile()
 	tile_modified.emit(_tile)
 
 func _on_rotation_symmetry_changed(index: int) -> void:
@@ -688,6 +704,122 @@ func _remove_any_socket(direction: Vector3i) -> void:
 	for socket in sockets:
 		if socket.socket_type and socket.socket_type.type_id.strip_edges() == "any":
 			_tile.remove_socket(socket)
+
+func _setup_requirement_menu() -> void:
+	"""Connect signals for the add requirement menu and preload available requirement types."""
+	_load_requirement_types()
+	if not add_requirement_menu_button:
+		return
+	var popup := add_requirement_menu_button.get_popup()
+	if popup:
+		if not popup.about_to_popup.is_connected(_on_add_requirement_menu_about_to_popup):
+			popup.about_to_popup.connect(_on_add_requirement_menu_about_to_popup)
+		if not popup.id_pressed.is_connected(_on_add_requirement_menu_item_pressed):
+			popup.id_pressed.connect(_on_add_requirement_menu_item_pressed)
+
+func _load_requirement_types() -> void:
+	"""Discover requirement scripts so they can be offered in the menu."""
+	if not _requirement_type_defs.is_empty():
+		return
+	var dir := DirAccess.open(REQUIREMENTS_DIR)
+	if not dir:
+		push_warning("DetailsPanel: Unable to open requirements directory")
+		return
+	dir.list_dir_begin()
+	var file_name := dir.get_next()
+	var discovered: Array = []
+	while file_name != "":
+		if file_name.begins_with("."):
+			file_name = dir.get_next()
+			continue
+		if dir.current_is_dir():
+			file_name = dir.get_next()
+			continue
+		if not file_name.ends_with(".gd") or file_name == "requirement.gd":
+			file_name = dir.get_next()
+			continue
+		var path := "%s/%s" % [REQUIREMENTS_DIR, file_name]
+		var script := load(path)
+		if script:
+			var instance = script.new()
+			if instance is Requirement:
+				instance._init()
+				var display_name: String = instance.display_name.strip_edges()
+				if display_name.is_empty():
+					display_name = instance.get_class()
+				discovered.append({
+					"name": display_name,
+					"script": script,
+					"path": path,
+				})
+				instance = null
+			else:
+				instance = null
+		file_name = dir.get_next()
+	dir.list_dir_end()
+	if discovered.is_empty():
+		return
+	discovered.sort_custom(func(a, b):
+		return a["name"].naturalnocasecmp_to(b["name"]) < 0
+	)
+	_requirement_type_defs = discovered
+
+func _on_add_requirement_menu_about_to_popup() -> void:
+	"""Populate the requirement add menu before it opens."""
+	if not add_requirement_menu_button:
+		return
+	var popup := add_requirement_menu_button.get_popup()
+	if not popup:
+		return
+	popup.clear()
+	if not _tile:
+		popup.add_item("Select a tile first")
+		popup.set_item_disabled(0, true)
+		return
+	_load_requirement_types()
+	if _requirement_type_defs.is_empty():
+		popup.add_item("No requirements available")
+		popup.set_item_disabled(0, true)
+		return
+	popup.set_meta(REQUIREMENT_MENU_META_TYPES, _requirement_type_defs)
+	for i in range(_requirement_type_defs.size()):
+		popup.add_item(_requirement_type_defs[i]["name"], i)
+
+func _on_add_requirement_menu_item_pressed(id: int) -> void:
+	"""Create and add a requirement when the menu item is pressed."""
+	if not _tile:
+		return
+	var popup := add_requirement_menu_button.get_popup()
+	if not popup:
+		return
+	var defs: Array = popup.get_meta(REQUIREMENT_MENU_META_TYPES, [])
+	if id < 0 or id >= defs.size():
+		return
+	var def: Dictionary = defs[id]
+	var script = def.get("script", null)
+	if script == null:
+		push_warning("DetailsPanel: Requirement script missing for menu entry")
+		return
+	var requirement_instance = script.new()
+	if not requirement_instance is Requirement:
+		return
+	_add_requirement_instance(requirement_instance)
+
+func _add_requirement_instance(requirement_instance: Requirement) -> void:
+	"""Insert a new requirement into the current tile and refresh the UI."""
+	if not _tile or requirement_instance == null:
+		return
+	if undo_redo_manager:
+		var action := AddRequirementAction.new(undo_redo_manager, _tile, requirement_instance)
+		action.execute()
+	else:
+		var requirements_copy: Array = []
+		requirements_copy.assign(_tile.requirements)
+		requirements_copy.append(requirement_instance)
+		_tile.requirements = requirements_copy
+	_update_requirements_display()
+	_validate_tile()
+	tile_modified.emit(_tile)
 
 func _validate_tile() -> void:
 	"""Validate current tile and emit validation events."""

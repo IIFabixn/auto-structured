@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="ModuleLibrary" load_steps=27 format=3 uid="uid://dc816b44bgrjl"]
+[gd_resource type="Resource" script_class="ModuleLibrary" load_steps=24 format=3 uid="uid://dc816b44bgrjl"]
 
 [ext_resource type="Script" uid="uid://n5qundf42kiu" path="res://addons/auto_structured/core/module_library.gd" id="1_8lv1h"]
 [ext_resource type="Script" uid="uid://bb8jmn884hdv7" path="res://addons/auto_structured/core/socket_type.gd" id="2_gy8lu"]
@@ -55,10 +55,6 @@ script = ExtResource("2_gy8lu")
 type_id = "corner_block"
 compatible_types = Array[String](["corner_block"])
 
-[sub_resource type="Resource" id="Resource_07n0n"]
-script = ExtResource("6_d002p")
-socket_type = SubResource("Resource_7i2i1")
-
 [sub_resource type="Resource" id="Resource_hvh7s"]
 script = ExtResource("6_d002p")
 socket_type = SubResource("Resource_7i2i1")
@@ -79,29 +75,21 @@ script = ExtResource("6_d002p")
 socket_type = SubResource("Resource_7i2i1")
 direction = Vector3i(0, 0, 1)
 
-[sub_resource type="Resource" id="Resource_oyb7k"]
-script = ExtResource("6_d002p")
-socket_type = SubResource("Resource_ussj3")
-
-[sub_resource type="Resource" id="Resource_mlnqq"]
-script = ExtResource("6_d002p")
-socket_type = SubResource("Resource_d002p")
-
-[sub_resource type="Resource" id="Resource_qujqk"]
-script = ExtResource("6_d002p")
-socket_type = SubResource("Resource_ey63r")
-
 [sub_resource type="Resource" id="Resource_mqw5r"]
 script = ExtResource("6_d002p")
 socket_type = SubResource("Resource_7i2i1")
 direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_07n0n"]
+script = ExtResource("6_d002p")
+socket_type = SubResource("Resource_8lv1h")
 
 [sub_resource type="Resource" id="Resource_2fdcs"]
 script = ExtResource("3_ey63r")
 name = "floor"
 scene = ExtResource("5_ussj3")
 rotation_symmetry = 1
-sockets = Array[ExtResource("6_d002p")]([SubResource("Resource_07n0n"), SubResource("Resource_hvh7s"), SubResource("Resource_3tpbv"), SubResource("Resource_w7sp3"), SubResource("Resource_etoiu"), SubResource("Resource_oyb7k"), SubResource("Resource_mlnqq"), SubResource("Resource_qujqk"), SubResource("Resource_mqw5r")])
+sockets = Array[ExtResource("6_d002p")]([SubResource("Resource_hvh7s"), SubResource("Resource_3tpbv"), SubResource("Resource_w7sp3"), SubResource("Resource_etoiu"), SubResource("Resource_mqw5r"), SubResource("Resource_07n0n")])
 
 [resource]
 script = ExtResource("1_8lv1h")

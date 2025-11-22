@@ -16,19 +16,42 @@ func _init() -> void:
 
 func _generate_display_name() -> String:
 	"""Generate a readable display name from the class name."""
-	var class_name_str = get_class()
+	var class_name_str := get_class()
+	class_name_str = class_name_str.strip_edges()
+	if class_name_str == "Resource" or class_name_str == "Requirement":
+		class_name_str = ""
 	if class_name_str.ends_with("Requirement"):
 		class_name_str = class_name_str.substr(0, class_name_str.length() - "Requirement".length())
-	
-	# Convert PascalCase to Title Case
-	var result = ""
-	for i in range(class_name_str.length()):
-		var c = class_name_str[i]
-		if i > 0 and c == c.to_upper() and class_name_str[i-1] == class_name_str[i-1].to_lower():
-			result += " "
+	if class_name_str.is_empty():
+		var script := get_script()
+		if script:
+			var script_path: String = script.resource_path
+			if not script_path.is_empty():
+				class_name_str = script_path.get_file().get_basename()
+	if class_name_str.is_empty():
+		class_name_str = "Requirement"
+
+	# Convert identifier-style names into Title Case
+	var cleaned := class_name_str.replace("_", " ").replace("-", " ")
+	var result := ""
+	for i in range(cleaned.length()):
+		var c := cleaned.substr(i, 1)
+		if i > 0:
+			var prev := cleaned.substr(i - 1, 1)
+			if c != " " and prev != " " and c == c.to_upper() and prev == prev.to_lower():
+				result += " "
 		result += c
-	
-	return result
+	result = result.strip_edges()
+	if result.is_empty():
+		result = "Requirement"
+	var words := result.split(" ", false)
+	for i in range(words.size()):
+		var word: String = words[i]
+		if not word.is_empty():
+			words[i] = word.substr(0, 1).to_upper() + word.substr(1).to_lower()
+	if words.is_empty():
+		return "Requirement"
+	return " ".join(words)
 
 ## Override this method to implement the requirement logic.
 ## Returns true if the tile can be placed at the given position, false otherwise.
