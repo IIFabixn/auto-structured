@@ -23,6 +23,10 @@ const RequirementItemScene = preload("res://addons/auto_structured/ui/controls/d
 const RequirementItem = preload("res://addons/auto_structured/ui/controls/details_panel_controls/requirement_item.gd")
 const TileThumbnailGenerator = preload("res://addons/auto_structured/utils/thumbnail_generator.gd")
 
+const SOCKET_MENU_ID_NONE := 1000000
+const SOCKET_MENU_ID_ANY := 1000001
+const SOCKET_MENU_META_TYPES := "socket_type_mapping"
+
 @onready var close_button: TextureButton = %CloseButton
 
 @onready var name_label: Label = %NameLabel
@@ -311,20 +315,30 @@ func _update_socket_menu_button_text(menu_button: MenuButton, direction: Vector3
 	
 	if sockets_in_direction.is_empty():
 		menu_button.text = "none"
-	else:
-		# Display socket type IDs as comma-separated list
-		var socket_type_ids: Array[String] = []
-		for socket in sockets_in_direction:
-			if socket.socket_type:
-				socket_type_ids.append(socket.socket_type.type_id)
-			else:
-				# Socket exists but has no type assigned - treat as "none"
-				socket_type_ids.append("none")
-		
-		if socket_type_ids.is_empty():
-			menu_button.text = "none"
-		else:
-			menu_button.text = ", ".join(socket_type_ids)
+		return
+
+	var has_any_type := false
+	var display_ids: Array[String] = []
+	for socket in sockets_in_direction:
+		if socket.socket_type == null:
+			continue
+		var type_id: String = socket.socket_type.type_id.strip_edges()
+		if type_id == "any":
+			has_any_type = true
+		elif type_id != "" and type_id != "none":
+			if not display_ids.has(type_id):
+				display_ids.append(type_id)
+
+	if has_any_type and display_ids.is_empty():
+		menu_button.text = "any"
+		return
+
+	if display_ids.is_empty():
+		menu_button.text = "none"
+		return
+
+	display_ids.sort()
+	menu_button.text = ", ".join(display_ids)
 
 func _update_preview_image() -> void:
 	"""Update the preview image/3D representation of the tile."""
@@ -498,23 +512,57 @@ func _on_socket_menu_about_to_popup(direction: Vector3i) -> void:
 	
 	var popup = menu_button.get_popup()
 	popup.clear()
-	
-	# Get all available socket types from library
-	var socket_types = library.get_socket_type_resources()
-	
-	# Get current sockets for this direction
+
 	var current_sockets = _tile.get_sockets_in_direction(direction)
-	
-	# Add socket types to menu with checkboxes
-	for i in range(socket_types.size()):
-		var socket_type = socket_types[i]
-		popup.add_check_item(socket_type.get_display_name(), i)
-		
-		# Check if this socket type is already on the tile in this direction
-		for socket in current_sockets:
-			if socket.socket_type == socket_type:
-				popup.set_item_checked(i, true)
-				break
+	var selected_type_ids: Array[String] = []
+	var has_any_type := false
+	for socket in current_sockets:
+		if socket.socket_type == null:
+			continue
+		var type_id: String = socket.socket_type.type_id.strip_edges()
+		if type_id == "any":
+			has_any_type = true
+		elif type_id != "" and type_id != "none":
+			if not selected_type_ids.has(type_id):
+				selected_type_ids.append(type_id)
+
+	var none_selected := current_sockets.is_empty() or (selected_type_ids.is_empty() and not has_any_type)
+	var any_selected := has_any_type and selected_type_ids.is_empty()
+
+	var none_index := popup.get_item_count()
+	popup.add_radio_check_item("None", SOCKET_MENU_ID_NONE)
+	popup.set_item_checked(none_index, none_selected)
+
+	var any_index := popup.get_item_count()
+	popup.add_radio_check_item("Any", SOCKET_MENU_ID_ANY)
+	popup.set_item_checked(any_index, any_selected)
+
+	popup.add_separator()
+
+	var socket_types = library.get_socket_type_resources()
+	var selectable_types: Array[SocketType] = []
+	for socket_type in socket_types:
+		if socket_type == null:
+			continue
+		var type_id: String = socket_type.type_id.strip_edges()
+		if type_id == "" or type_id == "none" or type_id == "any":
+			continue
+		selectable_types.append(socket_type)
+
+	menu_button.set_meta(SOCKET_MENU_META_TYPES, selectable_types)
+
+	for i in range(selectable_types.size()):
+		var socket_type: SocketType = selectable_types[i]
+		var label := socket_type.get_display_name()
+		if label.strip_edges() == "":
+			label = socket_type.type_id
+		else:
+			var trimmed_id := socket_type.type_id.strip_edges()
+			if trimmed_id != "" and label != trimmed_id:
+				label = "%s [%s]" % [label, trimmed_id]
+		var item_index := popup.get_item_count()
+		popup.add_check_item(label, i)
+		popup.set_item_checked(item_index, selected_type_ids.has(socket_type.type_id.strip_edges()))
 
 func _on_socket_menu_item_pressed(id: int, direction: Vector3i) -> void:
 	"""Handle socket menu item press - toggle socket type on/off for this direction."""
@@ -524,30 +572,21 @@ func _on_socket_menu_item_pressed(id: int, direction: Vector3i) -> void:
 	var library = _get_library()
 	if not library:
 		return
-	
-	var socket_types = library.get_socket_type_resources()
-	if id < 0 or id >= socket_types.size():
-		return
-	
-	var socket_type = socket_types[id]
-	var current_sockets = _tile.get_sockets_in_direction(direction)
-	
-	# Check if this socket type already exists for this direction
-	var existing_socket: Socket = null
-	for socket in current_sockets:
-		if socket.socket_type == socket_type:
-			existing_socket = socket
-			break
-	
-	if existing_socket:
-		# Remove the socket
-		_tile.remove_socket(existing_socket)
-	else:
-		# Add new socket with this type
-		var new_socket = Socket.new()
-		new_socket.direction = direction
-		new_socket.socket_type = socket_type
-		_tile.add_socket(new_socket)
+
+	match id:
+		SOCKET_MENU_ID_NONE:
+			_clear_direction_sockets(direction)
+		SOCKET_MENU_ID_ANY:
+			_set_direction_to_any(direction, library)
+		_:
+			var menu_button = _get_socket_menu_button_for_direction(direction)
+			if not menu_button:
+				return
+			var selectable_types: Array = menu_button.get_meta(SOCKET_MENU_META_TYPES, [])
+			if id < 0 or id >= selectable_types.size():
+				return
+			var socket_type: SocketType = selectable_types[id]
+			_toggle_socket_type(direction, socket_type)
 	
 	_update_sockets_display()
 	tile_modified.emit(_tile)
@@ -583,6 +622,72 @@ func _get_socket_menu_button_for_direction(direction: Vector3i) -> MenuButton:
 	elif direction == Vector3i.BACK:
 		return backSocketMenuButton
 	return null
+
+func _clear_direction_sockets(direction: Vector3i) -> void:
+	"""Remove all sockets for a given direction."""
+	if not _tile:
+		return
+	var sockets = _tile.get_sockets_in_direction(direction)
+	for socket in sockets:
+		_tile.remove_socket(socket)
+
+func _set_direction_to_any(direction: Vector3i, library: ModuleLibrary) -> void:
+	"""Replace sockets in the direction with a single 'any' socket."""
+	if not _tile:
+		return
+	_clear_direction_sockets(direction)
+	var any_type: SocketType = library.get_socket_type_by_id("any")
+	if not any_type:
+		any_type = library.ensure_socket_type("any")
+	if not any_type:
+		push_warning("DetailsPanel: Could not resolve 'any' socket type in library")
+		return
+	var socket = Socket.new()
+	socket.direction = direction
+	socket.socket_type = any_type
+	_tile.add_socket(socket)
+
+func _toggle_socket_type(direction: Vector3i, socket_type: SocketType) -> void:
+	"""Toggle a specific socket type for a direction."""
+	if socket_type == null:
+		return
+	if not _tile:
+		return
+
+	var sockets = _tile.get_sockets_in_direction(direction)
+	for socket in sockets:
+		if socket.socket_type == socket_type:
+			_tile.remove_socket(socket)
+			return
+
+	_remove_placeholder_sockets(direction)
+	_remove_any_socket(direction)
+	var new_socket = Socket.new()
+	new_socket.direction = direction
+	new_socket.socket_type = socket_type
+	_tile.add_socket(new_socket)
+
+func _remove_placeholder_sockets(direction: Vector3i) -> void:
+	"""Remove sockets with empty type or 'none' marker in a direction."""
+	if not _tile:
+		return
+	var sockets = _tile.get_sockets_in_direction(direction)
+	for socket in sockets:
+		if socket.socket_type == null:
+			_tile.remove_socket(socket)
+			continue
+		var type_id: String = socket.socket_type.type_id.strip_edges()
+		if type_id == "" or type_id == "none":
+			_tile.remove_socket(socket)
+
+func _remove_any_socket(direction: Vector3i) -> void:
+	"""Remove wildcard 'any' sockets from a direction."""
+	if not _tile:
+		return
+	var sockets = _tile.get_sockets_in_direction(direction)
+	for socket in sockets:
+		if socket.socket_type and socket.socket_type.type_id.strip_edges() == "any":
+			_tile.remove_socket(socket)
 
 func _validate_tile() -> void:
 	"""Validate current tile and emit validation events."""
