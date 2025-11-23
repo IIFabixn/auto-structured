@@ -14,11 +14,13 @@ const AutoStructuredUndoRedo = preload("res://addons/auto_structured/core/undo_r
 const SelectionManager = preload("res://addons/auto_structured/core/events/selection_manager.gd")
 const TileItemScene = preload("res://addons/auto_structured/ui/controls/module_library_panel/tile_item.tscn")
 const TileItem = preload("res://addons/auto_structured/ui/controls/module_library_panel/tile_item.gd")
+const ManageLibraryDialogScene = preload("res://addons/auto_structured/ui/dialogs/manage_library_dialog.tscn")
 
 const CREATE = 0
 const RENAME = 1
 const SAVE = 2
 const DELETE = 3
+const MANAGE = 4
 
 @onready var library_option_button: OptionButton = %LibraryOptionButton
 @onready var library_menu_button: MenuButton = %LibraryMenuButton
@@ -82,6 +84,7 @@ func _setup_library_menu() -> void:
 	popup.add_separator()
 	popup.add_item("Rename Library", RENAME)
 	popup.add_item("Save Library", SAVE)
+	popup.add_item("Manage Tags & Socket Types", MANAGE)
 	popup.add_separator()
 	popup.add_item("Delete Library", DELETE)
 	
@@ -98,6 +101,8 @@ func _on_library_menu_id_pressed(id: int) -> void:
 			_save_library()
 		DELETE:
 			_delete_library()
+		MANAGE:
+			_open_manage_dialog()
 
 ## ============================================================================
 ## Library Management Functions
@@ -308,6 +313,35 @@ func _delete_library() -> void:
 	
 	add_child(dialog)
 	dialog.popup_centered()
+
+func _open_manage_dialog() -> void:
+	"""Open the management dialog for tags and socket types."""
+	if current_library == null:
+		_show_error("No library is currently loaded.")
+		return
+
+	var dialog = ManageLibraryDialogScene.instantiate()
+	if dialog == null:
+		_show_error("Failed to open management dialog.")
+		return
+
+	if not dialog.has_method("setup"):
+		_show_error("Management dialog has invalid type.")
+		dialog.queue_free()
+		return
+
+	dialog.confirmed.connect(func():
+		_update_tile_list()
+		_save_library()
+		dialog.queue_free()
+	)
+	dialog.canceled.connect(dialog.queue_free)
+	dialog.close_requested.connect(dialog.queue_free)
+
+	add_child(dialog)
+	dialog.popup_centered_ratio(0.8)
+	dialog.grab_focus()
+	dialog.call_deferred("setup", current_library)
 
 ## ============================================================================
 ## Library Discovery and Loading

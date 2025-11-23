@@ -72,6 +72,69 @@ func add_available_tag(tag: String) -> void:
 		available_tags.sort()
 		library_changed.emit()
 
+func remove_available_tag(tag: String, remove_from_tiles: bool = true) -> bool:
+	"""Remove a tag from the available pool and optionally from all tiles."""
+	var clean_tag := String(tag).strip_edges()
+	if clean_tag.is_empty():
+		return false
+
+	if not available_tags.has(clean_tag):
+		return false
+
+	available_tags.erase(clean_tag)
+	available_tags.sort()
+
+	var modified_tiles := false
+	if remove_from_tiles:
+		for tile in tiles:
+			if tile.has_tag(clean_tag):
+				tile.remove_tag(clean_tag)
+				notify_tile_modified(tile, "tags")
+				modified_tiles = true
+
+	if not modified_tiles:
+		library_changed.emit()
+
+	return true
+
+func rename_available_tag(old_name: String, new_name: String) -> bool:
+	"""Rename an available tag and update all tiles using it."""
+	var clean_old := String(old_name).strip_edges()
+	var clean_new := String(new_name).strip_edges()
+
+	if clean_old.is_empty() or clean_new.is_empty():
+		return false
+
+	if clean_old == clean_new:
+		return true
+
+	if not available_tags.has(clean_old):
+		return false
+
+	if available_tags.has(clean_new):
+		return false
+
+	var index := available_tags.find(clean_old)
+	if index == -1:
+		return false
+
+	available_tags[index] = clean_new
+	available_tags.sort()
+
+	var modified_tiles := false
+	for tile in tiles:
+		if tile.has_tag(clean_old):
+			tile.remove_tag(clean_old)
+			if not tile.has_tag(clean_new):
+				tile.add_tag(clean_new)
+			notify_tile_modified(tile, "tags")
+			modified_tiles = true
+
+	if not modified_tiles:
+		library_changed.emit()
+
+	return true
+
 func get_available_tags() -> Array[String]:
 	"""Get all available tags for this library."""
 	return available_tags.duplicate()

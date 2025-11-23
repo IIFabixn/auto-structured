@@ -3,4 +3,209 @@
 [ext_resource type="Script" uid="uid://byn03q2mfpvsq" path="res://addons/auto_structured/ui/dialogs/manage_library_dialog.gd" id="1_w2yoq"]
 
 [node name="ManageLibraryDialog" type="ConfirmationDialog"]
+oversampling_override = 1.0
+title = "Manage Library Metadata"
+position = Vector2i(0, 36)
+size = Vector2i(960, 560)
+visible = true
+min_size = Vector2i(720, 420)
+ok_button_text = "Apply"
 script = ExtResource("1_w2yoq")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -49.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TabContainer" type="TabContainer" parent="MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+current_tab = 1
+
+[node name="TagsTab" type="Control" parent="MarginContainer/VBoxContainer/TabContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+metadata/_tab_index = 0
+
+[node name="TagsSplit" type="HSplitContainer" parent="MarginContainer/VBoxContainer/TabContainer/TagsTab"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+split_offset = 280
+
+[node name="TagsLeftPanel" type="VBoxContainer" parent="MarginContainer/VBoxContainer/TabContainer/TagsTab/TagsSplit"]
+custom_minimum_size = Vector2(260, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TagsSearchRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer/TabContainer/TagsTab/TagsSplit/TagsLeftPanel"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TagsSearchLine" type="LineEdit" parent="MarginContainer/VBoxContainer/TabContainer/TagsTab/TagsSplit/TagsLeftPanel/TagsSearchRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Search tags"
+
+[node name="TagsAddButton" type="Button" parent="MarginContainer/VBoxContainer/TabContainer/TagsTab/TagsSplit/TagsLeftPanel/TagsSearchRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Add"
+
+[node name="TagsActionRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer/TabContainer/TagsTab/TagsSplit/TagsLeftPanel"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TagsRenameButton" type="Button" parent="MarginContainer/VBoxContainer/TabContainer/TagsTab/TagsSplit/TagsLeftPanel/TagsActionRow"]
+unique_name_in_owner = true
+layout_mode = 2
+disabled = true
+text = "Rename"
+
+[node name="TagsDeleteButton" type="Button" parent="MarginContainer/VBoxContainer/TabContainer/TagsTab/TagsSplit/TagsLeftPanel/TagsActionRow"]
+unique_name_in_owner = true
+layout_mode = 2
+disabled = true
+text = "Delete"
+
+[node name="TagsTree" type="Tree" parent="MarginContainer/VBoxContainer/TabContainer/TagsTab/TagsSplit/TagsLeftPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+column_titles_visible = true
+hide_root = true
+
+[node name="TagsRightPanel" type="VBoxContainer" parent="MarginContainer/VBoxContainer/TabContainer/TagsTab/TagsSplit"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TagsUsageTitle" type="Label" parent="MarginContainer/VBoxContainer/TabContainer/TagsTab/TagsSplit/TagsRightPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Tiles using this tag"
+
+[node name="TagsUsageSummary" type="Label" parent="MarginContainer/VBoxContainer/TabContainer/TagsTab/TagsSplit/TagsRightPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HeaderSmall"
+text = "Select a tag to view usage"
+
+[node name="TagsUsageTree" type="Tree" parent="MarginContainer/VBoxContainer/TabContainer/TagsTab/TagsSplit/TagsRightPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+columns = 2
+column_titles_visible = true
+hide_root = true
+
+[node name="SocketsTab" type="Control" parent="MarginContainer/VBoxContainer/TabContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+metadata/_tab_index = 1
+
+[node name="SocketsSplit" type="HSplitContainer" parent="MarginContainer/VBoxContainer/TabContainer/SocketsTab"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+split_offset = 280
+
+[node name="SocketsLeftPanel" type="VBoxContainer" parent="MarginContainer/VBoxContainer/TabContainer/SocketsTab/SocketsSplit"]
+custom_minimum_size = Vector2(260, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="SocketsSearchRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer/TabContainer/SocketsTab/SocketsSplit/SocketsLeftPanel"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SocketsSearchLine" type="LineEdit" parent="MarginContainer/VBoxContainer/TabContainer/SocketsTab/SocketsSplit/SocketsLeftPanel/SocketsSearchRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Search socket types"
+
+[node name="SocketsAddButton" type="Button" parent="MarginContainer/VBoxContainer/TabContainer/SocketsTab/SocketsSplit/SocketsLeftPanel/SocketsSearchRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Add"
+
+[node name="SocketsActionRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer/TabContainer/SocketsTab/SocketsSplit/SocketsLeftPanel"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SocketsRenameButton" type="Button" parent="MarginContainer/VBoxContainer/TabContainer/SocketsTab/SocketsSplit/SocketsLeftPanel/SocketsActionRow"]
+unique_name_in_owner = true
+layout_mode = 2
+disabled = true
+text = "Rename"
+
+[node name="SocketsDeleteButton" type="Button" parent="MarginContainer/VBoxContainer/TabContainer/SocketsTab/SocketsSplit/SocketsLeftPanel/SocketsActionRow"]
+unique_name_in_owner = true
+layout_mode = 2
+disabled = true
+text = "Delete"
+
+[node name="SocketsTree" type="Tree" parent="MarginContainer/VBoxContainer/TabContainer/SocketsTab/SocketsSplit/SocketsLeftPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+column_titles_visible = true
+hide_root = true
+
+[node name="SocketsRightPanel" type="VBoxContainer" parent="MarginContainer/VBoxContainer/TabContainer/SocketsTab/SocketsSplit"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="SocketsUsageTitle" type="Label" parent="MarginContainer/VBoxContainer/TabContainer/SocketsTab/SocketsSplit/SocketsRightPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Tile sockets using this type"
+
+[node name="SocketsUsageSummary" type="Label" parent="MarginContainer/VBoxContainer/TabContainer/SocketsTab/SocketsSplit/SocketsRightPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HeaderSmall"
+text = "Select a socket type to view usage"
+
+[node name="SocketsUsageTree" type="Tree" parent="MarginContainer/VBoxContainer/TabContainer/SocketsTab/SocketsSplit/SocketsRightPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+columns = 2
+column_titles_visible = true
+hide_root = true
