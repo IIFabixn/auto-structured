@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" uid="uid://cmyung7rwf4s0" path="res://addons/auto_structured/assets/preview.svg" id="7_h81gu"]
 
 [node name="DetailsPanel" type="Control"]
+visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -89,10 +90,9 @@ stretch_mode = 5
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-current_tab = 2
+current_tab = 0
 
 [node name="Generel" type="ScrollContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer"]
-visible = false
 layout_mode = 2
 metadata/_tab_index = 0
 
@@ -211,6 +211,7 @@ layout_mode = 2
 layout_mode = 2
 
 [node name="Sockets" type="ScrollContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer"]
+visible = false
 layout_mode = 2
 metadata/_tab_index = 2
 
@@ -254,6 +255,7 @@ icon = ExtResource("3_qj0jw")
 alignment = 0
 clip_text = true
 icon_alignment = 2
+metadata/socket_direction = Vector3i(0, 1, 0)
 
 [node name="PreviewUpSocketButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
 unique_name_in_owner = true
@@ -262,6 +264,7 @@ layout_mode = 2
 size_flags_horizontal = 8
 texture_normal = ExtResource("7_h81gu")
 stretch_mode = 3
+metadata/socket_direction = Vector3i(0, 1, 0)
 
 [node name="DownSocketLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
 layout_mode = 2
@@ -277,6 +280,7 @@ icon = ExtResource("3_qj0jw")
 alignment = 0
 clip_text = true
 icon_alignment = 2
+metadata/socket_direction = Vector3i(0, -1, 0)
 
 [node name="PreviewDownSocketButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
 unique_name_in_owner = true
@@ -285,6 +289,7 @@ layout_mode = 2
 size_flags_horizontal = 8
 texture_normal = ExtResource("7_h81gu")
 stretch_mode = 3
+metadata/socket_direction = Vector3i(0, -1, 0)
 
 [node name="LeftSocketLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
 layout_mode = 2
@@ -298,6 +303,7 @@ icon = ExtResource("3_qj0jw")
 alignment = 0
 clip_text = true
 icon_alignment = 2
+metadata/socket_direction = Vector3i(-1, 0, 0)
 
 [node name="PreviewLeftSocketButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
 unique_name_in_owner = true
@@ -306,6 +312,7 @@ layout_mode = 2
 size_flags_horizontal = 8
 texture_normal = ExtResource("7_h81gu")
 stretch_mode = 3
+metadata/socket_direction = Vector3i(-1, 0, 0)
 
 [node name="RightSocketLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
 layout_mode = 2
@@ -319,6 +326,7 @@ icon = ExtResource("3_qj0jw")
 alignment = 0
 clip_text = true
 icon_alignment = 2
+metadata/socket_direction = Vector3i(1, 0, 0)
 
 [node name="PreviewRightSocketButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
 unique_name_in_owner = true
@@ -327,6 +335,7 @@ layout_mode = 2
 size_flags_horizontal = 8
 texture_normal = ExtResource("7_h81gu")
 stretch_mode = 3
+metadata/socket_direction = Vector3i(1, 0, 0)
 
 [node name="FrontSocketLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
 layout_mode = 2
@@ -342,6 +351,7 @@ icon = ExtResource("3_qj0jw")
 alignment = 0
 clip_text = true
 icon_alignment = 2
+metadata/socket_direction = Vector3i(0, 0, -1)
 
 [node name="PreviewFrontSocketButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
 unique_name_in_owner = true
@@ -350,6 +360,7 @@ layout_mode = 2
 size_flags_horizontal = 8
 texture_normal = ExtResource("7_h81gu")
 stretch_mode = 3
+metadata/socket_direction = Vector3i(0, 0, -1)
 
 [node name="BackSocketLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
 layout_mode = 2
@@ -363,6 +374,7 @@ icon = ExtResource("3_qj0jw")
 alignment = 0
 clip_text = true
 icon_alignment = 2
+metadata/socket_direction = Vector3i(0, 0, 1)
 
 [node name="PreviewBackSocketButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
 unique_name_in_owner = true
@@ -371,3 +383,4 @@ layout_mode = 2
 size_flags_horizontal = 8
 texture_normal = ExtResource("7_h81gu")
 stretch_mode = 3
+metadata/socket_direction = Vector3i(0, 0, 1)

@@ -14,6 +14,8 @@ const Socket = preload("res://addons/auto_structured/core/socket.gd")
 @onready var tags_usage_title: Label = %TagsUsageTitle
 @onready var tags_usage_summary: Label = %TagsUsageSummary
 @onready var tags_usage_tree: Tree = %TagsUsageTree
+@onready var tags_apply_button: Button = %TagsApplyButton
+@onready var tags_revoke_button: Button = %TagsRevokeButton
 
 @onready var sockets_search: LineEdit = %SocketsSearchLine
 @onready var sockets_tree: Tree = %SocketsTree
@@ -23,6 +25,8 @@ const Socket = preload("res://addons/auto_structured/core/socket.gd")
 @onready var sockets_usage_title: Label = %SocketsUsageTitle
 @onready var sockets_usage_summary: Label = %SocketsUsageSummary
 @onready var sockets_usage_tree: Tree = %SocketsUsageTree
+@onready var sockets_assign_button: Button = %SocketsAssignButton
+@onready var sockets_revoke_button: Button = %SocketsRevokeButton
 
 var _library: ModuleLibrary = null
 
@@ -98,6 +102,10 @@ func _connect_ui() -> void:
 		tags_rename_button.pressed.connect(_on_rename_tag_pressed)
 	if tags_delete_button:
 		tags_delete_button.pressed.connect(_on_delete_tag_pressed)
+	if tags_apply_button:
+		tags_apply_button.pressed.connect(_on_apply_tag_to_tiles_pressed)
+	if tags_revoke_button:
+		tags_revoke_button.pressed.connect(_on_revoke_tag_from_tiles_pressed)
 	if tags_tree:
 		tags_tree.item_selected.connect(_on_tag_selected)
 		tags_tree.item_activated.connect(_on_tag_activated)
@@ -113,6 +121,10 @@ func _connect_ui() -> void:
 		sockets_rename_button.pressed.connect(_on_rename_socket_pressed)
 	if sockets_delete_button:
 		sockets_delete_button.pressed.connect(_on_delete_socket_pressed)
+	if sockets_assign_button:
+		sockets_assign_button.pressed.connect(_on_assign_socket_to_sockets_pressed)
+	if sockets_revoke_button:
+		sockets_revoke_button.pressed.connect(_on_revoke_socket_from_sockets_pressed)
 	if sockets_tree:
 		sockets_tree.item_selected.connect(_on_socket_selected)
 		sockets_tree.item_activated.connect(_on_socket_activated)
@@ -214,10 +226,52 @@ func _refresh_sockets_list() -> void:
 	_update_buttons_state()
 
 func _update_buttons_state() -> void:
-	tags_rename_button.disabled = _selected_tag.is_empty()
-	tags_delete_button.disabled = _selected_tag.is_empty()
-	sockets_rename_button.disabled = _selected_socket_id.is_empty() or _selected_socket_id in ["none", "any"]
-	sockets_delete_button.disabled = _selected_socket_id.is_empty() or _selected_socket_id in ["none", "any"]
+	var has_tag_selection := not _selected_tag.is_empty()
+	if tags_rename_button:
+		tags_rename_button.disabled = not has_tag_selection
+	if tags_delete_button:
+		tags_delete_button.disabled = not has_tag_selection
+	if tags_apply_button:
+		var disable_apply := not has_tag_selection
+		if not disable_apply and _library != null:
+			var clean = _selected_tag.strip_edges()
+			disable_apply = true
+			for tile in _library.tiles:
+				if not tile.has_tag(clean):
+					disable_apply = false
+					break
+		tags_apply_button.disabled = disable_apply
+	if tags_revoke_button:
+		var disable_revoke := not has_tag_selection
+		if not disable_revoke and _library != null:
+			disable_revoke = _get_tiles_using_tag(_selected_tag).is_empty()
+		tags_revoke_button.disabled = disable_revoke
+
+	var has_socket_selection := not _selected_socket_id.is_empty()
+	var is_reserved_socket := _selected_socket_id in ["none", "any"]
+	if sockets_rename_button:
+		sockets_rename_button.disabled = (not has_socket_selection) or is_reserved_socket
+	if sockets_delete_button:
+		sockets_delete_button.disabled = (not has_socket_selection) or is_reserved_socket
+	if sockets_assign_button:
+		var disable_assign := not has_socket_selection or _library == null
+		if not disable_assign:
+			disable_assign = true
+			var clean_socket = _selected_socket_id.strip_edges()
+			for tile in _library.tiles:
+				for socket in tile.sockets:
+					var current_id = socket.socket_type.type_id if socket.socket_type else ""
+					if current_id != clean_socket:
+						disable_assign = false
+						break
+				if not disable_assign:
+					break
+		sockets_assign_button.disabled = disable_assign
+	if sockets_revoke_button:
+		var disable_socket_revoke := (not has_socket_selection) or _library == null
+		if not disable_socket_revoke:
+			disable_socket_revoke = _get_socket_usage(_selected_socket_id).is_empty()
+		sockets_revoke_button.disabled = disable_socket_revoke
 
 func _on_tag_selected() -> void:
 	var item = tags_tree.get_selected()
@@ -318,6 +372,47 @@ func _on_delete_tag_pressed() -> void:
 	)
 	confirm.canceled.connect(confirm.queue_free)
 	confirm.popup_centered()
+
+func _on_apply_tag_to_tiles_pressed() -> void:
+	if _library == null or _selected_tag.is_empty():
+		return
+	var clean = _selected_tag.strip_edges()
+	if clean == "":
+		return
+	var candidates: Array[Tile] = []
+	for tile in _library.tiles:
+		if not tile.has_tag(clean):
+			candidates.append(tile)
+	if candidates.is_empty():
+		_show_warning("All tiles already have the '%s' tag." % clean)
+		return
+	var dialog = _create_selection_dialog("Apply Tag", "Select tiles to add the '%s' tag:" % clean, candidates, func(tile: Tile): return tile.name)
+	dialog.confirmed.connect(func():
+		var selected_tiles = _get_dialog_selected_entries(dialog)
+		if not selected_tiles.is_empty():
+			_apply_tag_to_tiles(clean, selected_tiles)
+		dialog.queue_free()
+	)
+	dialog.canceled.connect(dialog.queue_free)
+	dialog.popup_centered_ratio(0.5)
+
+func _on_revoke_tag_from_tiles_pressed() -> void:
+	if _library == null or _selected_tag.is_empty():
+		return
+	var clean = _selected_tag.strip_edges()
+	var candidates = _get_tiles_using_tag(clean)
+	if candidates.is_empty():
+		_show_warning("No tiles currently use the '%s' tag." % clean)
+		return
+	var dialog = _create_selection_dialog("Revoke Tag", "Select tiles to remove the '%s' tag:" % clean, candidates, func(tile: Tile): return tile.name)
+	dialog.confirmed.connect(func():
+		var selected_tiles = _get_dialog_selected_entries(dialog)
+		if not selected_tiles.is_empty():
+			_remove_tag_from_tiles(clean, selected_tiles)
+		dialog.queue_free()
+	)
+	dialog.canceled.connect(dialog.queue_free)
+	dialog.popup_centered_ratio(0.5)
 
 func _try_delete_tag(name: String) -> bool:
 	var clean = name.strip_edges()
@@ -444,6 +539,48 @@ func _on_delete_socket_pressed() -> void:
 	confirm.canceled.connect(confirm.queue_free)
 	confirm.popup_centered()
 
+func _on_assign_socket_to_sockets_pressed() -> void:
+	if _library == null or _selected_socket_id.is_empty():
+		return
+	var clean = _selected_socket_id.strip_edges()
+	if clean == "":
+		return
+	var candidates = _get_sockets_not_matching_type(clean)
+	if candidates.is_empty():
+		_show_warning("All sockets already use the '%s' type or are unavailable." % clean)
+		return
+	var dialog = _create_selection_dialog("Assign Socket Type", "Select sockets to assign the '%s' type:" % clean, candidates, func(entry: SocketUsage):
+		return "%s  —  %s (current: %s)" % [entry.tile.name, _direction_to_string(entry.direction), entry.socket.socket_type.type_id if entry.socket.socket_type else "none"])
+	dialog.confirmed.connect(func():
+		var selected_entries = _get_dialog_selected_entries(dialog)
+		if not selected_entries.is_empty():
+			_assign_socket_type_to_entries(clean, selected_entries)
+		dialog.queue_free()
+	)
+	dialog.canceled.connect(dialog.queue_free)
+	dialog.popup_centered_ratio(0.6)
+
+func _on_revoke_socket_from_sockets_pressed() -> void:
+	if _library == null or _selected_socket_id.is_empty():
+		return
+	var clean = _selected_socket_id.strip_edges()
+	if clean == "":
+		return
+	var candidates = _get_socket_usage(clean)
+	if candidates.is_empty():
+		_show_warning("No sockets currently use the '%s' type." % clean)
+		return
+	var dialog = _create_selection_dialog("Revoke Socket Type", "Select sockets to revert from the '%s' type:" % clean, candidates, func(entry: SocketUsage):
+		return "%s  —  %s" % [entry.tile.name, _direction_to_string(entry.direction)])
+	dialog.confirmed.connect(func():
+		var selected_entries = _get_dialog_selected_entries(dialog)
+		if not selected_entries.is_empty():
+			_revoke_socket_type_from_entries(clean, selected_entries)
+		dialog.queue_free()
+	)
+	dialog.canceled.connect(dialog.queue_free)
+	dialog.popup_centered_ratio(0.6)
+
 func _try_delete_socket_type(id: String) -> bool:
 	var clean = id.strip_edges()
 	if clean == "" or not _socket_records.has(clean):
@@ -506,6 +643,7 @@ func _update_socket_usage(socket_id: String = "") -> void:
 
 class SocketUsage:
 	var tile: Tile
+	var socket: Socket
 	var direction: Vector3i
 
 func _get_tiles_using_tag(tag: String) -> Array[Tile]:
@@ -547,8 +685,25 @@ func _get_socket_usage(socket_id: String) -> Array[SocketUsage]:
 			if id in actual_ids:
 				var usage = SocketUsage.new()
 				usage.tile = tile
+				usage.socket = socket
 				usage.direction = socket.direction
 				results.append(usage)
+	return results
+
+func _get_sockets_not_matching_type(socket_id: String) -> Array[SocketUsage]:
+	var results: Array[SocketUsage] = []
+	if _library == null:
+		return results
+	var clean = socket_id.strip_edges()
+	for tile in _library.tiles:
+		for socket in tile.sockets:
+			var current_id = socket.socket_type.type_id if socket.socket_type else ""
+			if current_id != clean:
+				var entry = SocketUsage.new()
+				entry.tile = tile
+				entry.socket = socket
+				entry.direction = socket.direction
+				results.append(entry)
 	return results
 
 func _map_socket_to_library_ids(socket_id: String) -> Array[String]:
@@ -576,6 +731,116 @@ func _extract_line_edit_text(dialog: AcceptDialog) -> String:
 		return ""
 	var line_edit: LineEdit = dialog.get_meta("line_edit") if dialog.has_meta("line_edit") else null
 	return "" if line_edit == null else line_edit.text
+
+func _create_selection_dialog(title: String, message: String, entries: Array, label_func: Callable, select_all := true) -> AcceptDialog:
+	var dialog = AcceptDialog.new()
+	dialog.title = title
+	dialog.dialog_text = message
+	var list_container = VBoxContainer.new()
+	list_container.custom_minimum_size = Vector2(420, 260)
+	list_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	list_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var list = ItemList.new()
+	list.select_mode = ItemList.SELECT_MULTI
+	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	for i in range(entries.size()):
+		var entry = entries[i]
+		var label_text = label_func.call(entry) if label_func != null else String(entry)
+		list.add_item(label_text)
+		if select_all:
+			list.select(i, true)
+	list_container.add_child(list)
+	if dialog.has_method("get_vbox"):
+		dialog.get_vbox().add_child(list_container)
+	else:
+		dialog.add_child(list_container)
+	dialog.set_meta("selection_entries", entries.duplicate())
+	dialog.set_meta("selection_list", list)
+	add_child(dialog)
+	dialog.popup_window = true
+	list.call_deferred("grab_focus")
+	return dialog
+
+func _get_dialog_selected_entries(dialog: AcceptDialog) -> Array:
+	var result: Array = []
+	if dialog == null:
+		return result
+	var list: ItemList = dialog.get_meta("selection_list") if dialog.has_meta("selection_list") else null
+	var entries: Array = dialog.get_meta("selection_entries") if dialog.has_meta("selection_entries") else []
+	if list == null or entries.is_empty():
+		return result
+	for index in list.get_selected_items():
+		if index >= 0 and index < entries.size():
+			result.append(entries[index])
+	return result
+
+func _apply_tag_to_tiles(tag: String, tiles: Array) -> void:
+	var clean = tag.strip_edges()
+	if clean == "" or _library == null:
+		return
+	_library.add_available_tag(clean)
+	var modified := false
+	for entry in tiles:
+		if entry is Tile:
+			var tile: Tile = entry
+			if tile.add_tag(clean):
+				_library.notify_tile_modified(tile, "tags")
+				modified = true
+	if modified:
+		_update_tag_usage(clean)
+		_update_buttons_state()
+
+func _remove_tag_from_tiles(tag: String, tiles: Array) -> void:
+	var clean = tag.strip_edges()
+	if clean == "" or _library == null:
+		return
+	var modified := false
+	for entry in tiles:
+		if entry is Tile:
+			var tile: Tile = entry
+			if tile.has_tag(clean):
+				tile.remove_tag(clean)
+				_library.notify_tile_modified(tile, "tags")
+				modified = true
+	if modified:
+		_update_tag_usage(clean)
+		_update_buttons_state()
+
+func _assign_socket_type_to_entries(socket_id: String, entries: Array) -> void:
+	if _library == null:
+		return
+	var target_type = _library.ensure_socket_type(socket_id)
+	if target_type == null:
+		return
+	var modified_tiles: Dictionary = {}
+	for entry in entries:
+		if entry is SocketUsage:
+			var usage: SocketUsage = entry
+			usage.socket.socket_type = target_type
+			modified_tiles[usage.tile] = true
+	for tile in modified_tiles.keys():
+		_library.notify_tile_modified(tile, "sockets")
+	_update_socket_usage(socket_id)
+	_update_buttons_state()
+
+func _revoke_socket_type_from_entries(socket_id: String, entries: Array) -> void:
+	if _library == null:
+		return
+	var fallback = _library.ensure_socket_type("none")
+	var modified_tiles: Dictionary = {}
+	for entry in entries:
+		if entry is SocketUsage:
+			var usage: SocketUsage = entry
+			if fallback != null:
+				usage.socket.socket_type = fallback
+			else:
+				usage.socket.socket_type = null
+			modified_tiles[usage.tile] = true
+	for tile in modified_tiles.keys():
+		_library.notify_tile_modified(tile, "sockets")
+	_update_socket_usage(socket_id)
+	_update_buttons_state()
 
 func _create_line_edit_dialog(title: String, message: String, initial: String = "") -> AcceptDialog:
 	var dialog = AcceptDialog.new()

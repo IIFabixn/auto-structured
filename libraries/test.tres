@@ -159,7 +159,7 @@ socket_type = SubResource("Resource_xc3r3")
 
 [sub_resource type="Resource" id="Resource_a7quu"]
 script = ExtResource("6_d002p")
-socket_type = SubResource("Resource_8lv1h")
+socket_type = SubResource("Resource_ebtt5")
 direction = Vector3i(0, -1, 0)
 
 [sub_resource type="Resource" id="Resource_qqw7i"]
@@ -175,4 +175,4 @@ script = ExtResource("1_8lv1h")
 library_name = "Test"
 tiles = Array[ExtResource("3_ey63r")]([SubResource("Resource_2fdcs"), SubResource("Resource_rtcot"), SubResource("Resource_qqw7i")])
 socket_types = Array[ExtResource("2_gy8lu")]([SubResource("Resource_7i2i1"), SubResource("Resource_ussj3"), SubResource("Resource_8lv1h"), SubResource("Resource_gy8lu"), SubResource("Resource_ey63r"), SubResource("Resource_d002p"), SubResource("Resource_wryci"), SubResource("Resource_xc3r3"), SubResource("Resource_66rhd"), SubResource("Resource_ebtt5")])
-available_tags = Array[String](["test", "wood"])
+available_tags = Array[String](["wood"])
