@@ -184,7 +184,51 @@ func setup_library(library: ModuleLibrary) -> void:
 	Set the current library reference.
 	Should be called by the parent viewport when library changes.
 	"""
+	if current_library != null:
+		_disconnect_library_signals()
 	current_library = library
+	_connect_library_signals()
+	if _tile != null:
+		if current_library == null or not current_library.tiles.has(_tile):
+			tile = null
+			hide()
+		elif is_node_ready():
+			call_deferred("_update_ui")
+	elif current_library == null:
+		hide()
+
+func _connect_library_signals() -> void:
+	if current_library == null:
+		return
+	var modified_callable := Callable(self, "_on_library_tile_modified")
+	if not current_library.tile_modified.is_connected(modified_callable):
+		current_library.tile_modified.connect(modified_callable)
+	var removed_callable := Callable(self, "_on_library_tile_removed")
+	if not current_library.tile_removed.is_connected(removed_callable):
+		current_library.tile_removed.connect(removed_callable)
+
+func _disconnect_library_signals() -> void:
+	if current_library == null:
+		return
+	var modified_callable := Callable(self, "_on_library_tile_modified")
+	if current_library.tile_modified.is_connected(modified_callable):
+		current_library.tile_modified.disconnect(modified_callable)
+	var removed_callable := Callable(self, "_on_library_tile_removed")
+	if current_library.tile_removed.is_connected(removed_callable):
+		current_library.tile_removed.disconnect(removed_callable)
+
+func _on_library_tile_modified(tile: Tile, _property: String) -> void:
+	if tile != _tile:
+		return
+	if not is_node_ready():
+		return
+	call_deferred("_update_ui")
+
+func _on_library_tile_removed(tile: Tile) -> void:
+	if tile != _tile:
+		return
+	self.tile = null
+	hide()
 
 func setup_validation_bus(bus: ValidationEventBus) -> void:
 	"""
