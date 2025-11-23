@@ -57,7 +57,14 @@ func _generate_thumbnail() -> void:
 	"""Generate a thumbnail image for the tile."""
 	if not _tile or not tileImage:
 		return
-		
+	
+	var current_tile = _tile
 	var texture = await TileThumbnailGenerator.generate_thumbnail(_tile, self, Vector2i(64, 64))
-	if texture:
-		tileImage.texture = texture
+	
+	if not is_instance_valid(self) or not is_instance_valid(tileImage):
+		return
+	
+	if _tile != current_tile:
+		return
+	
+	tileImage.texture = texture

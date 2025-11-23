@@ -14,6 +14,13 @@ static func generate_thumbnail(tile: Tile, parent_node: Node, size: Vector2i = V
 	if not tile or not parent_node:
 		return null
 	
+	if not _is_valid_object(parent_node):
+		return null
+	
+	var tree := parent_node.get_tree()
+	if tree == null:
+		return null
+	
 	# Get the 3D instance (either from scene or mesh)
 	var instance: Node3D = null
 	if tile.scene:
@@ -39,7 +46,10 @@ static func generate_thumbnail(tile: Tile, parent_node: Node, size: Vector2i = V
 	viewport.add_child(instance)
 	
 	# Wait a frame for the instance to be ready
-	await parent_node.get_tree().process_frame
+	await tree.process_frame
+	if not _is_thumbnail_context_valid(parent_node, viewport, instance):
+		_safe_queue_free(viewport)
+		return null
 	
 	# Calculate the bounding box to frame the object
 	var aabb = _get_visual_aabb(instance)
@@ -91,22 +101,42 @@ static func generate_thumbnail(tile: Tile, parent_node: Node, size: Vector2i = V
 	viewport.add_child(back_light)
 	
 	# Wait for multiple frames to ensure rendering is complete
-	await parent_node.get_tree().process_frame
-	await parent_node.get_tree().process_frame
+	await tree.process_frame
+	if not _is_thumbnail_context_valid(parent_node, viewport, instance):
+		_safe_queue_free(viewport)
+		return null
+	await tree.process_frame
+	if not _is_thumbnail_context_valid(parent_node, viewport, instance):
+		_safe_queue_free(viewport)
+		return null
 	await RenderingServer.frame_post_draw
+	if not _is_thumbnail_context_valid(parent_node, viewport, instance):
+		_safe_queue_free(viewport)
+		return null
 	
 	# Get the texture
 	var result_texture: ImageTexture = null
-	var texture = viewport.get_texture()
-	if texture:
-		var img = texture.get_image()
-		if img:
-			result_texture = ImageTexture.create_from_image(img)
+	if _is_thumbnail_context_valid(parent_node, viewport, instance):
+		var texture = viewport.get_texture()
+		if texture:
+			var img = texture.get_image()
+			if img:
+				result_texture = ImageTexture.create_from_image(img)
 	
 	# Cleanup
-	viewport.queue_free()
+	_safe_queue_free(viewport)
 	
 	return result_texture
+
+static func _is_thumbnail_context_valid(parent_node: Variant, viewport: Variant, instance: Variant = null) -> bool:
+	return _is_valid_object(parent_node) and _is_valid_object(viewport) and (instance == null or _is_valid_object(instance))
+
+static func _is_valid_object(obj: Variant) -> bool:
+	return obj != null and obj is Object and is_instance_valid(obj)
+
+static func _safe_queue_free(node: Variant) -> void:
+	if _is_valid_object(node):
+		node.queue_free()
 
 static func _get_visual_aabb(node: Node, parent_transform: Transform3D = Transform3D.IDENTITY) -> AABB:
 	"""Calculate the visual bounding box of a node and its children in world space."""

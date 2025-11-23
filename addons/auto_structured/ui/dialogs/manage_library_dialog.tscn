@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://b7qfxiieckga4"]
+
+[ext_resource type="Script" uid="uid://byn03q2mfpvsq" path="res://addons/auto_structured/ui/dialogs/manage_library_dialog.gd" id="1_w2yoq"]
+
+[node name="ManageLibraryDialog" type="ConfirmationDialog"]
+script = ExtResource("1_w2yoq")

@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="ModuleLibrary" load_steps=24 format=3 uid="uid://dc816b44bgrjl"]
+[gd_resource type="Resource" script_class="ModuleLibrary" load_steps=40 format=3 uid="uid://dc816b44bgrjl"]
 
 [ext_resource type="Script" uid="uid://n5qundf42kiu" path="res://addons/auto_structured/core/module_library.gd" id="1_8lv1h"]
 [ext_resource type="Script" uid="uid://bb8jmn884hdv7" path="res://addons/auto_structured/core/socket_type.gd" id="2_gy8lu"]
@@ -6,6 +6,8 @@
 [ext_resource type="Script" uid="uid://cn5v8xrkm6w3y" path="res://addons/auto_structured/core/requirements/requirement.gd" id="4_7i2i1"]
 [ext_resource type="PackedScene" uid="uid://brrawbb8qli2o" path="res://sample/modules/floor.tscn" id="5_ussj3"]
 [ext_resource type="Script" uid="uid://bddgr0flhmhcl" path="res://addons/auto_structured/core/socket.gd" id="6_d002p"]
+[ext_resource type="PackedScene" uid="uid://dvmtflhjehotm" path="res://sample/modules/wall.tscn" id="7_ussj3"]
+[ext_resource type="PackedScene" uid="uid://khrtlct1n2sc" path="res://sample/modules/wall_corner.tscn" id="8_d002p"]
 
 [sub_resource type="Resource" id="Resource_7i2i1"]
 script = ExtResource("2_gy8lu")
@@ -55,45 +57,122 @@ script = ExtResource("2_gy8lu")
 type_id = "corner_block"
 compatible_types = Array[String](["corner_block"])
 
+[sub_resource type="Resource" id="Resource_vg4h0"]
+script = ExtResource("6_d002p")
+socket_type = SubResource("Resource_8lv1h")
+direction = Vector3i(-1, 0, 0)
+
 [sub_resource type="Resource" id="Resource_hvh7s"]
 script = ExtResource("6_d002p")
-socket_type = SubResource("Resource_7i2i1")
+socket_type = SubResource("Resource_8lv1h")
 direction = Vector3i(1, 0, 0)
 
 [sub_resource type="Resource" id="Resource_3tpbv"]
 script = ExtResource("6_d002p")
-socket_type = SubResource("Resource_7i2i1")
-direction = Vector3i(-1, 0, 0)
+socket_type = SubResource("Resource_8lv1h")
+direction = Vector3i(0, 0, -1)
 
 [sub_resource type="Resource" id="Resource_w7sp3"]
 script = ExtResource("6_d002p")
-socket_type = SubResource("Resource_7i2i1")
-direction = Vector3i(0, 0, -1)
-
-[sub_resource type="Resource" id="Resource_etoiu"]
-script = ExtResource("6_d002p")
-socket_type = SubResource("Resource_7i2i1")
+socket_type = SubResource("Resource_8lv1h")
 direction = Vector3i(0, 0, 1)
 
 [sub_resource type="Resource" id="Resource_mqw5r"]
 script = ExtResource("6_d002p")
-socket_type = SubResource("Resource_7i2i1")
-direction = Vector3i(0, -1, 0)
+socket_type = SubResource("Resource_d002p")
+direction = Vector3i(-1, 0, 0)
 
 [sub_resource type="Resource" id="Resource_07n0n"]
 script = ExtResource("6_d002p")
-socket_type = SubResource("Resource_8lv1h")
+socket_type = SubResource("Resource_d002p")
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_exvse"]
+script = ExtResource("6_d002p")
+socket_type = SubResource("Resource_d002p")
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_gp7fu"]
+script = ExtResource("6_d002p")
+socket_type = SubResource("Resource_d002p")
+direction = Vector3i(0, 0, 1)
 
 [sub_resource type="Resource" id="Resource_2fdcs"]
 script = ExtResource("3_ey63r")
 name = "floor"
 scene = ExtResource("5_ussj3")
+tags = Array[String](["wood"])
 rotation_symmetry = 1
-sockets = Array[ExtResource("6_d002p")]([SubResource("Resource_hvh7s"), SubResource("Resource_3tpbv"), SubResource("Resource_w7sp3"), SubResource("Resource_etoiu"), SubResource("Resource_mqw5r"), SubResource("Resource_07n0n")])
+sockets = Array[ExtResource("6_d002p")]([SubResource("Resource_vg4h0"), SubResource("Resource_hvh7s"), SubResource("Resource_3tpbv"), SubResource("Resource_w7sp3"), SubResource("Resource_mqw5r"), SubResource("Resource_07n0n"), SubResource("Resource_exvse"), SubResource("Resource_gp7fu")])
+
+[sub_resource type="Resource" id="Resource_qujqk"]
+script = ExtResource("6_d002p")
+socket_type = SubResource("Resource_8lv1h")
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_etoiu"]
+script = ExtResource("6_d002p")
+socket_type = SubResource("Resource_d002p")
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_u48cd"]
+script = ExtResource("6_d002p")
+socket_type = SubResource("Resource_wryci")
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_mlnqq"]
+script = ExtResource("6_d002p")
+socket_type = SubResource("Resource_wryci")
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_rtcot"]
+script = ExtResource("3_ey63r")
+name = "wall"
+scene = ExtResource("7_ussj3")
+tags = Array[String](["wood"])
+rotation_symmetry = 1
+sockets = Array[ExtResource("6_d002p")]([SubResource("Resource_qujqk"), SubResource("Resource_etoiu"), SubResource("Resource_u48cd"), SubResource("Resource_mlnqq")])
+
+[sub_resource type="Resource" id="Resource_oyb7k"]
+script = ExtResource("6_d002p")
+socket_type = SubResource("Resource_d002p")
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_mp06d"]
+script = ExtResource("6_d002p")
+socket_type = SubResource("Resource_d002p")
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_qw87n"]
+script = ExtResource("6_d002p")
+socket_type = SubResource("Resource_wryci")
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_uxfxb"]
+script = ExtResource("6_d002p")
+socket_type = SubResource("Resource_wryci")
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_27yo8"]
+script = ExtResource("6_d002p")
+socket_type = SubResource("Resource_xc3r3")
+
+[sub_resource type="Resource" id="Resource_a7quu"]
+script = ExtResource("6_d002p")
+socket_type = SubResource("Resource_8lv1h")
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_qqw7i"]
+script = ExtResource("3_ey63r")
+name = "wall_corner"
+scene = ExtResource("8_d002p")
+tags = Array[String](["wood"])
+rotation_symmetry = 1
+sockets = Array[ExtResource("6_d002p")]([SubResource("Resource_oyb7k"), SubResource("Resource_mp06d"), SubResource("Resource_qw87n"), SubResource("Resource_uxfxb"), SubResource("Resource_27yo8"), SubResource("Resource_a7quu")])
 
 [resource]
 script = ExtResource("1_8lv1h")
 library_name = "Test"
-tiles = Array[ExtResource("3_ey63r")]([SubResource("Resource_2fdcs")])
+tiles = Array[ExtResource("3_ey63r")]([SubResource("Resource_2fdcs"), SubResource("Resource_rtcot"), SubResource("Resource_qqw7i")])
 socket_types = Array[ExtResource("2_gy8lu")]([SubResource("Resource_7i2i1"), SubResource("Resource_ussj3"), SubResource("Resource_8lv1h"), SubResource("Resource_gy8lu"), SubResource("Resource_ey63r"), SubResource("Resource_d002p"), SubResource("Resource_wryci"), SubResource("Resource_xc3r3"), SubResource("Resource_66rhd"), SubResource("Resource_ebtt5")])
-available_tags = Array[String](["wood"])
+available_tags = Array[String](["test", "wood"])
