@@ -1,0 +1,99 @@
+[gd_scene load_steps=2 format=3 uid="uid://7p6f24b0fwgn"]
+
+[ext_resource type="Script" uid="uid://dgy0tu8imdwxp" path="res://addons/auto_structured/ui/dialogs/socket_manager_dialog.gd" id="1_i3mcs"]
+
+[node name="SocketManagerDialog" type="ConfirmationDialog"]
+oversampling_override = 1.0
+title = "Manage Socket Compatibility"
+size = Vector2i(720, 420)
+visible = true
+min_size = Vector2i(720, 420)
+ok_button_text = "Apply"
+cancel_button_text = "Close"
+script = ExtResource("1_i3mcs")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -49.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="SocketsPanel" type="VBoxContainer" parent="MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="SocketsLabel" type="Label" parent="MarginContainer/HBoxContainer/SocketsPanel"]
+layout_mode = 2
+text = "Tile sockets"
+
+[node name="SocketList" type="ItemList" parent="MarginContainer/HBoxContainer/SocketsPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+select_mode = 1
+
+[node name="VSeparator" type="VSeparator" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="DetailsPanel" type="VBoxContainer" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="SelectedSocketInfo" type="Label" parent="MarginContainer/HBoxContainer/DetailsPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Select a socket to manage."
+clip_text = true
+
+[node name="CompatibilityStatusLabel" type="Label" parent="MarginContainer/HBoxContainer/DetailsPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+clip_text = true
+
+[node name="SuggestionsRow" type="HBoxContainer" parent="MarginContainer/HBoxContainer/DetailsPanel"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SuggestionsLabel" type="Label" parent="MarginContainer/HBoxContainer/DetailsPanel/SuggestionsRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Suggestions:"
+clip_text = true
+
+[node name="ApplySuggestionsButton" type="Button" parent="MarginContainer/HBoxContainer/DetailsPanel/SuggestionsRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+disabled = true
+text = "Apply suggestions"
+
+[node name="CompatibilityTree" type="Tree" parent="MarginContainer/HBoxContainer/DetailsPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+column_titles_visible = true
+hide_root = true
+
+[node name="InfoLabel" type="Label" parent="MarginContainer/HBoxContainer/DetailsPanel"]
+modulate = Color(0.8, 0.8, 0.8, 1)
+layout_mode = 2
+text = "Toggle checkboxes to enable or disable bidirectional compatibility."
+clip_text = true

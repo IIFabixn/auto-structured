@@ -25,6 +25,7 @@ const TileThumbnailGenerator = preload("res://addons/auto_structured/utils/thumb
 const AddRequirementAction = preload("res://addons/auto_structured/core/actions/add_requirement_action.gd")
 const RemoveRequirementAction = preload("res://addons/auto_structured/core/actions/remove_requirement_action.gd")
 const Requirement = preload("res://addons/auto_structured/core/requirements/requirement.gd")
+const SocketManagerDialogScene = preload("res://addons/auto_structured/ui/dialogs/socket_manager_dialog.tscn")
 
 const REQUIREMENTS_DIR := "res://addons/auto_structured/core/requirements"
 const REQUIREMENT_MENU_META_TYPES := "requirement_type_defs"
@@ -58,6 +59,7 @@ const SOCKET_MENU_META_TYPES := "socket_type_mapping"
 @onready var requirements_container: VBoxContainer = %RequirementsContainer
 
 @onready var add_socket_button: TextureButton = %AddSocketButton
+@onready var manage_sockets_button: Button = %ManageSocketsButton
 
 @onready var upSocketMenuButton: MenuButton = %UpSocketMenuButton
 @onready var previewUpSocketButton: TextureButton = %PreviewUpSocketButton
@@ -137,6 +139,9 @@ func _ready() -> void:
 	_setup_socket_button(rightSocketMenuButton, previewRightSocketButton, Vector3i.RIGHT)
 	_setup_socket_button(frontSocketMenuButton, previewFrontSocketButton, Vector3i.FORWARD)
 	_setup_socket_button(backSocketMenuButton, previewBackSocketButton, Vector3i.BACK)
+
+	if manage_sockets_button and not manage_sockets_button.pressed.is_connected(_on_manage_sockets_pressed):
+		manage_sockets_button.pressed.connect(_on_manage_sockets_pressed)
 	
 	# Start hidden until a tile is selected
 	hide()
@@ -555,6 +560,36 @@ func _setup_socket_button(menu_button: MenuButton, preview_button: TextureButton
 		preview_button.set_meta("socket_direction", direction)
 		if not preview_button.pressed.is_connected(_on_preview_socket_pressed.bind(direction)):
 			preview_button.pressed.connect(_on_preview_socket_pressed.bind(direction))
+
+func _on_manage_sockets_pressed() -> void:
+	"""Open the socket manager dialog for the current tile."""
+	if _tile == null:
+		push_warning("No tile selected to manage sockets.")
+		return
+	if current_library == null:
+		push_warning("No library available for socket management.")
+		return
+	var dialog = SocketManagerDialogScene.instantiate()
+	if dialog == null:
+		push_warning("Failed to create socket manager dialog.")
+		return
+	if not dialog.has_method("setup"):
+		push_warning("Socket manager dialog is missing setup() method.")
+		dialog.queue_free()
+		return
+	var library_ref := current_library
+	var tile_ref := _tile
+	dialog.ready.connect(func():
+		dialog.setup(library_ref, tile_ref)
+	, CONNECT_ONE_SHOT)
+	dialog.canceled.connect(dialog.queue_free)
+	dialog.close_requested.connect(dialog.queue_free)
+	dialog.confirmed.connect(func():
+		dialog.queue_free()
+	)
+	add_child(dialog)
+	dialog.popup_centered_ratio(0.75)
+	dialog.grab_focus()
 
 func _on_socket_menu_about_to_popup(direction: Vector3i) -> void:
 	"""Populate socket menu when it's about to open."""

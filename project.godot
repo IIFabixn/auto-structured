@@ -20,7 +20,7 @@ project/assembly_name="AutoStructured"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/auto_structured/plugin.cfg", "res://addons/simpleassetplacer/plugin.cfg")
+enabled=PackedStringArray("res://addons/auto_structured/plugin.cfg")
 
 [gdunit4]
 

@@ -21,7 +21,7 @@ type_id = "any"
 [sub_resource type="Resource" id="Resource_8lv1h"]
 script = ExtResource("2_gy8lu")
 type_id = "floor_side"
-compatible_types = Array[String](["floor_side"])
+compatible_types = Array[String](["floor_side", "wall_side"])
 
 [sub_resource type="Resource" id="Resource_gy8lu"]
 script = ExtResource("2_gy8lu")
@@ -41,7 +41,7 @@ compatible_types = Array[String](["wall_forward"])
 [sub_resource type="Resource" id="Resource_wryci"]
 script = ExtResource("2_gy8lu")
 type_id = "wall_side"
-compatible_types = Array[String](["wall_side"])
+compatible_types = Array[String](["floor_side", "wall_side"])
 
 [sub_resource type="Resource" id="Resource_xc3r3"]
 script = ExtResource("2_gy8lu")
