@@ -186,12 +186,11 @@ func _register_template_socket_types(template: SocketTemplate) -> void:
         var compatible: Array = entry["compatible"]
         
         # Register socket type in library
-        var socket_type = _library.ensure_socket_type(socket_id)
-        if socket_type:
-            # Update compatibility
-            for compat_id in compatible:
-                if not socket_type.compatible_types.has(compat_id):
-                    socket_type.compatible_types.append(compat_id)
+        _library.ensure_socket_type(socket_id)
+        
+        # Register compatible types
+        for compat_id in compatible:
+            _library.ensure_socket_type(compat_id)
 
 func _update_tags_display() -> void:
     """Update the tags menu button text."""

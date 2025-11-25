@@ -163,12 +163,12 @@ func _reset_state() -> void:
 	for tag in _tags_original:
 		_tag_forward_map[tag] = tag
 		_tag_reverse_map[tag] = tag
-	for socket_type in _library.get_socket_type_resources():
+	for socket_id in _library.get_socket_types():
 		var record := SocketRecord.new()
-		record.original_id = socket_type.type_id
-		record.current_id = socket_type.type_id
-		record.display_name = socket_type.display_name
-		record.compatibility = socket_type.compatible_types.duplicate()
+		record.original_id = socket_id
+		record.current_id = socket_id
+		record.display_name = socket_id
+		record.compatibility = []
 		_socket_records[record.current_id] = record
 		_socket_forward_map[record.original_id] = record.current_id
 		_socket_reverse_map[record.current_id] = record.original_id

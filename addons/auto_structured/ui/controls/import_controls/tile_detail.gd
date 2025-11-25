@@ -428,7 +428,7 @@ func _populate_socket_menu(menu: MenuButton) -> void:
         return
     
     # Get socket types from library
-    var socket_types = _library.get_socket_type_resources()
+    var socket_types = _library.get_socket_types()
     if socket_types.is_empty():
         popup.add_item("(No socket types available)", -1)
         popup.set_item_disabled(0, true)
@@ -444,8 +444,7 @@ func _populate_socket_menu(menu: MenuButton) -> void:
     
     # Add socket types
     for i in range(socket_types.size()):
-        var socket_type = socket_types[i]
-        var socket_id = socket_type.type_id
+        var socket_id: String = socket_types[i]
         var is_selected = current_sockets.has(socket_id)
         popup.add_check_item(socket_id, i)
         popup.set_item_checked(i, is_selected)
@@ -493,12 +492,11 @@ func _on_socket_menu_item_pressed(id: int, menu: MenuButton) -> void:
     if direction == Vector3i.ZERO:
         return
     
-    var socket_types = _library.get_socket_type_resources()
+    var socket_types = _library.get_socket_types()
     if id < 0 or id >= socket_types.size():
         return
     
-    var socket_type = socket_types[id]
-    var socket_id = socket_type.type_id
+    var socket_id: String = socket_types[id]
     
     # Initialize direction array if needed
     if not _socket_config.has(direction):
