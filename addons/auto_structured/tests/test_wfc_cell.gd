@@ -3,7 +3,6 @@ extends RefCounted
 const WfcCell = preload("res://addons/auto_structured/core/wfc/wfc_cell.gd")
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
-const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
 
 var test_results: Array[Dictionary] = []
 var tests_passed: int = 0

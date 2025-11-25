@@ -77,13 +77,9 @@ static func _library_to_dict(library: ModuleLibrary) -> Dictionary:
 		"tiles": []
 	}
 	
-	# Export socket types
-	for socket_type in library.socket_types:
-		data["socket_types"].append({
-			"type_id": socket_type.type_id,
-			"display_name": socket_type.display_name,
-			"compatible_types": socket_type.compatible_types.duplicate()
-		})
+	# Export socket types (now just strings)
+	for socket_type_id in library.socket_types:
+		data["socket_types"].append(socket_type_id)
 	
 	# Export tiles
 	for tile in library.tiles:
@@ -112,7 +108,8 @@ static func _library_to_dict(library: ModuleLibrary) -> Dictionary:
 					"y": socket.direction.y,
 					"z": socket.direction.z
 				},
-				"socket_type_id": socket.socket_type.type_id if socket.socket_type else ""
+				"socket_type_id": socket.socket_id,
+				"compatible_sockets": socket.compatible_sockets.duplicate()
 			})
 		
 		# Export requirements (basic info)
@@ -143,10 +140,8 @@ static func _library_to_markdown(library: ModuleLibrary) -> String:
 	
 	# Socket types
 	md += "## Socket Types\n\n"
-	for socket_type in library.socket_types:
-		md += "### %s\n\n" % (socket_type.display_name if not socket_type.display_name.is_empty() else socket_type.type_id)
-		md += "- **ID**: `%s`\n" % socket_type.type_id
-		md += "- **Compatible With**: %s\n\n" % (", ".join(socket_type.compatible_types) if not socket_type.compatible_types.is_empty() else "None")
+	for socket_type_id in library.socket_types:
+		md += "- `%s`\n" % socket_type_id
 	
 	# Tiles
 	md += "## Tiles\n\n"
@@ -164,7 +159,7 @@ static func _library_to_markdown(library: ModuleLibrary) -> String:
 			md += "- **Sockets**: %d\n" % tile.sockets.size()
 			for socket in tile.sockets:
 				var dir_name = _direction_to_string(socket.direction)
-				var socket_type_name = socket.socket_type.type_id if socket.socket_type else "none"
+				var socket_type_name = socket.socket_id if not socket.socket_id.is_empty() else "none"
 				md += "  - %s: `%s`\n" % [dir_name, socket_type_name]
 		
 		if not tile.requirements.is_empty():

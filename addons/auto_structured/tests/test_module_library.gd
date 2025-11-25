@@ -3,7 +3,6 @@ extends RefCounted
 const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.gd")
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
-const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
 
 var test_results: Array[Dictionary] = []
 var tests_passed: int = 0
@@ -46,14 +45,12 @@ func test_library_ensure_defaults() -> void:
 	library.ensure_defaults()
 	
 	# Check "none" socket type was created
-	var none_type = library.get_socket_type_by_id("none")
-	assert_not_null(none_type, "Should create 'none' socket type", test_name)
-	assert_equal(none_type.type_id, "none", "'none' type should have correct id", test_name)
+	assert_true(library.has_socket_type("none"), "Should create 'none' socket type", test_name)
+	assert_true("none" in library.socket_types, "'none' should be in socket_types array", test_name)
 	
 	# Check "any" socket type was created
-	var any_type = library.get_socket_type_by_id("any")
-	assert_not_null(any_type, "Should create 'any' socket type", test_name)
-	assert_equal(any_type.type_id, "any", "'any' type should have correct id", test_name)
+	assert_true(library.has_socket_type("any"), "Should create 'any' socket type", test_name)
+	assert_true("any" in library.socket_types, "'any' should be in socket_types array", test_name)
 	
 	# Check cell size was set to defaults if invalid
 	assert_true(library.cell_world_size.x > 0, "Cell size X should be positive", test_name)
@@ -135,31 +132,27 @@ func test_library_register_socket_type() -> void:
 	var library = ModuleLibrary.new()
 	
 	# Test registering by string
-	var type1 = library.register_socket_type("wall")
-	assert_not_null(type1, "Should register socket type from string", test_name)
-	assert_equal(type1.type_id, "wall", "Registered type should have correct id", test_name)
+	library.register_socket_type("wall")
 	assert_equal(library.socket_types.size(), 1, "Should have 1 socket type", test_name)
+	assert_true("wall" in library.socket_types, "Should contain 'wall' type", test_name)
 	
-	# Test registering duplicate (should return existing)
-	var type1_again = library.register_socket_type("wall")
-	assert_equal(type1_again, type1, "Should return existing type for duplicate", test_name)
-	assert_equal(library.socket_types.size(), 1, "Should still have 1 socket type", test_name)
+	# Test registering duplicate (should not add again)
+	library.register_socket_type("wall")
+	assert_equal(library.socket_types.size(), 1, "Should still have 1 socket type after duplicate", test_name)
 	
-	# Test registering SocketType resource
-	var type2 = SocketType.new()
-	type2.type_id = "floor"
-	var registered = library.register_socket_type(type2)
-	assert_equal(registered, type2, "Should register SocketType resource", test_name)
+	# Test registering another type
+	library.register_socket_type("floor")
 	assert_equal(library.socket_types.size(), 2, "Should have 2 socket types", test_name)
+	assert_true("floor" in library.socket_types, "Should contain 'floor' type", test_name)
 	
-	# Test registering empty string (should return null)
-	var type_empty = library.register_socket_type("")
-	assert_null(type_empty, "Should return null for empty string", test_name)
+	# Test registering empty string (should not add)
+	library.register_socket_type("")
+	assert_equal(library.socket_types.size(), 2, "Should not register empty string", test_name)
 	
 	# Test registering whitespace (should trim and register)
-	var type3 = library.register_socket_type("  ceiling  ")
-	assert_not_null(type3, "Should register trimmed type", test_name)
-	assert_equal(type3.type_id, "ceiling", "Should trim whitespace from type_id", test_name)
+	library.register_socket_type("  ceiling  ")
+	assert_equal(library.socket_types.size(), 3, "Should register trimmed type", test_name)
+	assert_true("ceiling" in library.socket_types, "Should contain trimmed 'ceiling' type", test_name)
 
 func test_library_get_socket_type_by_id() -> void:
 	var test_name = "Library get socket type by id"
@@ -169,13 +162,12 @@ func test_library_get_socket_type_by_id() -> void:
 	library.register_socket_type("floor")
 	
 	# Test finding existing type
-	var wall_type = library.get_socket_type_by_id("wall")
-	assert_not_null(wall_type, "Should find wall type", test_name)
-	assert_equal(wall_type.type_id, "wall", "Found type should have correct id", test_name)
+	var has_wall = library.has_socket_type("wall")
+	assert_true(has_wall, "Should find wall type", test_name)
 	
 	# Test not finding non-existent type
-	var not_found = library.get_socket_type_by_id("nonexistent")
-	assert_null(not_found, "Should return null for non-existent type", test_name)
+	var has_nonexistent = library.has_socket_type("nonexistent")
+	assert_false(has_nonexistent, "Should not find non-existent type", test_name)
 
 func test_library_ensure_socket_type() -> void:
 	var test_name = "Library ensure socket type"
@@ -183,21 +175,22 @@ func test_library_ensure_socket_type() -> void:
 	var library = ModuleLibrary.new()
 	
 	# Test ensuring new type (should create it)
-	var type1 = library.ensure_socket_type("wall")
-	assert_not_null(type1, "Should create new socket type", test_name)
-	assert_equal(type1.type_id, "wall", "Created type should have correct id", test_name)
+	library.ensure_socket_type("wall")
+	assert_true(library.has_socket_type("wall"), "Should create new socket type", test_name)
+	assert_equal(library.socket_types.size(), 1, "Should have 1 socket type", test_name)
 	
-	# Test ensuring existing type (should return it)
-	var type1_again = library.ensure_socket_type("wall")
-	assert_equal(type1_again, type1, "Should return existing type", test_name)
+	# Test ensuring existing type (should not duplicate)
+	library.ensure_socket_type("wall")
+	assert_equal(library.socket_types.size(), 1, "Should still have 1 socket type", test_name)
 	
-	# Test ensuring empty string (should return null)
-	var type_empty = library.ensure_socket_type("")
-	assert_null(type_empty, "Should return null for empty string", test_name)
+	# Test ensuring empty string (should not add)
+	library.ensure_socket_type("")
+	assert_equal(library.socket_types.size(), 1, "Should not add empty string", test_name)
 	
 	# Test ensuring whitespace (should trim)
-	var type2 = library.ensure_socket_type("  floor  ")
-	assert_equal(type2.type_id, "floor", "Should trim whitespace", test_name)
+	library.ensure_socket_type("  floor  ")
+	assert_true(library.has_socket_type("floor"), "Should trim whitespace and add", test_name)
+	assert_equal(library.socket_types.size(), 2, "Should have 2 socket types", test_name)
 
 func test_library_get_socket_type_ids() -> void:
 	var test_name = "Library get socket type ids"
@@ -218,29 +211,23 @@ func test_library_get_all_unique_socket_ids() -> void:
 	
 	var library = ModuleLibrary.new()
 	
-	# Create socket types
-	var wall_type = SocketType.new()
-	wall_type.type_id = "wall"
-	var floor_type = SocketType.new()
-	floor_type.type_id = "floor"
-	
 	# Create tiles with sockets
 	var tile1 = Tile.new()
 	tile1.name = "Wall"
 	var socket1 = Socket.new()
-	socket1.socket_type = wall_type
+	socket1.socket_id = "wall"
 	socket1.direction = Vector3i.UP
 	tile1.sockets.append(socket1)
 	
 	var tile2 = Tile.new()
 	tile2.name = "Floor"
 	var socket2 = Socket.new()
-	socket2.socket_type = floor_type
+	socket2.socket_id = "floor"
 	socket2.direction = Vector3i.UP
 	tile2.sockets.append(socket2)
 	
 	var socket3 = Socket.new()
-	socket3.socket_type = wall_type  # Duplicate wall type
+	socket3.socket_id = "wall"  # Duplicate wall type
 	socket3.direction = Vector3i.DOWN
 	tile2.sockets.append(socket3)
 	
@@ -259,23 +246,17 @@ func test_library_rename_socket_type() -> void:
 	
 	# Register types
 	library.register_socket_type("old_name")
-	var type2 = library.register_socket_type("other")
-	type2.set_compatible_types(["old_name"])
+	library.register_socket_type("other")
 	
 	# Test successful rename
 	var result = library.rename_socket_type("old_name", "new_name")
 	assert_true(result, "Rename should succeed", test_name)
 	
-	var renamed = library.get_socket_type_by_id("new_name")
-	assert_not_null(renamed, "Should find renamed type", test_name)
+	var has_new = library.has_socket_type("new_name")
+	assert_true(has_new, "Should find renamed type", test_name)
 	
-	var old = library.get_socket_type_by_id("old_name")
-	assert_null(old, "Should not find old name", test_name)
-	
-	# Check compatibility references were updated
-	var other = library.get_socket_type_by_id("other")
-	assert_true("new_name" in other.compatible_types, "Compatibility should be updated to new name", test_name)
-	assert_false("old_name" in other.compatible_types, "Compatibility should not have old name", test_name)
+	var has_old = library.has_socket_type("old_name")
+	assert_false(has_old, "Should not find old name", test_name)
 	
 	# Test rename to existing name (should fail)
 	library.register_socket_type("existing")
@@ -293,15 +274,14 @@ func test_library_delete_socket_type() -> void:
 	library.ensure_defaults()
 	
 	# Register a type to delete
-	var to_delete = library.register_socket_type("deleteme")
-	var keep_type = library.register_socket_type("keepme")
-	keep_type.set_compatible_types(["deleteme"])
+	library.register_socket_type("deleteme")
+	library.register_socket_type("keepme")
 	
 	# Create tile with socket referencing the type
 	var tile = Tile.new()
 	tile.name = "TestTile"
 	var socket = Socket.new()
-	socket.socket_type = to_delete
+	socket.socket_id = "deleteme"
 	socket.direction = Vector3i.UP
 	tile.sockets.append(socket)
 	
@@ -315,16 +295,10 @@ func test_library_delete_socket_type() -> void:
 	assert_true(result, "Delete should succeed", test_name)
 	assert_equal(library.socket_types.size(), initial_count - 1, "Should have one less socket type", test_name)
 	
-	var deleted = library.get_socket_type_by_id("deleteme")
-	assert_null(deleted, "Deleted type should not be found", test_name)
+	assert_false(library.has_socket_type("deleteme"), "Deleted type should not be found", test_name)
 	
 	# Check socket was migrated to fallback
-	var none_type = library.get_socket_type_by_id("none")
-	assert_equal(tile.sockets[0].socket_type, none_type, "Socket should be migrated to fallback", test_name)
-	
-	# Check compatibility references were removed
-	var keep = library.get_socket_type_by_id("keepme")
-	assert_false("deleteme" in keep.compatible_types, "Compatibility reference should be removed", test_name)
+	assert_equal(tile.sockets[0].socket_id, "none", "Socket should be migrated to fallback", test_name)
 	
 	# Test deleting "none" (should fail)
 	var fail_result = library.delete_socket_type("none")
@@ -359,13 +333,13 @@ func test_library_validate_library() -> void:
 	library.ensure_defaults()
 	
 	# Create valid tile
-	var wall_type = library.register_socket_type("wall")
-	wall_type.set_compatible_types(["wall"])
+	library.register_socket_type("wall")
 	
 	var tile1 = Tile.new()
 	tile1.name = "ValidTile"
 	var socket1 = Socket.new()
-	socket1.socket_type = wall_type
+	socket1.socket_id = "wall"
+	socket1.add_compatible_socket("wall")
 	socket1.direction = Vector3i.UP
 	tile1.sockets.append(socket1)
 	
@@ -377,11 +351,11 @@ func test_library_validate_library() -> void:
 	assert_true(result1["valid"], "Valid library should pass validation", test_name)
 	assert_equal(result1["issues"].size(), 0, "Should have no issues", test_name)
 	
-	# Add tile with null socket_type
+	# Add tile with empty socket_id
 	var tile2 = Tile.new()
 	tile2.name = "InvalidTile"
 	var socket2 = Socket.new()
-	socket2.socket_type = null
+	socket2.socket_id = ""
 	socket2.direction = Vector3i.UP
 	tile2.sockets.append(socket2)
 	tiles_array.append(tile2)

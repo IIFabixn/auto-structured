@@ -12,7 +12,6 @@ signal socket_preview_requested(socket: Socket)
 signal socket_editor_requested(tile: Tile, start_mode: int)
 signal request_preview(tile: Tile, socket: Socket)
 
-const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.gd")
@@ -380,9 +379,7 @@ func _update_socket_menu_button_text(menu_button: MenuButton, direction: Vector3
 	var has_any_type := false
 	var display_ids: Array[String] = []
 	for socket in sockets_in_direction:
-		if socket.socket_type == null:
-			continue
-		var type_id: String = socket.socket_type.type_id.strip_edges()
+		var type_id: String = socket.socket_id.strip_edges()
 		if type_id == "any":
 			has_any_type = true
 		elif type_id != "" and type_id != "none":
@@ -612,9 +609,7 @@ func _on_socket_menu_about_to_popup(direction: Vector3i) -> void:
 	var selected_type_ids: Array[String] = []
 	var has_any_type := false
 	for socket in current_sockets:
-		if socket.socket_type == null:
-			continue
-		var type_id: String = socket.socket_type.type_id.strip_edges()
+		var type_id: String = socket.socket_id.strip_edges()
 		if type_id == "any":
 			has_any_type = true
 		elif type_id != "" and type_id != "none":
@@ -634,30 +629,22 @@ func _on_socket_menu_about_to_popup(direction: Vector3i) -> void:
 
 	popup.add_separator()
 
-	var socket_types = library.get_socket_type_resources()
-	var selectable_types: Array[SocketType] = []
-	for socket_type in socket_types:
-		if socket_type == null:
-			continue
-		var type_id: String = socket_type.type_id.strip_edges()
+	var socket_types = library.get_socket_types()
+	var selectable_types: Array[String] = []
+	for socket_id in socket_types:
+		var type_id: String = socket_id.strip_edges()
 		if type_id == "" or type_id == "none" or type_id == "any":
 			continue
-		selectable_types.append(socket_type)
+		selectable_types.append(type_id)
 
 	menu_button.set_meta(SOCKET_MENU_META_TYPES, selectable_types)
 
 	for i in range(selectable_types.size()):
-		var socket_type: SocketType = selectable_types[i]
-		var label := socket_type.get_display_name()
-		if label.strip_edges() == "":
-			label = socket_type.type_id
-		else:
-			var trimmed_id := socket_type.type_id.strip_edges()
-			if trimmed_id != "" and label != trimmed_id:
-				label = "%s [%s]" % [label, trimmed_id]
+		var socket_id: String = selectable_types[i]
+		var label := socket_id
 		var item_index := popup.get_item_count()
 		popup.add_check_item(label, i)
-		popup.set_item_checked(item_index, selected_type_ids.has(socket_type.type_id.strip_edges()))
+		popup.set_item_checked(item_index, selected_type_ids.has(socket_id))
 
 func _on_socket_menu_item_pressed(id: int, direction: Vector3i) -> void:
 	"""Handle socket menu item press - toggle socket type on/off for this direction."""
@@ -680,8 +667,8 @@ func _on_socket_menu_item_pressed(id: int, direction: Vector3i) -> void:
 			var selectable_types: Array = menu_button.get_meta(SOCKET_MENU_META_TYPES, [])
 			if id < 0 or id >= selectable_types.size():
 				return
-			var socket_type: SocketType = selectable_types[id]
-			_toggle_socket_type(direction, socket_type)
+			var socket_id: String = selectable_types[id]
+			_toggle_socket_type(direction, socket_id)
 	
 	_update_sockets_display()
 	tile_modified.emit(_tile)
@@ -731,27 +718,21 @@ func _set_direction_to_any(direction: Vector3i, library: ModuleLibrary) -> void:
 	if not _tile:
 		return
 	_clear_direction_sockets(direction)
-	var any_type: SocketType = library.get_socket_type_by_id("any")
-	if not any_type:
-		any_type = library.ensure_socket_type("any")
-	if not any_type:
-		push_warning("DetailsPanel: Could not resolve 'any' socket type in library")
-		return
 	var socket = Socket.new()
 	socket.direction = direction
-	socket.socket_type = any_type
+	socket.socket_id = "any"
 	_tile.add_socket(socket)
 
-func _toggle_socket_type(direction: Vector3i, socket_type: SocketType) -> void:
+func _toggle_socket_type(direction: Vector3i, socket_id: String) -> void:
 	"""Toggle a specific socket type for a direction."""
-	if socket_type == null:
+	if socket_id.strip_edges() == "":
 		return
 	if not _tile:
 		return
 
 	var sockets = _tile.get_sockets_in_direction(direction)
 	for socket in sockets:
-		if socket.socket_type == socket_type:
+		if socket.socket_id == socket_id:
 			_tile.remove_socket(socket)
 			return
 
@@ -759,19 +740,16 @@ func _toggle_socket_type(direction: Vector3i, socket_type: SocketType) -> void:
 	_remove_any_socket(direction)
 	var new_socket = Socket.new()
 	new_socket.direction = direction
-	new_socket.socket_type = socket_type
+	new_socket.socket_id = socket_id
 	_tile.add_socket(new_socket)
 
 func _remove_placeholder_sockets(direction: Vector3i) -> void:
-	"""Remove sockets with empty type or 'none' marker in a direction."""
+	"""Remove sockets with empty ID or 'none' marker in a direction."""
 	if not _tile:
 		return
 	var sockets = _tile.get_sockets_in_direction(direction)
 	for socket in sockets:
-		if socket.socket_type == null:
-			_tile.remove_socket(socket)
-			continue
-		var type_id: String = socket.socket_type.type_id.strip_edges()
+		var type_id: String = socket.socket_id.strip_edges()
 		if type_id == "" or type_id == "none":
 			_tile.remove_socket(socket)
 
@@ -781,7 +759,7 @@ func _remove_any_socket(direction: Vector3i) -> void:
 		return
 	var sockets = _tile.get_sockets_in_direction(direction)
 	for socket in sockets:
-		if socket.socket_type and socket.socket_type.type_id.strip_edges() == "any":
+		if socket.socket_id.strip_edges() == "any":
 			_tile.remove_socket(socket)
 
 func _setup_requirement_menu() -> void:

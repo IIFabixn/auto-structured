@@ -9,7 +9,6 @@ const TagRequirement = preload("res://addons/auto_structured/core/requirements/t
 const BoundaryRequirement = preload("res://addons/auto_structured/core/requirements/boundary_requirement.gd")
 const WfcGrid = preload("res://addons/auto_structured/core/wfc/wfc_grid.gd")
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
-const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
 
 var test_results: Array[Dictionary] = []
 var tests_passed: int = 0
@@ -356,13 +355,10 @@ func _create_test_tile(tile_name: String) -> Tile:
 	tile.size = Vector3i.ONE
 	
 	# Add a basic "any" socket so tiles can connect
-	var socket_type = SocketType.new()
-	socket_type.type_id = "any"
-	
 	for dir in [Vector3i.RIGHT, Vector3i.LEFT, Vector3i.FORWARD, Vector3i.BACK, Vector3i.UP, Vector3i.DOWN]:
 		var socket = Socket.new()
 		socket.direction = dir
-		socket.socket_type = socket_type
+		socket.socket_id = "any"
 		tile.sockets.append(socket)
 	
 	return tile

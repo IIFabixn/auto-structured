@@ -260,7 +260,7 @@ func _update_buttons_state() -> void:
 			var clean_socket = _selected_socket_id.strip_edges()
 			for tile in _library.tiles:
 				for socket in tile.sockets:
-					var current_id = socket.socket_type.type_id if socket.socket_type else ""
+					var current_id = socket.socket_id
 					if current_id != clean_socket:
 						disable_assign = false
 						break
@@ -550,7 +550,7 @@ func _on_assign_socket_to_sockets_pressed() -> void:
 		_show_warning("All sockets already use the '%s' type or are unavailable." % clean)
 		return
 	var dialog = _create_selection_dialog("Assign Socket Type", "Select sockets to assign the '%s' type:" % clean, candidates, func(entry: SocketUsage):
-		return "%s  —  %s (current: %s)" % [entry.tile.name, _direction_to_string(entry.direction), entry.socket.socket_type.type_id if entry.socket.socket_type else "none"])
+		return "%s  —  %s (current: %s)" % [entry.tile.name, _direction_to_string(entry.direction), entry.socket.socket_id if not entry.socket.socket_id.is_empty() else "none"])
 	dialog.confirmed.connect(func():
 		var selected_entries = _get_dialog_selected_entries(dialog)
 		if not selected_entries.is_empty():
@@ -679,9 +679,7 @@ func _get_socket_usage(socket_id: String) -> Array[SocketUsage]:
 		return results
 	for tile in _library.tiles:
 		for socket in tile.sockets:
-			if socket.socket_type == null:
-				continue
-			var id = socket.socket_type.type_id
+			var id = socket.socket_id
 			if id in actual_ids:
 				var usage = SocketUsage.new()
 				usage.tile = tile
@@ -697,7 +695,7 @@ func _get_sockets_not_matching_type(socket_id: String) -> Array[SocketUsage]:
 	var clean = socket_id.strip_edges()
 	for tile in _library.tiles:
 		for socket in tile.sockets:
-			var current_id = socket.socket_type.type_id if socket.socket_type else ""
+			var current_id = socket.socket_id
 			if current_id != clean:
 				var entry = SocketUsage.new()
 				entry.tile = tile
@@ -810,14 +808,11 @@ func _remove_tag_from_tiles(tag: String, tiles: Array) -> void:
 func _assign_socket_type_to_entries(socket_id: String, entries: Array) -> void:
 	if _library == null:
 		return
-	var target_type = _library.ensure_socket_type(socket_id)
-	if target_type == null:
-		return
 	var modified_tiles: Dictionary = {}
 	for entry in entries:
 		if entry is SocketUsage:
 			var usage: SocketUsage = entry
-			usage.socket.socket_type = target_type
+			usage.socket.socket_id = socket_id
 			modified_tiles[usage.tile] = true
 	for tile in modified_tiles.keys():
 		_library.notify_tile_modified(tile, "sockets")
@@ -827,15 +822,11 @@ func _assign_socket_type_to_entries(socket_id: String, entries: Array) -> void:
 func _revoke_socket_type_from_entries(socket_id: String, entries: Array) -> void:
 	if _library == null:
 		return
-	var fallback = _library.ensure_socket_type("none")
 	var modified_tiles: Dictionary = {}
 	for entry in entries:
 		if entry is SocketUsage:
 			var usage: SocketUsage = entry
-			if fallback != null:
-				usage.socket.socket_type = fallback
-			else:
-				usage.socket.socket_type = null
+			usage.socket.socket_id = "none"
 			modified_tiles[usage.tile] = true
 	for tile in modified_tiles.keys():
 		_library.notify_tile_modified(tile, "sockets")

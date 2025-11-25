@@ -5,7 +5,6 @@ const TestWfcGrid = preload("res://addons/auto_structured/tests/test_wfc_grid.gd
 const TestWfcSolver = preload("res://addons/auto_structured/tests/test_wfc_solver.gd")
 const TestWfcHelper = preload("res://addons/auto_structured/tests/test_wfc_helper.gd")
 const TestSocket = preload("res://addons/auto_structured/tests/test_socket.gd")
-const TestSocketType = preload("res://addons/auto_structured/tests/test_socket_type.gd")
 const TestTile = preload("res://addons/auto_structured/tests/test_tile.gd")
 const TestModuleLibrary = preload("res://addons/auto_structured/tests/test_module_library.gd")
 const TestMeshOutlineAnalyzer = preload("res://addons/auto_structured/tests/test_mesh_outline_analyzer.gd")
@@ -29,8 +28,6 @@ func _initialize() -> void:
 	var start_time = Time.get_ticks_msec()
 	# Run all test suites
 	run_test_suite("Socket", TestSocket)
-	print("")
-	run_test_suite("SocketType", TestSocketType)
 	print("")
 	run_test_suite("Tile", TestTile)
 	print("")

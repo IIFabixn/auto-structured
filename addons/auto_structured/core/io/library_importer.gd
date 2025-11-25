@@ -6,7 +6,6 @@ class_name LibraryImporter extends RefCounted
 const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.gd")
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
-const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
 const Requirement = preload("res://addons/auto_structured/core/requirements/requirement.gd")
 const HeightRequirement = preload("res://addons/auto_structured/core/requirements/height_requirement.gd")
 const MaxCountRequirement = preload("res://addons/auto_structured/core/requirements/max_count_requirement.gd")
@@ -75,15 +74,17 @@ static func _dict_to_library(data: Dictionary) -> ModuleLibrary:
 	var socket_type_map = {}
 	if data.has("socket_types"):
 		for st_data in data["socket_types"]:
-			var socket_type = SocketType.new()
-			socket_type.type_id = st_data.get("type_id", "")
-			socket_type.display_name = st_data.get("display_name", "")
+			var type_id: String = ""
 			
-			if st_data.has("compatible_types"):
-				socket_type.compatible_types.assign(st_data["compatible_types"])
+			# Handle both old format (dict with type_id) and new format (string)
+			if st_data is String:
+				type_id = st_data
+			elif st_data is Dictionary:
+				type_id = st_data.get("type_id", "")
 			
-			library.socket_types.append(socket_type)
-			socket_type_map[socket_type.type_id] = socket_type
+			if not type_id.is_empty():
+				library.register_socket_type(type_id)
+				socket_type_map[type_id] = type_id
 	
 	# Import tiles
 	if data.has("tiles"):
@@ -142,8 +143,12 @@ static func _dict_to_tile(data: Dictionary, socket_type_map: Dictionary) -> Tile
 				)
 			
 			var socket_type_id = socket_data.get("socket_type_id", "")
-			if socket_type_map.has(socket_type_id):
-				socket.socket_type = socket_type_map[socket_type_id]
+			socket.socket_id = socket_type_id
+			
+			# Import compatible sockets if present
+			if socket_data.has("compatible_sockets"):
+				for compat_id in socket_data["compatible_sockets"]:
+					socket.add_compatible_socket(compat_id)
 			
 			tile.sockets.append(socket)
 	

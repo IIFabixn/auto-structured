@@ -4,7 +4,6 @@ const WfcSolver = preload("res://addons/auto_structured/core/wfc/wfc_solver.gd")
 const WfcGrid = preload("res://addons/auto_structured/core/wfc/wfc_grid.gd")
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
-const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
 const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.gd")
 
 var test_results: Array[Dictionary] = []
@@ -50,10 +49,6 @@ func test_solver_compatibility_basic() -> void:
 	var test_name = "Solver compatibility basic"
 	
 	# Create two tiles with compatible sockets
-	var socket_type1 = SocketType.new()
-	socket_type1.type_id = "wall"
-	socket_type1.set_compatible_types(["wall"])
-	
 	var tile1 = Tile.new()
 	tile1.name = "WallTile"
 	tile1.size = Vector3i.ONE
@@ -61,7 +56,8 @@ func test_solver_compatibility_basic() -> void:
 	# Add sockets on all sides
 	for direction in [Vector3i.RIGHT, Vector3i.LEFT, Vector3i.UP, Vector3i.DOWN, Vector3i.FORWARD, Vector3i.BACK]:
 		var socket = Socket.new()
-		socket.socket_type = socket_type1
+		socket.socket_id = "wall"
+		socket.add_compatible_socket("wall")
 		socket.direction = direction
 		tile1.sockets.append(socket)
 	
@@ -76,21 +72,13 @@ func test_solver_compatibility_basic() -> void:
 func test_solver_compatibility_with_sockets() -> void:
 	var test_name = "Solver compatibility with sockets"
 	
-	# Create socket types
-	var socket_type_a = SocketType.new()
-	socket_type_a.type_id = "type_a"
-	socket_type_a.set_compatible_types(["type_b"])
-	
-	var socket_type_b = SocketType.new()
-	socket_type_b.type_id = "type_b"
-	socket_type_b.set_compatible_types(["type_a"])
-	
 	# Create tile with type_a on right
 	var tile_a = Tile.new()
 	tile_a.name = "TileA"
 	tile_a.size = Vector3i.ONE
 	var socket_a = Socket.new()
-	socket_a.socket_type = socket_type_a
+	socket_a.socket_id = "type_a"
+	socket_a.add_compatible_socket("type_b")
 	socket_a.direction = Vector3i.RIGHT
 	tile_a.sockets.append(socket_a)
 	
@@ -99,7 +87,8 @@ func test_solver_compatibility_with_sockets() -> void:
 	tile_b.name = "TileB"
 	tile_b.size = Vector3i.ONE
 	var socket_b = Socket.new()
-	socket_b.socket_type = socket_type_b
+	socket_b.socket_id = "type_b"
+	socket_b.add_compatible_socket("type_a")
 	socket_b.direction = Vector3i.LEFT
 	tile_b.sockets.append(socket_b)
 	
@@ -278,10 +267,6 @@ func create_simple_tile(tile_name: String) -> Tile:
 
 func create_universal_tile(tile_name: String) -> Tile:
 	"""Create a tile that connects to itself in all directions."""
-	var socket_type = SocketType.new()
-	socket_type.type_id = "universal"
-	socket_type.set_compatible_types(["universal"])
-	
 	var tile = Tile.new()
 	tile.name = tile_name
 	tile.size = Vector3i.ONE
@@ -289,7 +274,8 @@ func create_universal_tile(tile_name: String) -> Tile:
 	# Add sockets on all six sides
 	for direction in [Vector3i.RIGHT, Vector3i.LEFT, Vector3i.UP, Vector3i.DOWN, Vector3i.FORWARD, Vector3i.BACK]:
 		var socket = Socket.new()
-		socket.socket_type = socket_type
+		socket.socket_id = "universal"
+		socket.add_compatible_socket("universal")
 		socket.direction = direction
 		tile.sockets.append(socket)
 	

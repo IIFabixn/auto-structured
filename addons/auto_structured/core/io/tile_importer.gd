@@ -6,7 +6,6 @@ class_name TileImporter extends RefCounted
 
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
-const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
 const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.gd")
 const MeshOutlineAnalyzer = preload("res://addons/auto_structured/core/analysis/mesh_outline_analyzer.gd")
 
@@ -195,20 +194,17 @@ static func _process_mesh_data(tile: Tile, mesh: Mesh, library: ModuleLibrary, o
 	
 	# Generate sockets based on method
 	if options.auto_generate_sockets and options.socket_detection_method == "outline":
-		var socket_type = library.ensure_socket_type(options.default_socket_type_id)
 		var analyzer = MeshOutlineAnalyzer.new()
 		var faces = analyzer.analyze(mesh, tile.size)
 		
 		for face_dir in faces:
 			var socket = Socket.new()
 			socket.direction = face_dir
-			socket.socket_type = socket_type
+			socket.socket_id = options.default_socket_type_id
 			tile.add_socket(socket)
 
 ## Generate default sockets for all 6 cardinal directions
 static func _generate_default_sockets(tile: Tile, library: ModuleLibrary, options: ImportOptions) -> void:
-	var socket_type = library.ensure_socket_type(options.default_socket_type_id)
-	
 	var directions = [
 		Vector3i.RIGHT, Vector3i.LEFT,
 		Vector3i.FORWARD, Vector3i.BACK,
@@ -218,7 +214,7 @@ static func _generate_default_sockets(tile: Tile, library: ModuleLibrary, option
 	for dir in directions:
 		var socket = Socket.new()
 		socket.direction = dir
-		socket.socket_type = socket_type
+		socket.socket_id = options.default_socket_type_id
 		tile.add_socket(socket)
 
 ## Find the first MeshInstance3D in a scene tree

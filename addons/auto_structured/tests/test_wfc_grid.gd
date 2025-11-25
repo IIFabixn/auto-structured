@@ -4,7 +4,6 @@ const WfcGrid = preload("res://addons/auto_structured/core/wfc/wfc_grid.gd")
 const WfcCell = preload("res://addons/auto_structured/core/wfc/wfc_cell.gd")
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
-const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
 const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.gd")
 
 var test_results: Array[Dictionary] = []

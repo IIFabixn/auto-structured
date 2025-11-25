@@ -3,7 +3,6 @@ extends RefCounted
 const WfcHelper = preload("res://addons/auto_structured/core/wfc/wfc_helper.gd")
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
-const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
 
 var test_results: Array[Dictionary] = []
 var tests_passed: int = 0
@@ -204,22 +203,15 @@ func test_rotated_bounds() -> void:
 func test_can_sockets_connect() -> void:
 	var test_name = "Can sockets connect"
 	
-	# Create compatible socket types
-	var type_a = SocketType.new()
-	type_a.type_id = "a"
-	type_a.set_compatible_types(["b"])
-	
-	var type_b = SocketType.new()
-	type_b.type_id = "b"
-	type_b.set_compatible_types(["a"])
-	
 	# Create sockets
 	var socket_a = Socket.new()
-	socket_a.socket_type = type_a
+	socket_a.socket_id = "a"
+	socket_a.add_compatible_socket("b")
 	socket_a.direction = Vector3i.RIGHT
 	
 	var socket_b = Socket.new()
-	socket_b.socket_type = type_b
+	socket_b.socket_id = "b"
+	socket_b.add_compatible_socket("a")
 	socket_b.direction = Vector3i.LEFT
 	
 	var tile1 = Tile.new()
@@ -230,12 +222,8 @@ func test_can_sockets_connect() -> void:
 	assert_true(can_connect, "Compatible sockets should be able to connect", test_name)
 	
 	# Create incompatible socket
-	var type_c = SocketType.new()
-	type_c.type_id = "c"
-	type_c.set_compatible_types([])
-	
 	var socket_c = Socket.new()
-	socket_c.socket_type = type_c
+	socket_c.socket_id = "c"
 	socket_c.direction = Vector3i.RIGHT
 	
 	# Test incompatible sockets

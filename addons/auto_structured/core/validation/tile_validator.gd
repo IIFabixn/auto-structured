@@ -64,8 +64,8 @@ func _validate_tile_sockets(tile: Tile, results: Array[ValidationResult]) -> voi
 			results.append(create_error("Socket at index %d is null" % i, {"index": i}, tile))
 			continue
 		
-		if socket.socket_type == null:
-			results.append(create_error("Socket at index %d has no socket type" % i, {"index": i, "direction": socket.direction}, tile))
+		if socket.socket_id.is_empty():
+			results.append(create_error("Socket at index %d has no socket ID" % i, {"index": i, "direction": socket.direction}, tile))
 		
 		# Check for duplicate directions
 		var dir_key = str(socket.direction)

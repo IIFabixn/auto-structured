@@ -8,7 +8,6 @@ const RequirementValidator = preload("res://addons/auto_structured/core/validati
 
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
-const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
 const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.gd")
 const HeightRequirement = preload("res://addons/auto_structured/core/requirements/height_requirement.gd")
 const MaxCountRequirement = preload("res://addons/auto_structured/core/requirements/max_count_requirement.gd")
@@ -184,13 +183,11 @@ func test_tile_validator_duplicate_socket_directions() -> void:
 	var test_name = "TileValidator detects duplicate socket directions"
 	var tile = _create_basic_tile("TestTile")
 	
-	var socket_type = SocketType.new()
-	socket_type.type_id = "test"
-	
 	# Add duplicate socket in same direction
 	var duplicate_socket = Socket.new()
 	duplicate_socket.direction = Vector3i.RIGHT
-	duplicate_socket.socket_type = socket_type
+	duplicate_socket.socket_id = "test"
+	duplicate_socket.add_compatible_socket("test")
 	tile.sockets.append(duplicate_socket)
 	
 	var validator = TileValidator.new()
@@ -271,13 +268,12 @@ func test_library_validator_unused_socket_types() -> void:
 	library.tiles.append(tile)
 	
 	# Add an extra socket type that's not used
-	var used_type = _create_socket_type("used")
-	var unused_type = _create_socket_type("unused")
-	library.socket_types.assign([used_type, unused_type])
+	library.socket_types.assign(["used", "unused"])
 	
 	# Make sure tile uses 'used' type
 	for socket in tile.sockets:
-		socket.socket_type = used_type
+		socket.socket_id = "used"
+		socket.add_compatible_socket("used")
 	
 	var validator = LibraryValidator.new()
 	var results = validator.validate(library)
@@ -294,21 +290,20 @@ func test_library_validator_isolated_tiles() -> void:
 	var test_name = "LibraryValidator detects isolated tiles"
 	var library = ModuleLibrary.new()
 	
-	var socket_type1 = _create_socket_type("type1")
-	var socket_type2 = _create_socket_type("type2")
-	
 	var tile1 = _create_basic_tile("Tile1")
 	var tile2 = _create_basic_tile("Tile2")
 	
 	# Give tiles different socket types so they can't connect
 	for socket in tile1.sockets:
-		socket.socket_type = socket_type1
+		socket.socket_id = "type1"
+		socket.add_compatible_socket("type1")
 	for socket in tile2.sockets:
-		socket.socket_type = socket_type2
+		socket.socket_id = "type2"
+		socket.add_compatible_socket("type2")
 	
 	library.tiles.append(tile1)
 	library.tiles.append(tile2)
-	library.socket_types.assign([socket_type1, socket_type2])
+	library.socket_types.assign(["type1", "type2"])
 	
 	var validator = LibraryValidator.new()
 	var results = validator.validate(library)
@@ -482,21 +477,18 @@ func _create_basic_tile(tile_name: String) -> Tile:
 	tile.size = Vector3i.ONE
 	tile.weight = 1.0
 	
-	var socket_type = _create_socket_type("any")
-	
 	# Add basic sockets in all 6 directions
 	for dir in [Vector3i.RIGHT, Vector3i.LEFT, Vector3i.FORWARD, Vector3i.BACK, Vector3i.UP, Vector3i.DOWN]:
 		var socket = Socket.new()
 		socket.direction = dir
-		socket.socket_type = socket_type
+		socket.socket_id = "any"
+		socket.add_compatible_socket("any")
 		tile.sockets.append(socket)
 	
 	return tile
 
-func _create_socket_type(type_id: String) -> SocketType:
-	var socket_type = SocketType.new()
-	socket_type.type_id = type_id
-	return socket_type
+func _create_socket_type(type_id: String) -> String:
+	return type_id
 
 ## ============================================================================
 ## ASSERTION HELPERS

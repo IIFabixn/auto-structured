@@ -4,7 +4,6 @@ const SocketSuggestionBuilder = preload("res://addons/auto_structured/core/analy
 const MeshOutlineAnalyzer = preload("res://addons/auto_structured/core/analysis/mesh_outline_analyzer.gd")
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
-const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
 const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.gd")
 
 var test_results: Array[Dictionary] = []
@@ -53,19 +52,20 @@ func test_builder_build_suggestions() -> void:
 	library.ensure_defaults()
 	
 	# Create socket type
-	var wall_type = library.register_socket_type("wall")
-	wall_type.set_compatible_types(["wall"])
+	library.register_socket_type("wall")
 	
 	# Create two matching tiles
 	var tile1 = _create_cube_tile("Tile1", Vector3.ONE)
 	var socket1 = Socket.new()
-	socket1.socket_type = wall_type
+	socket1.socket_id = "wall"
+	socket1.add_compatible_socket("wall")
 	socket1.direction = Vector3i.RIGHT
 	tile1.sockets.append(socket1)
 	
 	var tile2 = _create_cube_tile("Tile2", Vector3.ONE)
 	var socket2 = Socket.new()
-	socket2.socket_type = wall_type
+	socket2.socket_id = "wall"
+	socket2.add_compatible_socket("wall")
 	socket2.direction = Vector3i.LEFT
 	tile2.sockets.append(socket2)
 	
@@ -91,18 +91,19 @@ func test_builder_analyze_faces() -> void:
 	var library = ModuleLibrary.new()
 	library.ensure_defaults()
 	
-	var wall_type = library.register_socket_type("wall")
-	wall_type.set_compatible_types(["wall"])
+	library.register_socket_type("wall")
 	
 	var tile1 = _create_cube_tile("Tile1", Vector3.ONE)
 	var socket1 = Socket.new()
-	socket1.socket_type = wall_type
+	socket1.socket_id = "wall"
+	socket1.add_compatible_socket("wall")
 	socket1.direction = Vector3i.RIGHT
 	tile1.sockets.append(socket1)
 	
 	var tile2 = _create_cube_tile("Tile2", Vector3.ONE)
 	var socket2 = Socket.new()
-	socket2.socket_type = wall_type
+	socket2.socket_id = "wall"
+	socket2.add_compatible_socket("wall")
 	socket2.direction = Vector3i.LEFT
 	tile2.sockets.append(socket2)
 	
@@ -200,17 +201,18 @@ func test_builder_self_match_behavior() -> void:
 	var library = ModuleLibrary.new()
 	library.ensure_defaults()
 	
-	var wall_type = library.register_socket_type("wall")
-	wall_type.set_compatible_types(["wall"])
+	library.register_socket_type("wall")
 	
 	var tile = _create_cube_tile("Tile", Vector3.ONE)
 	var socket_right = Socket.new()
-	socket_right.socket_type = wall_type
+	socket_right.socket_id = "wall"
+	socket_right.add_compatible_socket("wall")
 	socket_right.direction = Vector3i.RIGHT
 	tile.sockets.append(socket_right)
 	
 	var socket_left = Socket.new()
-	socket_left.socket_type = wall_type
+	socket_left.socket_id = "wall"
+	socket_left.add_compatible_socket("wall")
 	socket_left.direction = Vector3i.LEFT
 	tile.sockets.append(socket_left)
 	
@@ -231,8 +233,7 @@ func test_builder_candidate_gathering() -> void:
 	var library = ModuleLibrary.new()
 	library.ensure_defaults()
 	
-	var wall_type = library.register_socket_type("wall")
-	wall_type.set_compatible_types(["wall"])
+	library.register_socket_type("wall")
 	
 	# Create source tile
 	var tile1 = _create_cube_tile("Source", Vector3.ONE)
@@ -242,7 +243,8 @@ func test_builder_candidate_gathering() -> void:
 	for i in range(3):
 		var candidate = _create_cube_tile("Candidate%d" % i, Vector3.ONE)
 		var socket = Socket.new()
-		socket.socket_type = wall_type
+		socket.socket_id = "wall"
+		socket.add_compatible_socket("wall")
 		socket.direction = Vector3i.LEFT
 		candidate.sockets.append(socket)
 		tiles_array.append(candidate)
@@ -259,14 +261,15 @@ func test_builder_no_valid_candidates() -> void:
 	var library = ModuleLibrary.new()
 	library.ensure_defaults()
 	
-	var wall_type = library.register_socket_type("wall")
+	library.register_socket_type("wall")
 	
 	# Create tiles with incompatible faces (different sizes)
 	var tile1 = _create_cube_tile("Small", Vector3(0.5, 0.5, 0.5))
 	var tile2 = _create_cube_tile("Large", Vector3(5.0, 5.0, 5.0))
 	
 	var socket2 = Socket.new()
-	socket2.socket_type = wall_type
+	socket2.socket_id = "wall"
+	socket2.add_compatible_socket("wall")
 	socket2.direction = Vector3i.LEFT
 	tile2.sockets.append(socket2)
 	
@@ -286,14 +289,14 @@ func test_builder_suggestion_structure() -> void:
 	var library = ModuleLibrary.new()
 	library.ensure_defaults()
 	
-	var wall_type = library.register_socket_type("wall")
-	wall_type.set_compatible_types(["wall"])
+	library.register_socket_type("wall")
 	
 	var tile1 = _create_cube_tile("Tile1", Vector3.ONE)
 	var tile2 = _create_cube_tile("Tile2", Vector3.ONE)
 	
 	var socket2 = Socket.new()
-	socket2.socket_type = wall_type
+	socket2.socket_id = "wall"
+	socket2.add_compatible_socket("wall")
 	socket2.direction = Vector3i.LEFT
 	tile2.sockets.append(socket2)
 	
@@ -308,7 +311,6 @@ func test_builder_suggestion_structure() -> void:
 		# Check required fields
 		assert_true(suggestion.has("direction"), "Suggestion should have direction", test_name)
 		assert_true(suggestion.has("socket_id"), "Suggestion should have socket_id", test_name)
-		assert_true(suggestion.has("socket_type"), "Suggestion should have socket_type", test_name)
 		assert_true(suggestion.has("compatible"), "Suggestion should have compatible array", test_name)
 		assert_true(suggestion.has("partner_tile"), "Suggestion should have partner_tile", test_name)
 		assert_true(suggestion.has("score"), "Suggestion should have score", test_name)

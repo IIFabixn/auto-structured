@@ -134,33 +134,6 @@ func modify_library_property(library: ModuleLibrary, property: String, new_value
 	_editor_undo_redo.add_undo_property(library, property, old_value)
 	_editor_undo_redo.commit_action()
 
-func add_socket_type(library: ModuleLibrary, socket_type: SocketType) -> void:
-	"""
-	Record adding a socket type to a library for undo/redo.
-	
-	Args:
-		library: The library to add the socket type to
-		socket_type: The socket type to add
-	"""
-	_editor_undo_redo.create_action("Add Socket Type")
-	_editor_undo_redo.add_do_method(self, "_do_add_socket_type", library, socket_type)
-	_editor_undo_redo.add_undo_method(self, "_undo_add_socket_type", library, socket_type)
-	_editor_undo_redo.commit_action()
-
-func remove_socket_type(library: ModuleLibrary, socket_type: SocketType, index: int) -> void:
-	"""
-	Record removing a socket type from a library for undo/redo.
-	
-	Args:
-		library: The library to remove the socket type from
-		socket_type: The socket type to remove
-		index: The index where the socket type was located
-	"""
-	_editor_undo_redo.create_action("Remove Socket Type")
-	_editor_undo_redo.add_do_method(self, "_do_remove_socket_type", library, socket_type)
-	_editor_undo_redo.add_undo_method(self, "_undo_remove_socket_type", library, socket_type, index)
-	_editor_undo_redo.commit_action()
-
 ## ============================================================================
 ## TAG OPERATIONS
 ## ============================================================================
@@ -277,18 +250,6 @@ func _do_remove_socket(tile: Tile, socket: Socket) -> void:
 
 func _undo_remove_socket(tile: Tile, socket: Socket, index: int) -> void:
 	tile.sockets.insert(index, socket)
-
-func _do_add_socket_type(library: ModuleLibrary, socket_type: SocketType) -> void:
-	library.socket_types.append(socket_type)
-
-func _undo_add_socket_type(library: ModuleLibrary, socket_type: SocketType) -> void:
-	library.socket_types.erase(socket_type)
-
-func _do_remove_socket_type(library: ModuleLibrary, socket_type: SocketType) -> void:
-	library.socket_types.erase(socket_type)
-
-func _undo_remove_socket_type(library: ModuleLibrary, socket_type: SocketType, index: int) -> void:
-	library.socket_types.insert(index, socket_type)
 
 func _do_add_tag(tile: Tile, tag: String) -> void:
 	if not tile.tags.has(tag):

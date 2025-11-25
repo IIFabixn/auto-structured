@@ -1,10 +1,14 @@
 @tool
 class_name SocketManagerDialog extends ConfirmationDialog
+## Dialog for managing socket compatibility between tiles.
+##
+## This dialog allows users to configure which socket IDs can connect to each other.
+## Socket types are dynamic - any string can be a socket ID, and users configure
+## which IDs are compatible by checking/unchecking boxes in the tree.
 
 const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.gd")
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
-const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
 const SocketSuggestionBuilder = preload("res://addons/auto_structured/core/analysis/socket_suggestion_builder.gd")
 
 @onready var socket_list: ItemList = %SocketList
@@ -17,15 +21,14 @@ const SocketSuggestionBuilder = preload("res://addons/auto_structured/core/analy
 class SocketEntry:
 	var direction: Vector3i
 	var socket: Socket
-	var socket_type: SocketType
-	var socket_type_id: String
+	var socket_id: String
 
 var _library: ModuleLibrary = null
 var _tile: Tile = null
 var _socket_entries: Array[SocketEntry] = []
 var _current_entry: SocketEntry = null
 var _suggestions_by_dir: Dictionary = {}
-var _modified_types: Dictionary = {}
+var _modified_sockets: Dictionary = {}  # Track sockets that were modified
 var _tree_edit_enabled: bool = false
 
 func _ready() -> void:
@@ -51,7 +54,7 @@ func setup(library: ModuleLibrary, tile: Tile) -> void:
 func _rebuild_state() -> void:
 	_socket_entries.clear()
 	_suggestions_by_dir.clear()
-	_modified_types.clear()
+	_modified_sockets.clear()
 	_current_entry = null
 	if _library == null or _tile == null:
 		_refresh_socket_list()
@@ -80,8 +83,7 @@ func _build_socket_entries() -> void:
 		var entry := SocketEntry.new()
 		entry.direction = direction
 		entry.socket = socket
-		entry.socket_type = socket.socket_type if socket else null
-		entry.socket_type_id = entry.socket_type.type_id.strip_edges() if entry.socket_type else ""
+		entry.socket_id = socket.socket_id.strip_edges() if socket else ""
 		_socket_entries.append(entry)
 
 func _build_suggestions() -> void:
@@ -100,15 +102,15 @@ func _refresh_socket_list() -> void:
 	for i in range(_socket_entries.size()):
 		var entry: SocketEntry = _socket_entries[i]
 		var label := _direction_to_label(entry.direction)
-		if entry.socket_type_id != "":
-			label += "  —  %s" % entry.socket_type_id
+		if entry.socket_id != "":
+			label += "  —  %s" % entry.socket_id
 		elif entry.socket != null:
 			label += "  —  (unnamed type)"
 		else:
 			label += "  —  (no socket)"
 		socket_list.add_item(label)
 		socket_list.set_item_metadata(i, entry)
-		if entry.socket_type != null and first_valid == -1:
+		if entry.socket_id != "" and first_valid == -1:
 			first_valid = i
 	if _socket_entries.size() > 0:
 		var index_to_select := first_valid if first_valid != -1 else 0
@@ -136,12 +138,12 @@ func _on_socket_selected(index: int) -> void:
 		_update_ui_availability(false)
 		_refresh_compatibility_view()
 		return
-	if entry.socket_type == null:
+	if entry.socket_id == "":
 		socket_info_label.text = "Socket in direction %s has no socket type assigned." % _direction_to_label(entry.direction)
 		_update_ui_availability(false)
 		_refresh_compatibility_view()
 		return
-	socket_info_label.text = "Managing socket '%s' (%s)" % [entry.socket_type.get_display_name(), entry.socket_type_id]
+	socket_info_label.text = "Managing socket '%s'" % entry.socket_id
 	_update_ui_availability(true)
 	_refresh_compatibility_view()
 
@@ -163,54 +165,67 @@ func _refresh_compatibility_view() -> void:
 	compatibility_tree.set_column_expand_ratio(2, 0.4)
 	compatibility_status_label.text = ""
 	suggestions_label.text = ""
-	if _current_entry == null or _current_entry.socket_type == null or _library == null:
+	
+	if _current_entry == null or _current_entry.socket_id == "" or _library == null:
 		return
+	
 	var root = compatibility_tree.create_item()
-	var current_type := _current_entry.socket_type
+	var current_socket_id := _current_entry.socket_id
 	var summary_total := 0
 	var summary_enabled := 0
+	
+	# Build a tree showing all sockets in the library
 	for tile in _library.tiles:
 		var tile_item = compatibility_tree.create_item(root)
 		tile_item.set_text(1, tile.name if tile.name != "" else "(Unnamed Tile)")
 		for column in range(3):
 			tile_item.set_selectable(column, false)
+		
 		for socket in tile.sockets:
-			if socket.socket_type == null:
-				continue
-			var target_type: SocketType = socket.socket_type
-			var target_id := target_type.type_id.strip_edges()
+			var target_id := socket.socket_id.strip_edges()
 			if target_id == "":
 				continue
+			
 			var child = compatibility_tree.create_item(tile_item)
 			child.set_cell_mode(0, TreeItem.CELL_MODE_CHECK)
 			child.set_selectable(0, true)
-			var is_bidirectional := _are_types_bidirectionally_compatible(current_type, target_type)
-			var is_partial := _has_partial_compatibility(current_type, target_type)
+			
+			# Check if current socket and target socket are bidirectionally compatible
+			var is_bidirectional := _are_sockets_bidirectionally_compatible(_current_entry.socket, socket)
+			var is_partial := _has_partial_compatibility(_current_entry.socket, socket)
+			
 			child.set_checked(0, is_bidirectional)
 			child.set_metadata(0, {
-				"socket_type": target_type,
-				"type_id": target_id,
+				"socket": socket,
+				"socket_id": target_id,
 				"tile": tile,
 				"direction": socket.direction
 			})
+			
 			if is_partial and not is_bidirectional:
 				child.set_indeterminate(0, true)
 			else:
 				child.set_indeterminate(0, false)
+			
 			child.set_text(1, _direction_to_label(socket.direction))
 			child.set_text(2, target_id)
+			
 			for column in range(3):
 				child.set_selectable(column, column == 0)
+			
 			var tooltip := "Tile: %s\nDirection: %s\nSocket ID: %s" % [tile.name, _direction_to_label(socket.direction), target_id]
 			for column in range(3):
 				child.set_tooltip_text(column, tooltip)
+			
 			if _is_suggested_target(_current_entry.direction, target_id):
 				child.set_custom_color(1, Color(0.7, 0.85, 1.0))
 				child.set_custom_color(2, Color(0.7, 0.85, 1.0))
+			
 			child.set_editable(0, _tree_edit_enabled)
 			summary_total += 1
 			if is_bidirectional:
 				summary_enabled += 1
+	
 	var status := "%d of %d connections enabled" % [summary_enabled, summary_total]
 	if summary_total == 0:
 		status = "No other sockets available in library."
@@ -242,7 +257,7 @@ func _on_tree_item_edited() -> void:
 	if compatibility_tree == null:
 		return
 	var item: TreeItem = compatibility_tree.get_edited()
-	if item == null or _current_entry == null or _current_entry.socket_type == null:
+	if item == null or _current_entry == null or _current_entry.socket_id == "":
 		return
 	var column := compatibility_tree.get_edited_column()
 	if column != 0:
@@ -250,62 +265,53 @@ func _on_tree_item_edited() -> void:
 	var data = item.get_metadata(0)
 	if typeof(data) != TYPE_DICTIONARY:
 		return
-	var target_type: SocketType = data.get("socket_type")
-	if target_type == null:
+	var target_socket: Socket = data.get("socket")
+	if target_socket == null:
 		return
 	var desired := item.is_checked(0)
-	_apply_bidirectional_change(_current_entry.socket_type, target_type, desired)
+	_apply_bidirectional_change(_current_entry.socket, target_socket, desired)
 	_refresh_compatibility_view()
 
-func _apply_bidirectional_change(source: SocketType, target: SocketType, enable: bool) -> void:
+func _apply_bidirectional_change(source: Socket, target: Socket, enable: bool) -> void:
+	"""Apply bidirectional compatibility change between two sockets."""
 	if source == null or target == null or source == target:
 		return
-	if enable:
-		var changed := _ensure_bidirectional(source, target)
-		if changed:
-			_mark_modified(source)
-			_mark_modified(target)
-	else:
-		var changed := _remove_bidirectional(source, target)
-		if changed:
-			_mark_modified(source)
-			_mark_modified(target)
-
-func _ensure_bidirectional(source: SocketType, target: SocketType) -> bool:
-	var changed := false
-	if not source.compatible_types.has(target.type_id):
-		source.add_compatible_type(target.type_id)
-		changed = true
-	if not target.compatible_types.has(source.type_id):
-		target.add_compatible_type(source.type_id)
-		changed = true
-	return changed
-
-func _remove_bidirectional(source: SocketType, target: SocketType) -> bool:
-	var changed := false
-	if source.compatible_types.has(target.type_id):
-		source.remove_compatible_type(target.type_id)
-		changed = true
-	if target.compatible_types.has(source.type_id):
-		target.remove_compatible_type(source.type_id)
-		changed = true
-	return changed
-
-func _mark_modified(socket_type: SocketType) -> void:
-	if socket_type == null:
+	
+	var source_id := source.socket_id
+	var target_id := target.socket_id
+	
+	if source_id == "" or target_id == "":
 		return
-	_modified_types[socket_type] = true
+	
+	if enable:
+		# Add bidirectional compatibility
+		if target_id not in source.compatible_sockets:
+			source.add_compatible_socket(target_id)
+			_modified_sockets[source] = true
+		if source_id not in target.compatible_sockets:
+			target.add_compatible_socket(source_id)
+			_modified_sockets[target] = true
+	else:
+		# Remove bidirectional compatibility
+		if target_id in source.compatible_sockets:
+			source.remove_compatible_socket(target_id)
+			_modified_sockets[source] = true
+		if source_id in target.compatible_sockets:
+			target.remove_compatible_socket(source_id)
+			_modified_sockets[target] = true
 
-func _are_types_bidirectionally_compatible(a: SocketType, b: SocketType) -> bool:
+func _are_sockets_bidirectionally_compatible(a: Socket, b: Socket) -> bool:
+	"""Check if two sockets have bidirectional compatibility."""
 	if a == null or b == null:
 		return false
-	return a.compatible_types.has(b.type_id) and b.compatible_types.has(a.type_id)
+	return b.socket_id in a.compatible_sockets and a.socket_id in b.compatible_sockets
 
-func _has_partial_compatibility(a: SocketType, b: SocketType) -> bool:
+func _has_partial_compatibility(a: Socket, b: Socket) -> bool:
+	"""Check if sockets have partial (one-way) compatibility."""
 	if a == null or b == null:
 		return false
-	var forward := a.compatible_types.has(b.type_id)
-	var backward := b.compatible_types.has(a.type_id)
+	var forward := b.socket_id in a.compatible_sockets
+	var backward := a.socket_id in b.compatible_sockets
 	return forward != backward
 
 func _is_suggested_target(direction: Vector3i, socket_id: String) -> bool:
@@ -317,36 +323,29 @@ func _is_suggested_target(direction: Vector3i, socket_id: String) -> bool:
 	return false
 
 func _on_apply_suggestions_pressed() -> void:
-	if _current_entry == null or _current_entry.socket_type == null:
+	"""Apply all suggestions for the current socket."""
+	if _current_entry == null or _current_entry.socket == null:
 		return
+	
 	var suggestions: Array = _suggestions_by_dir.get(_current_entry.direction, [])
-	var changed := false
 	for suggestion in suggestions:
-		var target_type: SocketType = null
 		var partner_socket: Socket = suggestion.get("partner_socket", null)
-		if partner_socket and partner_socket.socket_type:
-			target_type = partner_socket.socket_type
-		else:
-			target_type = suggestion.get("socket_type", null)
-		if target_type == null:
-			var socket_id: String = suggestion.get("socket_id", "")
-			if socket_id != "" and _library != null:
-				target_type = _library.get_socket_type_by_id(socket_id)
-		if target_type == null:
+		if partner_socket == null:
 			continue
-		if _ensure_bidirectional(_current_entry.socket_type, target_type):
-			_mark_modified(_current_entry.socket_type)
-			_mark_modified(target_type)
-			changed = true
-	if changed:
-		_refresh_compatibility_view()
+		
+		# Add bidirectional compatibility
+		_apply_bidirectional_change(_current_entry.socket, partner_socket, true)
+	
+	_refresh_compatibility_view()
 
 func _on_dialog_confirmed() -> void:
+	"""Handle dialog confirmation - notify library of changes."""
 	if _library == null:
 		return
-	for socket_type in _modified_types.keys():
-		if socket_type is SocketType:
-			_library.notify_socket_type_compatibility_changed(socket_type)
+	
+	# Notify library that socket compatibility was changed
+	if not _modified_sockets.is_empty():
+		_library.notify_socket_compatibility_changed()
 
 func _direction_to_label(direction: Vector3i) -> String:
 	if direction == Vector3i.UP:

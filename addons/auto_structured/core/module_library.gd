@@ -2,7 +2,6 @@
 class_name ModuleLibrary extends Resource
 
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
-const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
 
 ## Emitted when a tile is added to the library
 signal tile_added(tile: Tile)
@@ -14,7 +13,7 @@ signal tile_removed(tile: Tile)
 signal tile_modified(tile: Tile, property: String)
 
 ## Emitted when a socket type is added
-signal socket_type_added(socket_type: SocketType)
+signal socket_type_added(socket_type_id: String)
 
 ## Emitted when a socket type is removed
 signal socket_type_removed(socket_type_id: String)
@@ -22,15 +21,15 @@ signal socket_type_removed(socket_type_id: String)
 ## Emitted when a socket type is renamed
 signal socket_type_renamed(old_id: String, new_id: String)
 
-## Emitted when a socket type's compatibility changes
-signal socket_type_compatibility_changed(socket_type: SocketType)
+## Emitted when socket compatibility changes
+signal socket_compatibility_changed
 
 ## Emitted when the library is modified in any way
 signal library_changed
 
 @export var library_name: String = "My Building Set"
 @export var tiles: Array[Tile] = []
-@export var socket_types: Array[SocketType] = []  ## Registered socket types for this library
+@export var socket_types: Array[String] = []  ## Registered socket type IDs for this library
 @export var available_tags: Array[String] = []  ## Available tags for tiles in this library
 @export var cell_world_size: Vector3 = Vector3(1, 1, 1)  ## Size of each grid cell in world units
 
@@ -40,16 +39,14 @@ func ensure_defaults() -> void:
 	Call this explicitly when setting up the library, not in _init.
 	"""
 	# Create "none" socket type if it doesn't exist
-	if get_socket_type_by_id("none") == null:
-		var none_type = SocketType.new()
-		none_type.type_id = "none"
-		socket_types.append(none_type)
+	if "none" not in socket_types:
+		socket_types.append("none")
 	
 	# Create "any" socket type if it doesn't exist
-	if get_socket_type_by_id("any") == null:
-		var any_type = SocketType.new()
-		any_type.type_id = "any"
-		socket_types.append(any_type)
+	if "any" not in socket_types:
+		socket_types.append("any")
+	
+	socket_types.sort()
 
 	# Ensure cell size has sane defaults
 	if cell_world_size.x <= 0.0 or cell_world_size.y <= 0.0 or cell_world_size.z <= 0.0:
@@ -151,135 +148,63 @@ func get_all_unique_socket_ids() -> Array[String]:
 	
 	for tile in tiles:
 		for socket in tile.sockets:
-			if socket.socket_type != null and socket.socket_type.type_id and not unique_ids.has(socket.socket_type.type_id):
-				unique_ids[socket.socket_type.type_id] = true
-				socket_ids.append(socket.socket_type.type_id)
+			if socket.socket_id and not unique_ids.has(socket.socket_id):
+				unique_ids[socket.socket_id] = true
+				socket_ids.append(socket.socket_id)
 	
 	socket_ids.sort()
 	return socket_ids
 
-func register_socket_type(type) -> SocketType:
+func register_socket_type(socket_id: String) -> void:
 	"""
-	Register a new socket type in this library.
+	Register a new socket type ID in this library.
 
 	Args:
-		type: SocketType resource or String ID to register
-
-	Returns:
-		The SocketType resource registered (existing or newly created)
+		socket_id: The socket type ID to register
 	"""
-	var socket_type: SocketType = null
-	if type is SocketType:
-		socket_type = type
-	elif type is String:
-		var clean := String(type).strip_edges()
-		if clean.is_empty():
-			return null
-		socket_type = get_socket_type_by_id(clean)
-		if socket_type:
-			return socket_type
-		socket_type = SocketType.new()
-		socket_type.type_id = clean
-	else:
-		return null
-
-	if socket_type == null or socket_type.type_id.strip_edges().is_empty():
-		return null
-
-	for existing in socket_types:
-		if existing.type_id == socket_type.type_id:
-			return existing
-
-	socket_types.append(socket_type)
-	socket_type_added.emit(socket_type)
+	var normalized_id = socket_id.strip_edges()
+	if normalized_id.is_empty():
+		return
+	
+	if normalized_id in socket_types:
+		return
+	
+	socket_types.append(normalized_id)
+	socket_types.sort()
+	socket_type_added.emit(normalized_id)
 	library_changed.emit()
-	return socket_type
 
-func get_socket_types() -> Array[String]:
-	"""Get the list of registered socket type IDs (legacy compatibility)."""
-	return get_socket_type_ids()
-
-func get_socket_type_resources() -> Array[SocketType]:
-	"""Get all socket type resources registered in this library."""
-	var types: Array[SocketType] = []
-	types.assign(socket_types)
-	return types
-
-func get_socket_type_by_id(id: String) -> SocketType:
+func has_socket_type(socket_id: String) -> bool:
 	"""
-	Get a socket type by its ID.
+	Check if a socket type ID exists in this library.
 	
 	Args:
-		id: The socket type ID to look up
+		socket_id: The socket ID to check
 	
 	Returns:
-		The SocketType with that ID, or null if not found
+		true if the socket type exists, false otherwise
 	"""
-	for t in socket_types:
-		if t.type_id == id:
-			return t
-	return null
+	return socket_id in socket_types
 
-func ensure_socket_type(id: String) -> SocketType:
-	"""Ensure a socket type with the given ID exists and return it."""
-	var clean_id := id.strip_edges()
-	if clean_id.is_empty():
-		return null
-	return register_socket_type(clean_id)
+func ensure_socket_type(socket_id: String) -> void:
+	"""
+	Ensure a socket type ID exists in the library, registering it if needed.
+	
+	Args:
+		socket_id: The socket ID to ensure exists
+	"""
+	register_socket_type(socket_id)
 
-func rename_socket_type(old_id: String, new_id: String) -> bool:
-	"""Rename a socket type and update compatibility references."""
-	var type := get_socket_type_by_id(old_id)
-	if type == null:
-		return false
-	var clean_new := new_id.strip_edges()
-	if clean_new.is_empty():
-		return false
-	if old_id == clean_new:
-		return true
-	if get_socket_type_by_id(clean_new) != null:
-		return false
-	# Update compatibility references before renaming
-	for other in socket_types:
-		if old_id in other.compatible_types:
-			var compat := other.compatible_types.duplicate()
-			compat.erase(old_id)
-			compat.append(clean_new)
-			compat.sort()
-			other.compatible_types = compat
-	# Rename the socket type
-	type.type_id = clean_new
-	socket_type_renamed.emit(old_id, clean_new)
-	library_changed.emit()
-	return true
-
-func delete_socket_type(id: String, fallback_id: String = "none") -> bool:
-	"""Delete a socket type from the library and migrate sockets to fallback."""
-	var type := get_socket_type_by_id(id)
-	if type == null:
-		return false
-	var normalized_id := id.strip_edges()
-	# Prevent removing required defaults
-	if normalized_id == "none" or normalized_id == "any":
-		return false
-	var fallback := ensure_socket_type(fallback_id)
-	if fallback == null:
-		return false
-	socket_types.erase(type)
-	# Update sockets referencing this type
-	for tile in tiles:
-		for socket in tile.sockets:
-			if socket.socket_type == type:
-				socket.socket_type = fallback
-	# Remove compatibility references from other types
-	for other in socket_types:
-		if normalized_id in other.compatible_types:
-			var compat := other.compatible_types.duplicate()
-			compat.erase(normalized_id)
-			other.compatible_types = compat
-	socket_type_removed.emit(normalized_id)
-	library_changed.emit()
-	return true
+func get_socket_type_ids() -> Array[String]:
+	"""
+	Get all registered socket type IDs.
+	
+	Returns:
+		A copy of the socket types array
+	"""
+	var ids: Array[String] = []
+	ids.assign(socket_types)
+	return ids
 
 func validate_socket_id(socket_id: String) -> bool:
 	"""
@@ -291,19 +216,80 @@ func validate_socket_id(socket_id: String) -> bool:
 	Returns:
 		true if the socket ID is registered, false otherwise
 	"""
-	return get_socket_type_by_id(socket_id) != null
+	return socket_id in socket_types
 
-func get_socket_type_ids() -> Array[String]:
+func get_socket_types() -> Array[String]:
 	"""
-	Get a list of all registered socket type IDs.
+	Get a copy of all registered socket type IDs.
 	
 	Returns:
-		An array of socket type ID strings
+		A sorted array of registered socket type IDs
 	"""
-	var ids: Array[String] = []
-	for t in socket_types:
-		ids.append(t.type_id)
-	return ids
+	var types_copy: Array[String] = []
+	types_copy.assign(socket_types)
+	return types_copy
+
+func rename_socket_type(old_id: String, new_id: String) -> bool:
+	"""Rename a socket type and update all references in tiles."""
+	if old_id not in socket_types:
+		return false
+	var clean_new := new_id.strip_edges()
+	if clean_new.is_empty():
+		return false
+	if old_id == clean_new:
+		return true
+	if clean_new in socket_types:
+		return false
+	
+	# Update the socket_types array
+	var index = socket_types.find(old_id)
+	if index >= 0:
+		socket_types[index] = clean_new
+	socket_types.sort()
+	
+	# Update all sockets that use this socket ID
+	for tile in tiles:
+		for socket in tile.sockets:
+			if socket.socket_id == old_id:
+				socket.socket_id = clean_new
+			# Update compatibility references
+			if old_id in socket.compatible_sockets:
+				socket.compatible_sockets.erase(old_id)
+				socket.compatible_sockets.append(clean_new)
+				socket.compatible_sockets.sort()
+	
+	socket_type_renamed.emit(old_id, clean_new)
+	library_changed.emit()
+	return true
+
+func delete_socket_type(id: String, fallback_id: String = "none") -> bool:
+	"""Delete a socket type from the library and migrate sockets to fallback."""
+	var normalized_id := id.strip_edges()
+	if normalized_id not in socket_types:
+		return false
+	
+	# Prevent removing required defaults
+	if normalized_id == "none" or normalized_id == "any":
+		return false
+	
+	# Ensure fallback exists
+	register_socket_type(fallback_id)
+	
+	# Remove from socket_types array
+	socket_types.erase(normalized_id)
+	
+	# Update sockets referencing this type
+	for tile in tiles:
+		for socket in tile.sockets:
+			if socket.socket_id == normalized_id:
+				socket.socket_id = fallback_id
+			# Remove from compatibility lists
+			if normalized_id in socket.compatible_sockets:
+				socket.compatible_sockets.erase(normalized_id)
+	
+	socket_type_removed.emit(normalized_id)
+	library_changed.emit()
+	return true
 
 func validate_library() -> Dictionary:
 	"""
@@ -319,19 +305,19 @@ func validate_library() -> Dictionary:
 	
 	for tile in tiles:
 		for socket in tile.sockets:
-			# Check if socket has a valid type
-			if socket.socket_type == null:
-				issues.append("Socket on tile '%s' (direction %s) has no socket_type" % [tile.name, socket.direction])
-			elif socket.socket_type.type_id.strip_edges().is_empty():
-				issues.append("Socket on tile '%s' (direction %s) has empty type_id" % [tile.name, socket.direction])
-			elif not validate_socket_id(socket.socket_type.type_id):
-				issues.append("Socket type '%s' on tile '%s' is not registered in socket_types" % [socket.socket_type.type_id, tile.name])
+			# Check if socket ID is empty
+			if socket.socket_id.strip_edges().is_empty():
+				issues.append("Tile '%s' has a socket with empty socket_id" % tile.name)
+				continue
 			
-			# Check if socket type's compatible types exist
-			if socket.socket_type != null:
-				for compat_id in socket.socket_type.compatible_types:
-					if compat_id not in all_socket_ids and not validate_socket_id(compat_id):
-						issues.append("Socket type '%s' on tile '%s' references unknown socket type '%s'" % [socket.socket_type.type_id, tile.name, compat_id])
+			# Check if socket ID is registered
+			if socket.socket_id and not validate_socket_id(socket.socket_id):
+				issues.append("Socket '%s' on tile '%s' is not registered in socket_types" % [socket.socket_id, tile.name])
+			
+			# Check if any compatible socket doesn't exist in library
+			for compat_id in socket.compatible_sockets:
+				if compat_id not in all_socket_ids:
+					issues.append("Socket '%s' on tile '%s' references unknown socket type '%s'" % [socket.socket_id, tile.name, compat_id])
 	
 	return {"valid": issues.is_empty(), "issues": issues}
 
@@ -363,7 +349,7 @@ func notify_tile_modified(tile: Tile, property: String = "") -> void:
 	library_changed.emit()
 
 
-## Notify that a socket type's compatibility changed
-func notify_socket_type_compatibility_changed(socket_type: SocketType) -> void:
-	socket_type_compatibility_changed.emit(socket_type)
+## Notify that socket compatibility changed
+func notify_socket_compatibility_changed() -> void:
+	socket_compatibility_changed.emit()
 	library_changed.emit()

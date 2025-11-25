@@ -1,7 +1,6 @@
 extends RefCounted
 
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
-const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
 
 var test_results: Array[Dictionary] = []
 var tests_passed: int = 0
@@ -25,7 +24,7 @@ func test_socket_initialization() -> void:
 	var socket = Socket.new()
 	assert_not_null(socket, "Socket should be created", test_name)
 	assert_equal(socket.direction, Vector3i.UP, "Socket should have default UP direction", test_name)
-	assert_null(socket.socket_type, "Socket should have null socket_type initially", test_name)
+	assert_equal(socket.socket_id, "", "Socket should have empty socket_id initially", test_name)
 
 func test_socket_direction_validation() -> void:
 	var test_name = "Socket direction validation"
@@ -68,28 +67,17 @@ func test_socket_direction_validation() -> void:
 func test_socket_compatibility() -> void:
 	var test_name = "Socket compatibility"
 	
-	# Create compatible socket types
-	var type_a = SocketType.new()
-	type_a.type_id = "type_a"
-	type_a.set_compatible_types(["type_b"])
-	
-	var type_b = SocketType.new()
-	type_b.type_id = "type_b"
-	type_b.set_compatible_types(["type_a"])
-	
-	var type_c = SocketType.new()
-	type_c.type_id = "type_c"
-	type_c.set_compatible_types([])
-	
-	# Create sockets
+	# Create sockets with compatibility
 	var socket_a = Socket.new()
-	socket_a.socket_type = type_a
+	socket_a.socket_id = "type_a"
+	socket_a.add_compatible_socket("type_b")
 	
 	var socket_b = Socket.new()
-	socket_b.socket_type = type_b
+	socket_b.socket_id = "type_b"
+	socket_b.add_compatible_socket("type_a")
 	
 	var socket_c = Socket.new()
-	socket_c.socket_type = type_c
+	socket_c.socket_id = "type_c"
 	
 	# Test compatibility
 	assert_true(socket_a.is_compatible_with(socket_b), "Socket A should be compatible with Socket B", test_name)
@@ -97,10 +85,10 @@ func test_socket_compatibility() -> void:
 	assert_false(socket_a.is_compatible_with(socket_c), "Socket A should not be compatible with Socket C", test_name)
 	assert_false(socket_c.is_compatible_with(socket_a), "Socket C should not be compatible with Socket A", test_name)
 	
-	# Test with null socket_type
+	# Test with empty socket_id
 	var socket_null = Socket.new()
-	assert_false(socket_null.is_compatible_with(socket_a), "Null socket_type should not be compatible", test_name)
-	assert_false(socket_a.is_compatible_with(socket_null), "Socket should not be compatible with null", test_name)
+	assert_false(socket_null.is_compatible_with(socket_a), "Empty socket_id should not be compatible", test_name)
+	assert_false(socket_a.is_compatible_with(socket_null), "Socket should not be compatible with empty", test_name)
 
 func test_socket_id_accessors() -> void:
 	var test_name = "Socket ID accessors"
@@ -110,19 +98,17 @@ func test_socket_id_accessors() -> void:
 	# Test getting empty socket_id
 	assert_equal(socket.socket_id, "", "Empty socket should have empty socket_id", test_name)
 	
-	# Test setting socket_id creates SocketType
+	# Test setting socket_id
 	socket.socket_id = "wall"
-	assert_not_null(socket.socket_type, "Setting socket_id should create SocketType", test_name)
-	assert_equal(socket.socket_type.type_id, "wall", "SocketType should have correct type_id", test_name)
 	assert_equal(socket.socket_id, "wall", "socket_id getter should return correct value", test_name)
 	
-	# Test setting empty socket_id clears SocketType
+	# Test setting empty socket_id
 	socket.socket_id = ""
-	assert_null(socket.socket_type, "Setting empty socket_id should clear SocketType", test_name)
+	assert_equal(socket.socket_id, "", "Setting empty socket_id should clear it", test_name)
 	
 	# Test setting socket_id with whitespace
 	socket.socket_id = "  trimmed  "
-	assert_equal(socket.socket_type.type_id, "trimmed", "socket_id should be trimmed", test_name)
+	assert_equal(socket.socket_id, "trimmed", "socket_id should be trimmed", test_name)
 
 func test_socket_compatible_list_accessors() -> void:
 	var test_name = "Socket compatible list accessors"

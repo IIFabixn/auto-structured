@@ -2,7 +2,6 @@ extends RefCounted
 
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
-const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
 
 var test_results: Array[Dictionary] = []
 var tests_passed: int = 0
@@ -130,19 +129,16 @@ func _create_l_shaped_tile() -> Tile:
 	var tile = Tile.new()
 	tile.name = "L-Shape"
 	
-	var type_a = SocketType.new()
-	type_a.type_id = "a"
-	var type_b = SocketType.new()
-	type_b.type_id = "b"
-	
 	# L-shape: sockets on RIGHT and BACK only
 	var socket_right = Socket.new()
 	socket_right.direction = Vector3i.RIGHT
-	socket_right.socket_type = type_a
+	socket_right.socket_id = "a"
+	socket_right.add_compatible_socket("a")
 	
 	var socket_back = Socket.new()
 	socket_back.direction = Vector3i.BACK
-	socket_back.socket_type = type_b
+	socket_back.socket_id = "b"
+	socket_back.add_compatible_socket("b")
 	
 	tile.sockets.append(socket_right)
 	tile.sockets.append(socket_back)
@@ -154,14 +150,12 @@ func _create_cross_shaped_tile() -> Tile:
 	var tile = Tile.new()
 	tile.name = "Cross"
 	
-	var type_a = SocketType.new()
-	type_a.type_id = "a"
-	
 	# Cross: same socket type on all 4 horizontal sides
 	for dir in [Vector3i.RIGHT, Vector3i.LEFT, Vector3i.FORWARD, Vector3i.BACK]:
 		var socket = Socket.new()
 		socket.direction = dir
-		socket.socket_type = type_a
+		socket.socket_id = "a"
+		socket.add_compatible_socket("a")
 		tile.sockets.append(socket)
 	
 	return tile
@@ -171,17 +165,16 @@ func _create_i_beam_tile() -> Tile:
 	var tile = Tile.new()
 	tile.name = "I-Beam"
 	
-	var type_a = SocketType.new()
-	type_a.type_id = "a"
-	
 	# I-beam: sockets on opposing sides (RIGHT/LEFT)
 	var socket_right = Socket.new()
 	socket_right.direction = Vector3i.RIGHT
-	socket_right.socket_type = type_a
+	socket_right.socket_id = "a"
+	socket_right.add_compatible_socket("a")
 	
 	var socket_left = Socket.new()
 	socket_left.direction = Vector3i.LEFT
-	socket_left.socket_type = type_a
+	socket_left.socket_id = "a"
+	socket_left.add_compatible_socket("a")
 	
 	tile.sockets.append(socket_right)
 	tile.sockets.append(socket_left)

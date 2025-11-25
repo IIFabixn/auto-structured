@@ -4,7 +4,7 @@ class_name SocketSuggestionBuilder
 const Tile := preload("res://addons/auto_structured/core/tile.gd")
 const ModuleLibrary := preload("res://addons/auto_structured/core/module_library.gd")
 const Socket := preload("res://addons/auto_structured/core/socket.gd")
-const SocketType := preload("res://addons/auto_structured/core/socket_type.gd")
+
 const MeshOutlineAnalyzer := preload("res://addons/auto_structured/core/analysis/mesh_outline_analyzer.gd")
 
 static func build_suggestions(tile: Tile, library: ModuleLibrary, allow_self_match: bool = false) -> Array:
@@ -131,8 +131,8 @@ static func _gather_candidates(tile: Tile, direction: Vector3i, face: Dictionary
 		if detail.is_empty():
 			continue
 		var partner_socket := other_tile.get_socket_by_direction(opposite)
-		# Skip candidates without valid socket types
-		if partner_socket == null or partner_socket.socket_type == null:
+		# Skip candidates without valid socket IDs
+		if partner_socket == null or partner_socket.socket_id.is_empty():
 			continue
 		var candidate := {
 			"tile": other_tile,
@@ -147,21 +147,17 @@ static func _gather_candidates(tile: Tile, direction: Vector3i, face: Dictionary
 
 static func _candidate_to_suggestion(direction: Vector3i, candidate: Dictionary, library: ModuleLibrary) -> Dictionary:
 	var partner_socket: Socket = candidate.get("partner_socket")
-	if partner_socket == null or partner_socket.socket_type == null:
+	if partner_socket == null or partner_socket.socket_id.is_empty():
 		return {}
-	var partner_socket_type: SocketType = partner_socket.socket_type
-	var partner_socket_id := partner_socket_type.type_id.strip_edges()
+	var partner_socket_id := partner_socket.socket_id.strip_edges()
 	if partner_socket_id == "" or partner_socket_id == "none":
 		return {}
-	# Ensure the partner socket type is registered in the library
-	if library:
-		library.register_socket_type(partner_socket_type)
+	# Socket ID is already registered in the library through the socket itself
 	var compatible_ids: Array[String] = []
-	compatible_ids.assign(partner_socket_type.compatible_types)
+	compatible_ids.assign(partner_socket.compatible_sockets)
 	return {
 		"direction": direction,
 		"socket_id": partner_socket_id,
-		"socket_type": partner_socket_type,
 		"compatible": compatible_ids,
 		"partner_tile": candidate.get("tile"),
 		"partner_direction": candidate.get("opposite"),

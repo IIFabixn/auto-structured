@@ -6,7 +6,6 @@ const WfcCell = preload("res://addons/auto_structured/core/wfc/wfc_cell.gd")
 const WfcHelper = preload("res://addons/auto_structured/core/wfc/wfc_helper.gd")
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
-const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
 
 var grid: WfcGrid
 var max_iterations: int = 10000

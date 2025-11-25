@@ -7,7 +7,6 @@ extends RefCounted
 
 const SocketTemplate = preload("res://addons/auto_structured/utils/socket_template.gd")
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
-const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 
 ## ============================================================================
@@ -91,17 +90,19 @@ static func apply_socket_template(tile: Tile, template: SocketTemplate, library)
 		var compatible: Array = entry["compatible"]
 		
 		# Register socket type in library
-		var socket_type = library.ensure_socket_type(socket_id)
-		if socket_type:
-			# Update compatibility
-			for compat_id in compatible:
-				if not socket_type.compatible_types.has(compat_id):
-					socket_type.compatible_types.append(compat_id)
+		library.ensure_socket_type(socket_id)
+		
+		# Register compatible types
+		for compat_id in compatible:
+			library.ensure_socket_type(compat_id)
 		
 		# Create socket
 		var socket = Socket.new()
-		socket.socket_type = socket_type
+		socket.socket_id = socket_id
 		socket.direction = direction
+		# Add compatible sockets
+		for compat_id in compatible:
+			socket.add_compatible_socket(compat_id)
 		tile.sockets.append(socket)
 		
 		covered_directions[direction] = true
@@ -113,11 +114,10 @@ static func apply_socket_template(tile: Tile, template: SocketTemplate, library)
 		Vector3i.FORWARD, Vector3i.BACK
 	]
 	
-	var none_type = library.ensure_socket_type("none")
 	for direction in all_directions:
 		if not covered_directions.has(direction):
 			var socket = Socket.new()
-			socket.socket_type = none_type
+			socket.socket_id = "none"
 			socket.direction = direction
 			tile.sockets.append(socket)
 
@@ -267,14 +267,13 @@ static func apply_socket_type_set(library, set_name: String) -> bool:
 	
 	var socket_defs = sets[set_name]
 	for def in socket_defs:
-		var socket_type = library.ensure_socket_type(def["id"])
-		if socket_type:
-			socket_type.display_name = def.get("description", "")
-			# Set compatibility
-			var compatible: Array = def.get("compatible", [])
-			for compat_id in compatible:
-				if not socket_type.compatible_types.has(compat_id):
-					socket_type.compatible_types.append(compat_id)
+		# Register socket type in library
+		library.ensure_socket_type(def["id"])
+		
+		# Register compatible types
+		var compatible: Array = def.get("compatible", [])
+		for compat_id in compatible:
+			library.ensure_socket_type(compat_id)
 	
 	return true
 

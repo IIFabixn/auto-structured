@@ -2,7 +2,6 @@ extends RefCounted
 
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
-const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
 const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.gd")
 
 var test_results: Array[Dictionary] = []
@@ -159,12 +158,10 @@ func test_tile_add_socket() -> void:
 	var test_name = "Tile add socket"
 	
 	var tile = Tile.new()
-	var socket_type = SocketType.new()
-	socket_type.type_id = "wall"
 	
 	var socket1 = Socket.new()
 	socket1.direction = Vector3i.UP
-	socket1.socket_type = socket_type
+	socket1.socket_id = "wall"
 	
 	tile.add_socket(socket1)
 	assert_equal(tile.sockets.size(), 1, "Should have 1 socket", test_name)
@@ -173,7 +170,7 @@ func test_tile_add_socket() -> void:
 	# Add another socket
 	var socket2 = Socket.new()
 	socket2.direction = Vector3i.DOWN
-	socket2.socket_type = socket_type
+	socket2.socket_id = "wall"
 	
 	tile.add_socket(socket2)
 	assert_equal(tile.sockets.size(), 2, "Should have 2 sockets", test_name)
@@ -182,16 +179,14 @@ func test_tile_remove_socket() -> void:
 	var test_name = "Tile remove socket"
 	
 	var tile = Tile.new()
-	var socket_type = SocketType.new()
-	socket_type.type_id = "wall"
 	
 	var socket1 = Socket.new()
 	socket1.direction = Vector3i.UP
-	socket1.socket_type = socket_type
+	socket1.socket_id = "wall"
 	
 	var socket2 = Socket.new()
 	socket2.direction = Vector3i.DOWN
-	socket2.socket_type = socket_type
+	socket2.socket_id = "wall"
 	
 	tile.add_socket(socket1)
 	tile.add_socket(socket2)
@@ -211,16 +206,14 @@ func test_tile_get_socket_by_direction() -> void:
 	var test_name = "Tile get socket by direction"
 	
 	var tile = Tile.new()
-	var socket_type = SocketType.new()
-	socket_type.type_id = "wall"
 	
 	var socket_up = Socket.new()
 	socket_up.direction = Vector3i.UP
-	socket_up.socket_type = socket_type
+	socket_up.socket_id = "wall"
 	
 	var socket_down = Socket.new()
 	socket_down.direction = Vector3i.DOWN
-	socket_down.socket_type = socket_type
+	socket_down.socket_id = "wall"
 	
 	tile.add_socket(socket_up)
 	tile.add_socket(socket_down)
@@ -241,21 +234,19 @@ func test_tile_get_sockets_in_direction() -> void:
 	var test_name = "Tile get sockets in direction"
 	
 	var tile = Tile.new()
-	var socket_type = SocketType.new()
-	socket_type.type_id = "wall"
 	
 	# Add two sockets in the same direction
 	var socket1 = Socket.new()
 	socket1.direction = Vector3i.UP
-	socket1.socket_type = socket_type
+	socket1.socket_id = "wall"
 	
 	var socket2 = Socket.new()
 	socket2.direction = Vector3i.UP
-	socket2.socket_type = socket_type
+	socket2.socket_id = "wall"
 	
 	var socket3 = Socket.new()
 	socket3.direction = Vector3i.DOWN
-	socket3.socket_type = socket_type
+	socket3.socket_id = "wall"
 	
 	tile.add_socket(socket1)
 	tile.add_socket(socket2)
@@ -276,12 +267,9 @@ func test_tile_socket_cache_rebuild() -> void:
 	var test_name = "Tile socket cache rebuild"
 	
 	var tile = Tile.new()
-	var socket_type = SocketType.new()
-	socket_type.type_id = "wall"
-	
 	var socket = Socket.new()
 	socket.direction = Vector3i.UP
-	socket.socket_type = socket_type
+	socket.socket_id = "wall"
 	
 	# Add socket and check cache
 	tile.add_socket(socket)
@@ -296,7 +284,7 @@ func test_tile_socket_cache_rebuild() -> void:
 	# Directly set sockets array (triggers cache rebuild)
 	var socket2 = Socket.new()
 	socket2.direction = Vector3i.DOWN
-	socket2.socket_type = socket_type
+	socket2.socket_id = "wall"
 	
 	var sockets_array: Array[Socket] = [socket2]
 	tile.sockets = sockets_array
@@ -329,8 +317,7 @@ func test_tile_ensure_all_sockets() -> void:
 	
 	# Check that default sockets use "none" type
 	var up_socket = tile.get_socket_by_direction(Vector3i.UP)
-	if up_socket.socket_type != null:
-		assert_equal(up_socket.socket_type.type_id, "none", "Default socket should use 'none' type", test_name)
+	assert_equal(up_socket.socket_id, "none", "Default socket should use 'none' type", test_name)
 	
 	# Call again - should not create duplicates
 	tile.ensure_all_sockets(library)

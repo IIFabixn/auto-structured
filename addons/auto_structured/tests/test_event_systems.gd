@@ -5,7 +5,6 @@ const ValidationEventBus = preload("res://addons/auto_structured/core/events/val
 const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.gd")
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
-const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
 const ValidationResult = preload("res://addons/auto_structured/core/validation/validation_result.gd")
 
 var test_results: Array[Dictionary] = []
@@ -302,19 +301,19 @@ func test_library_socket_type_signals() -> void:
 	library.socket_type_removed.connect(func(_id): removed_fired = true)
 	
 	# Add socket type - verify functionality
-	var socket_type = library.register_socket_type("test_type")
-	assert_not_null(socket_type, "Socket type should be registered", test_name)
-	assert_not_null(library.get_socket_type_by_id("test_type"), "Socket type should be retrievable", test_name)
+	library.register_socket_type("test_type")
+	assert_true(library.has_socket_type("test_type"), "Socket type should be registered", test_name)
+	assert_true(library.has_socket_type("test_type"), "Socket type should be retrievable", test_name)
 	
 	# Rename socket type
 	var renamed = library.rename_socket_type("test_type", "renamed_type")
 	assert_true(renamed, "Rename should succeed", test_name)
-	assert_not_null(library.get_socket_type_by_id("renamed_type"), "Renamed socket type should exist", test_name)
+	assert_true(library.has_socket_type("renamed_type"), "Renamed socket type should exist", test_name)
 	
 	# Delete socket type
 	var deleted = library.delete_socket_type("renamed_type")
 	assert_true(deleted, "Delete should succeed", test_name)
-	assert_null(library.get_socket_type_by_id("renamed_type"), "Deleted socket type should not exist", test_name)
+	assert_false(library.has_socket_type("renamed_type"), "Deleted socket type should not exist", test_name)
 
 func test_library_modification_signals() -> void:
 	var test_name = "ModuleLibrary modification signals"

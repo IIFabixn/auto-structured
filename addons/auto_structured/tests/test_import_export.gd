@@ -5,7 +5,6 @@ const LibraryImporter = preload("res://addons/auto_structured/core/io/library_im
 const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.gd")
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
-const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
 
 var test_results: Array[Dictionary] = []
 var tests_passed: int = 0
@@ -48,11 +47,7 @@ func create_test_library() -> ModuleLibrary:
 	library.cell_world_size = Vector3(2.0, 2.0, 2.0)
 	
 	# Create socket types
-	var wall_socket = SocketType.new()
-	wall_socket.type_id = "wall"
-	wall_socket.display_name = "Wall"
-	wall_socket.compatible_types.append("wall")
-	library.socket_types.append(wall_socket)
+	library.register_socket_type("wall")
 	
 	# Create test tile
 	var tile = Tile.new()
@@ -66,7 +61,8 @@ func create_test_library() -> ModuleLibrary:
 	# Add socket
 	var socket1 = Socket.new()
 	socket1.direction = Vector3i.RIGHT
-	socket1.socket_type = wall_socket
+	socket1.socket_id = "wall"
+	socket1.add_compatible_socket("wall")
 	tile.sockets.append(socket1)
 	
 	library.tiles.append(tile)

@@ -6,7 +6,7 @@ class_name LibraryValidator
 
 const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.gd")
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
-const SocketType = preload("res://addons/auto_structured/core/socket_type.gd")
+
 
 func validate(target: Variant) -> Array[ValidationResult]:
 	var results: Array[ValidationResult] = []
@@ -47,6 +47,13 @@ func _validate_tiles(library: ModuleLibrary, results: Array[ValidationResult]) -
 			results.append(create_error("Duplicate tile name: %s" % tile.name, {"name": tile.name, "indices": [tile_names[tile.name], i]}, library))
 		else:
 			tile_names[tile.name] = i
+		
+		# Check for invalid sockets
+		for socket in tile.sockets:
+			if socket == null:
+				results.append(create_error("Tile '%s' has a null socket" % tile.name, {"tile": tile.name}, library))
+			elif socket.socket_id.strip_edges().is_empty():
+				results.append(create_error("Tile '%s' has a socket with empty socket_id" % tile.name, {"tile": tile.name}, library))
 	
 	if library.tiles.size() == 1:
 		results.append(create_warning("Library has only 1 tile - WFC generation will be limited", {}, library))
@@ -59,20 +66,16 @@ func _validate_socket_types(library: ModuleLibrary, results: Array[ValidationRes
 	# Check for duplicate socket type IDs
 	var type_ids: Dictionary = {}
 	for i in range(library.socket_types.size()):
-		var socket_type: SocketType = library.socket_types[i]
+		var socket_type_id: String = library.socket_types[i]
 		
-		if socket_type == null:
-			results.append(create_error("Socket type at index %d is null" % i, {"index": i}, library))
+		if socket_type_id.is_empty():
+			results.append(create_error("Socket type at index %d has empty ID" % i, {"index": i}, library))
 			continue
 		
-		if socket_type.type_id.is_empty():
-			results.append(create_error("Socket type at index %d has empty type_id" % i, {"index": i}, library))
-			continue
-		
-		if socket_type.type_id in type_ids:
-			results.append(create_error("Duplicate socket type ID: %s" % socket_type.type_id, {"type_id": socket_type.type_id, "indices": [type_ids[socket_type.type_id], i]}, library))
+		if socket_type_id in type_ids:
+			results.append(create_error("Duplicate socket type ID: %s" % socket_type_id, {"type_id": socket_type_id, "indices": [type_ids[socket_type_id], i]}, library))
 		else:
-			type_ids[socket_type.type_id] = i
+			type_ids[socket_type_id] = i
 	
 	# Check if socket types are actually used by tiles
 	_validate_socket_type_usage(library, results)
@@ -86,18 +89,18 @@ func _validate_socket_type_usage(library: ModuleLibrary, results: Array[Validati
 			continue
 		
 		for socket in tile.sockets:
-			if socket == null or socket.socket_type == null:
+			if socket == null or socket.socket_id.is_empty():
 				continue
 			
-			used_type_ids[socket.socket_type.type_id] = true
+			used_type_ids[socket.socket_id] = true
 	
 	# Check for unused socket types
-	for socket_type in library.socket_types:
-		if socket_type == null or socket_type.type_id.is_empty():
+	for socket_type_id in library.socket_types:
+		if socket_type_id.is_empty():
 			continue
 		
-		if socket_type.type_id not in used_type_ids:
-			results.append(create_warning("Socket type '%s' is not used by any tile" % socket_type.type_id, {"type_id": socket_type.type_id}, library))
+		if socket_type_id not in used_type_ids:
+			results.append(create_warning("Socket type '%s' is not used by any tile" % socket_type_id, {"type_id": socket_type_id}, library))
 
 func _validate_tile_connectivity(library: ModuleLibrary, results: Array[ValidationResult]) -> void:
 	if library.tiles.size() < 2:
@@ -136,15 +139,15 @@ func _validate_tile_connectivity(library: ModuleLibrary, results: Array[Validati
 func _tiles_can_connect(tile_a: Tile, tile_b: Tile) -> bool:
 	## Check if two tiles can connect via any socket combination
 	for socket_a in tile_a.sockets:
-		if socket_a == null or socket_a.socket_type == null:
+		if socket_a == null or socket_a.socket_id.strip_edges() == "":
 			continue
 		
 		for socket_b in tile_b.sockets:
-			if socket_b == null or socket_b.socket_type == null:
+			if socket_b == null or socket_b.socket_id.strip_edges() == "":
 				continue
 			
-			# Check if sockets can connect (matching types, compatible orientations)
-			if socket_a.socket_type.type_id == socket_b.socket_type.type_id:
+			# Check if sockets can connect (compatible types, opposite orientations)
+			if socket_a.is_compatible_with(socket_b):
 				# Check if directions are opposite (can connect)
 				if socket_a.direction == -socket_b.direction:
 					return true

@@ -199,8 +199,7 @@ func ensure_all_sockets(library = null) -> void:
 			# Create a 'none' socket for this direction
 			var new_socket = Socket.new()
 			new_socket.direction = direction
-			if library != null:
-				new_socket.socket_type = library.get_socket_type_by_id("none")
+			new_socket.socket_id = "none"
 			add_socket(new_socket)
 
 func get_unique_rotations() -> Array[int]:
@@ -288,15 +287,15 @@ func _get_face_signature_at_rotation(rotation_degrees: int) -> String:
 		if sockets_in_dir.is_empty():
 			face_data.append("none")
 		else:
-			## Sort socket type IDs for consistent comparison
-			var socket_types: Array[String] = []
+			## Sort socket IDs for consistent comparison
+			var socket_ids: Array[String] = []
 			for socket in sockets_in_dir:
-				if socket.socket_type != null:
-					socket_types.append(socket.socket_type.type_id)
+				if not socket.socket_id.is_empty():
+					socket_ids.append(socket.socket_id)
 				else:
-					socket_types.append("null")
-			socket_types.sort()
-			face_data.append(",".join(socket_types))
+					socket_ids.append("none")
+			socket_ids.sort()
+			face_data.append(",".join(socket_ids))
 	
 	var signature = "|".join(face_data)
 	
