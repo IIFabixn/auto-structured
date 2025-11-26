@@ -40,6 +40,7 @@ var _add_tile_dialog: AddTileDialog = null
 var _remove_tile_icon: Texture2D = null
 var _socket_states: Dictionary = {}
 var _compatibility_refresh_pending: bool = false
+var _warning_dialog: AcceptDialog = null
 
 static var _hidden_tile_map: Dictionary = {}
 
@@ -355,6 +356,8 @@ func _on_add_tile_dialog_tiles_selected(tiles: Array) -> void:
 func _on_add_tile_button_pressed() -> void:
 	if _library == null:
 		return
+	if not _require_selection("Select at least one socket before choosing tiles to connect."):
+		return
 	_ensure_add_tile_dialog()
 	if _add_tile_dialog == null:
 		return
@@ -608,14 +611,20 @@ func _refresh_compatibility_view() -> void:
 			var socket_item := compatibility_tree.create_item(tile_item)
 			socket_item.set_cell_mode(0, TreeItem.CELL_MODE_CHECK)
 			socket_item.set_editable(0, _tree_edit_enabled)
-			var can_connect := _can_any_selected_connect_to(socket)
-			socket_item.set_checked(0, can_connect)
+			var stats := _get_connection_stats(socket)
+			var total_sources := int(stats.get("total", _selected_entries.size()))
+			var connected_count := int(stats.get("connected", 0))
+			var bidirectional_count := int(stats.get("bidirectional", 0))
+			var has_any_connection := connected_count > 0
+			var all_connected := total_sources > 0 and connected_count == total_sources
+			_set_tree_checkbox_state(socket_item, 0, has_any_connection, all_connected)
 			socket_item.set_text(1, "  " + _direction_to_label(socket.direction))
 			socket_item.set_text(2, target_id)
 			socket_item.set_cell_mode(3, TreeItem.CELL_MODE_CHECK)
 			socket_item.set_editable(3, _tree_edit_enabled)
-			var is_bidirectional := _are_all_selected_bidirectional_with(socket)
-			socket_item.set_checked(3, is_bidirectional)
+			var has_any_bidirectional := bidirectional_count > 0
+			var all_bidirectional := total_sources > 0 and bidirectional_count == total_sources
+			_set_tree_checkbox_state(socket_item, 3, has_any_bidirectional, all_bidirectional)
 			socket_item.set_selectable(0, true)
 			socket_item.set_selectable(1, false)
 			socket_item.set_selectable(2, false)
@@ -648,9 +657,9 @@ func _refresh_compatibility_view() -> void:
 				socket_item.set_icon(2, null)
 				socket_item.set_tooltip_text(2, "")
 			summary_total += 1
-			if can_connect:
+			if has_any_connection:
 				summary_enabled += 1
-			if is_bidirectional:
+			if all_bidirectional:
 				summary_bidirectional += 1
 	
 	var status := "%d connections (%d bidirectional) of %d sockets" % [summary_enabled, summary_bidirectional, summary_total]
@@ -769,59 +778,6 @@ func _are_sockets_bidirectionally_compatible(a: Socket, b: Socket) -> bool:
 	b.ensure_guid()
 	return _pending_contains(a, b.socket_guid) and _pending_contains(b, a.socket_guid)
 
-func _has_partial_compatibility(a: Socket, b: Socket) -> bool:
-	"""Check if sockets have partial (one-way) compatibility."""
-	if a == null or b == null:
-		return false
-	a.ensure_guid()
-	b.ensure_guid()
-	var forward := _pending_contains(a, b.socket_guid)
-	var backward := _pending_contains(b, a.socket_guid)
-	return forward != backward
-
-func _can_any_selected_connect_to(target: Socket) -> bool:
-	"""Check if ANY selected socket can connect to target (one-way or bidirectional)."""
-	if _selected_entries.is_empty() or target == null:
-		return false
-	target.ensure_guid()
-	var target_guid := String(target.socket_guid).strip_edges()
-	if target_guid == "":
-		return false
-	for entry in _selected_entries:
-		if entry.socket == null:
-			continue
-		var pending := _get_pending_socket_guids(entry.socket)
-		if target_guid in pending:
-			return true
-	return false
-
-func _are_all_selected_bidirectional_with(target: Socket) -> bool:
-	"""Check if ALL selected sockets have bidirectional compatibility with target."""
-	if _selected_entries.is_empty() or target == null:
-		return false
-	for entry in _selected_entries:
-		if not _are_sockets_bidirectionally_compatible(entry.socket, target):
-			return false
-	return true
-
-func _are_all_selected_compatible_with(target: Socket) -> bool:
-	"""Check if ALL selected sockets are bidirectionally compatible with target."""
-	if _selected_entries.is_empty() or target == null:
-		return false
-	for entry in _selected_entries:
-		if not _are_sockets_bidirectionally_compatible(entry.socket, target):
-			return false
-	return true
-
-func _has_any_selected_partial_compatibility(target: Socket) -> bool:
-	"""Check if ANY selected socket has partial compatibility with target."""
-	if _selected_entries.is_empty() or target == null:
-		return false
-	for entry in _selected_entries:
-		if _has_partial_compatibility(entry.socket, target):
-			return true
-	return false
-
 func _is_suggested_target_for_any_selected(socket_id: String) -> bool:
 	"""Check if socket_id is a suggested target for any selected socket."""
 	for entry in _selected_entries:
@@ -908,9 +864,63 @@ func _filtered_suggestions_for_entry(entry: SocketEntry) -> Array:
 		result.append(suggestion)
 	return result
 
+func _get_connection_stats(target: Socket) -> Dictionary:
+	var stats := {
+		"total": 0,
+		"connected": 0,
+		"bidirectional": 0
+	}
+	if target == null or _selected_entries.is_empty():
+		return stats
+	target.ensure_guid()
+	var target_guid := String(target.socket_guid).strip_edges()
+	if target_guid == "":
+		return stats
+	for entry in _selected_entries:
+		if entry == null or entry.socket == null:
+			continue
+		stats["total"] += 1
+		var pending := _get_pending_socket_guids(entry.socket)
+		if target_guid in pending:
+			stats["connected"] += 1
+		if _are_sockets_bidirectionally_compatible(entry.socket, target):
+			stats["bidirectional"] += 1
+	return stats
+
+func _set_tree_checkbox_state(item: TreeItem, column: int, any_enabled: bool, all_enabled: bool) -> void:
+	item.set_checked(column, any_enabled)
+	if item.has_method("set_indeterminate"):
+		item.set_indeterminate(column, any_enabled and not all_enabled)
+
+func _require_selection(message: String) -> bool:
+	if not _selected_entries.is_empty():
+		return true
+	_show_warning(message)
+	return false
+
+func _show_warning(message: String) -> void:
+	var dialog := _ensure_warning_dialog()
+	if dialog == null:
+		push_warning(message)
+		return
+	dialog.dialog_text = message
+	dialog.popup_centered()
+
+func _ensure_warning_dialog() -> AcceptDialog:
+	if _warning_dialog and is_instance_valid(_warning_dialog):
+		return _warning_dialog
+	_warning_dialog = AcceptDialog.new()
+	_warning_dialog.title = "Socket Manager"
+	_warning_dialog.popup_window = true
+	_warning_dialog.min_size = Vector2(320, 0)
+	_warning_dialog.close_requested.connect(Callable(_warning_dialog, "hide"))
+	_warning_dialog.canceled.connect(Callable(_warning_dialog, "hide"))
+	add_child(_warning_dialog)
+	return _warning_dialog
+
 func _on_apply_suggestions_pressed() -> void:
 	"""Apply all suggestions for all selected sockets."""
-	if _selected_entries.is_empty():
+	if not _require_selection("Select at least one socket before applying suggestions."):
 		return
 	
 	for entry in _selected_entries:

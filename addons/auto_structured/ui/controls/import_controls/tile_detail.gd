@@ -42,8 +42,15 @@ var _library: ModuleLibrary = null
 var _tags: Array[String] = []
 var _socket_names: Dictionary = {}
 var _templates: Array = []
-var _selected_template_id: int = -1
+var _selected_template_index: int = -1
+var _selected_template_key: String = ""
 var _updating_socket_fields := false
+var _socket_fields_wired := false
+
+func _template_key_for(template: SocketTemplate) -> String:
+    if template == null:
+        return ""
+    return template.template_name.strip_edges().to_lower()
 
 func _ready() -> void:
     _setup_rotation_symmetry_options()
@@ -81,7 +88,8 @@ func setup(path: String, library: ModuleLibrary) -> void:
     _tags.clear()
     _update_tags_display()
     _select_rotation_symmetry(Tile.RotationSymmetry.AUTO)
-    _selected_template_id = -1
+    _selected_template_index = -1
+    _selected_template_key = ""
     if templateOptionButton:
         templateOptionButton.selected = 0
     _reset_socket_names()
@@ -101,7 +109,8 @@ func get_config() -> Dictionary:
         "size": Vector3i(int(xSizeSpinBox.value), int(ySizeSpinBox.value), int(zSizeSpinBox.value)),
         "tags": _tags.duplicate(),
         "rotation_symmetry": _get_selected_rotation_symmetry(),
-        "template_id": _selected_template_id,
+        "template_key": _selected_template_key,
+        "template_id": _selected_template_index,
         "socket_names": _socket_names.duplicate(true)
     }
 
@@ -215,7 +224,8 @@ func _setup_template_controls() -> void:
             templateOptionButton.item_selected.connect(_on_template_selected)
     if resetSocketsButton:
         resetSocketsButton.pressed.connect(func():
-            _selected_template_id = -1
+            _selected_template_index = -1
+            _selected_template_key = ""
             if templateOptionButton:
                 templateOptionButton.selected = 0
             _reset_socket_names()
@@ -225,27 +235,33 @@ func _setup_template_controls() -> void:
 func _reload_template_options() -> void:
     if not templateOptionButton:
         return
-    var previous_name := ""
-    if _selected_template_id >= 0 and _selected_template_id < _templates.size():
-        previous_name = _templates[_selected_template_id].template_name
+    var previous_key := _selected_template_key
     if _library:
         _templates = _library.get_socket_templates()
     else:
         _templates = LibraryPresets.get_socket_templates()
     templateOptionButton.clear()
     templateOptionButton.add_item("No template", -1)
+    templateOptionButton.set_item_metadata(0, "")
     var selection_index := 0
-    _selected_template_id = -1
+    _selected_template_index = -1
+    _selected_template_key = ""
     for i in range(_templates.size()):
-        var template = _templates[i]
+        var template: SocketTemplate = _templates[i]
+        var key: String = _template_key_for(template)
         templateOptionButton.add_item(template.template_name, i)
-        templateOptionButton.set_item_tooltip(templateOptionButton.item_count - 1, template.description)
-        if not previous_name.is_empty() and template.template_name == previous_name:
-            selection_index = templateOptionButton.item_count - 1
-            _selected_template_id = i
+        var option_index := templateOptionButton.item_count - 1
+        templateOptionButton.set_item_metadata(option_index, key)
+        templateOptionButton.set_item_tooltip(option_index, template.description)
+        if not previous_key.is_empty() and key == previous_key:
+            selection_index = option_index
+            _selected_template_index = i
+            _selected_template_key = key
     templateOptionButton.selected = selection_index
 
 func _setup_socket_fields() -> void:
+    if _socket_fields_wired:
+        return
     var field_map := {
         "up": upSocketLineEdit,
         "down": downSocketLineEdit,
@@ -261,6 +277,7 @@ func _setup_socket_fields() -> void:
             field.text_changed.connect(func(text: String):
                 _on_socket_text_changed(captured_key, text)
             )
+    _socket_fields_wired = true
 
 func _on_socket_text_changed(key: String, text: String) -> void:
     if _updating_socket_fields:
@@ -302,15 +319,19 @@ func _get_socket_field(key: String) -> LineEdit:
 func _on_template_selected(index: int) -> void:
     if not templateOptionButton:
         return
-    _selected_template_id = templateOptionButton.get_item_id(index)
-    if _selected_template_id < 0:
+    _selected_template_index = templateOptionButton.get_item_id(index)
+    var metadata := templateOptionButton.get_item_metadata(index)
+    _selected_template_key = metadata if typeof(metadata) == TYPE_STRING else ""
+    if _selected_template_index < 0:
         return
-    _apply_template(_selected_template_id)
+    _apply_template(_selected_template_index)
 
 func _apply_template(template_id: int) -> void:
     if template_id < 0 or template_id >= _templates.size():
         return
-    var template = _templates[template_id]
+    var template: SocketTemplate = _templates[template_id]
+    _selected_template_index = template_id
+    _selected_template_key = _template_key_for(template)
     _reset_socket_names()
     for entry_data in template.entries:
         var entry = entry_data if entry_data is Dictionary else {}

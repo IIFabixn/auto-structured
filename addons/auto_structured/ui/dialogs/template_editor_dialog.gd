@@ -27,11 +27,14 @@ var _on_save: Callable = Callable()
 var _editing_template: SocketTemplate = null
 var _last_tree_item: TreeItem = null
 var _last_tree_column: int = COLUMN_SOCKET_ID
+var _warning_dialog: AcceptDialog = null
 
 func _ready() -> void:
 	set_process_unhandled_key_input(true)
 	if not confirmed.is_connected(_on_dialog_confirmed):
 		confirmed.connect(_on_dialog_confirmed)
+	if name_edit and not name_edit.text_changed.is_connected(_on_name_text_changed):
+		name_edit.text_changed.connect(_on_name_text_changed)
 	if entries_tree:
 		entries_tree.focus_mode = Control.FOCUS_ALL
 		entries_tree.column_titles_visible = true
@@ -110,6 +113,7 @@ func _refresh_entries_tree() -> void:
 		item.set_text(COLUMN_COMPATIBLE, ", ".join(compat))
 		item.set_metadata(COLUMN_COMPATIBLE, i)
 		item.set_editable(COLUMN_COMPATIBLE, true)
+	_update_ok_button_state()
 
 func _on_dialog_confirmed() -> void:
 	var data = _collect_template_data()
@@ -125,7 +129,8 @@ func _collect_template_data() -> Dictionary:
 		_show_warning("Template name cannot be empty.")
 		return {}
 	var normalized_name = _normalize_name(name)
-	if normalized_name != "" and _existing_names.has(normalized_name):
+	var original_normalized := _normalize_name(_editing_template.template_name) if _editing_template else ""
+	if normalized_name != "" and _existing_names.has(normalized_name) and normalized_name != original_normalized:
 		_show_warning("Template name must be unique.")
 		return {}
 	var enabled_entries = _get_enabled_entries()
@@ -185,6 +190,7 @@ func _on_entries_tree_item_edited() -> void:
 		entry["enabled"] = true
 		item.set_checked(COLUMN_ENABLED, true)
 	_entries[index] = entry
+	_update_ok_button_state()
 
 func _on_entries_tree_cell_selected() -> void:
 	if entries_tree == null:
@@ -344,9 +350,47 @@ func _handle_tree_tab_navigation(event: InputEvent) -> bool:
 			return true
 	return false
 
+func _has_valid_template_inputs() -> bool:
+	var name := name_edit.text.strip_edges() if name_edit else ""
+	if name == "":
+		return false
+	var normalized := _normalize_name(name)
+	var original_normalized := _normalize_name(_editing_template.template_name) if _editing_template else ""
+	if normalized != "" and _existing_names.has(normalized) and normalized != original_normalized:
+		return false
+	var enabled_entries := _get_enabled_entries()
+	if enabled_entries.is_empty():
+		return false
+	for entry_data in enabled_entries:
+		var socket_id := String(entry_data.get("socket_id", "")).strip_edges()
+		if socket_id == "":
+			return false
+	return true
+
+func _update_ok_button_state() -> void:
+	var ok_button := get_ok_button()
+	if ok_button:
+		ok_button.disabled = not _has_valid_template_inputs()
+
+func _on_name_text_changed(_new_text: String) -> void:
+	_update_ok_button_state()
+
 func _show_warning(message: String) -> void:
-	var dialog = AcceptDialog.new()
-	dialog.title = "Warning"
+	var dialog := _ensure_warning_dialog()
+	if dialog == null:
+		push_warning(message)
+		return
 	dialog.dialog_text = message
-	add_child(dialog)
 	dialog.popup_centered()
+
+func _ensure_warning_dialog() -> AcceptDialog:
+	if _warning_dialog and is_instance_valid(_warning_dialog):
+		return _warning_dialog
+	_warning_dialog = AcceptDialog.new()
+	_warning_dialog.title = "Template Warning"
+	_warning_dialog.popup_window = true
+	_warning_dialog.min_size = Vector2(320, 0)
+	_warning_dialog.close_requested.connect(Callable(_warning_dialog, "hide"))
+	_warning_dialog.canceled.connect(Callable(_warning_dialog, "hide"))
+	add_child(_warning_dialog)
+	return _warning_dialog

@@ -219,30 +219,6 @@ metadata/_tab_index = 2
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="HBoxContainer" type="HBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer"]
-layout_mode = 2
-
-[node name="Label" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/HBoxContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Add Socket"
-
-[node name="AddSocketButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/HBoxContainer"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(24, 24)
-layout_mode = 2
-size_flags_horizontal = 8
-texture_normal = ExtResource("3_mh04o")
-stretch_mode = 3
-
-[node name="ManageSocketsButton" type="Button" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/HBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Manage Sockets"
-
-[node name="HSeparator" type="HSeparator" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer"]
-layout_mode = 2
-
 [node name="SocketsContainer" type="GridContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -277,7 +253,6 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "none"
-metadata/socket_direction = Vector3i(0, -1, 0)
 metadata/socket_direction = Vector3i(0, -1, 0)
 
 [node name="PreviewDownSocketButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
@@ -339,7 +314,6 @@ layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "none"
 metadata/socket_direction = Vector3i(0, 0, -1)
-metadata/socket_direction = Vector3i(0, 0, -1)
 
 [node name="PreviewFrontSocketButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
 unique_name_in_owner = true
@@ -369,3 +343,11 @@ size_flags_horizontal = 8
 texture_normal = ExtResource("7_h81gu")
 stretch_mode = 3
 metadata/socket_direction = Vector3i(0, 0, 1)
+
+[node name="HSeparator" type="HSeparator" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer"]
+layout_mode = 2
+
+[node name="ManageSocketsButton" type="Button" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Manage Sockets"

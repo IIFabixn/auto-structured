@@ -23,6 +23,8 @@ const SocketTemplate = preload("res://addons/auto_structured/utils/socket_templa
 
 var _tags: Array[String] = []
 var _library: ModuleLibrary = null  # Reference to module library
+var _available_templates: Array = []
+var _registered_template_keys: Dictionary = {}
 
 func _ready() -> void:
     """Initialize the batch controls."""
@@ -38,7 +40,7 @@ func get_config() -> Dictionary:
     """Get the current batch configuration."""
     return {
         "size": Vector3i(int(xSpinBox.value), int(ySpinBox.value), int(zSpinBox.value)),
-        "template_id": _get_selected_template_id(),
+        "template_key": _get_selected_template_key(),
         "tags": _tags.duplicate(),
         "auto_detect_symmetry": autoSymmetryDetectCheckBox.button_pressed,
         "generate_variants": rotationalVarianceCheckBox.button_pressed,
@@ -53,8 +55,10 @@ func set_config(config: Dictionary) -> void:
         ySpinBox.value = size.y
         zSpinBox.value = size.z
     
-    if config.has("template_id"):
-        _select_template_by_id(config["template_id"])
+    if config.has("template_key"):
+        _select_template_by_key(config["template_key"])
+    elif config.has("template_id"):
+        _select_template_by_legacy_id(config["template_id"])
     
     if config.has("tags"):
         _tags = config["tags"].duplicate()
@@ -77,26 +81,41 @@ func _populate_template_dropdown() -> void:
     """Populate the template dropdown with built-in templates."""
     templateOptionButton.clear()
     templateOptionButton.add_item("None", -1)
-    
-    var templates = _get_available_templates()
-    for i in range(templates.size()):
-        var template = templates[i]
-        templateOptionButton.add_item(template.template_name, i)
-        templateOptionButton.set_item_tooltip(templateOptionButton.item_count - 1, template.description)
+    templateOptionButton.set_item_metadata(0, "")
 
-func _get_selected_template_id() -> int:
-    """Get the selected template ID (-1 for None)."""
+    _available_templates = _get_available_templates()
+    for template in _available_templates:
+        var key := _normalize_template_key(template.template_name)
+        templateOptionButton.add_item(template.template_name)
+        var item_index := templateOptionButton.item_count - 1
+        templateOptionButton.set_item_metadata(item_index, key)
+        templateOptionButton.set_item_tooltip(item_index, template.description)
+
+func _get_selected_template_key() -> String:
+    """Get the selected template identifier."""
     var selected_idx = templateOptionButton.selected
     if selected_idx < 0:
-        return -1
-    return templateOptionButton.get_item_id(selected_idx)
+        return ""
+    return String(templateOptionButton.get_item_metadata(selected_idx))
 
-func _select_template_by_id(template_id: int) -> void:
-    """Select a template by its ID."""
+func _select_template_by_key(template_key: String) -> void:
+    var normalized := _normalize_template_key(String(template_key))
+    if normalized.is_empty():
+        templateOptionButton.selected = 0
+        return
+    for i in range(templateOptionButton.item_count):
+        var meta := String(templateOptionButton.get_item_metadata(i))
+        if meta == normalized:
+            templateOptionButton.selected = i
+            return
+    templateOptionButton.selected = 0
+
+func _select_template_by_legacy_id(template_id: int) -> void:
     for i in range(templateOptionButton.item_count):
         if templateOptionButton.get_item_id(i) == template_id:
             templateOptionButton.selected = i
             return
+    templateOptionButton.selected = 0
 
 ## ============================================================================
 ## Tag Management
@@ -104,15 +123,16 @@ func _select_template_by_id(template_id: int) -> void:
 
 func setup(library) -> void:
     """Setup batch controls with library reference."""
-    print("BatchControls: Setting up with library: %s" % library.library_name)
+    if library == null:
+        return
     _library = library
+    _registered_template_keys.clear()
     
     # Repopulate template dropdown with library templates
     _populate_template_dropdown()
     
     # Register socket types from all templates so they appear in socket menus
-    var templates = _get_available_templates()
-    for template in templates:
+    for template in _available_templates:
         _register_template_socket_types(template)
     
     # If _ready has already been called, reconnect the tag menu
@@ -142,8 +162,6 @@ func _populate_tag_menu() -> void:
     """Populate tag menu with available tags."""
     if not tagsMenuButton or not _library:
         return
-    
-    print("BatchControls: Populating tag menu")
     var popup = tagsMenuButton.get_popup()
     popup.clear()
     
@@ -178,6 +196,9 @@ func _register_template_socket_types(template: SocketTemplate) -> void:
     """Register socket types from template in library."""
     if not template or not _library:
         return
+    var key := _normalize_template_key(template.template_name)
+    if key != "" and _registered_template_keys.has(key):
+        return
     
     # Register all socket types from template entries
     for entry_data in template.entries:
@@ -191,11 +212,16 @@ func _register_template_socket_types(template: SocketTemplate) -> void:
         # Register compatible types
         for compat_id in compatible:
             _library.ensure_socket_type(compat_id)
+    if key != "":
+        _registered_template_keys[key] = true
 
 func _get_available_templates() -> Array:
     if _library:
         return _library.get_socket_templates()
     return LibraryPresets.get_socket_templates()
+
+func _normalize_template_key(name: String) -> String:
+    return String(name).strip_edges().to_lower()
 
 func _update_tags_display() -> void:
     """Update the tags menu button text."""

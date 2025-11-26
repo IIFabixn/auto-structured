@@ -42,6 +42,7 @@ const DIRECTION_LABELS := {
 
 var _library: ModuleLibrary = null
 var _template_editor_dialog: TemplateEditorDialog = null
+var _warning_dialog: AcceptDialog = null
 
 var _tags_original: Array[String] = []
 var _tags_pending: Array[String] = []
@@ -901,11 +902,24 @@ func _create_confirmation_dialog(title: String, message: String) -> Confirmation
 	return dialog
 
 func _show_warning(message: String) -> void:
-	var dialog = AcceptDialog.new()
-	dialog.title = "Warning"
+	var dialog := _ensure_warning_dialog()
+	if dialog == null:
+		push_warning(message)
+		return
 	dialog.dialog_text = message
-	add_child(dialog)
 	dialog.popup_centered()
+
+func _ensure_warning_dialog() -> AcceptDialog:
+	if _warning_dialog and is_instance_valid(_warning_dialog):
+		return _warning_dialog
+	_warning_dialog = AcceptDialog.new()
+	_warning_dialog.title = "Warning"
+	_warning_dialog.popup_window = true
+	_warning_dialog.min_size = Vector2(280, 0)
+	_warning_dialog.close_requested.connect(_warning_dialog.hide)
+	_warning_dialog.canceled.connect(_warning_dialog.hide)
+	add_child(_warning_dialog)
+	return _warning_dialog
 
 func _apply_tag_changes() -> void:
 	if _library == null:

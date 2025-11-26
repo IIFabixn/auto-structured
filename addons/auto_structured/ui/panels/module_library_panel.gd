@@ -32,6 +32,8 @@ var undo_redo_manager: AutoStructuredUndoRedo
 var selection_manager: SelectionManager
 var current_library: ModuleLibrary = null
 var available_libraries: Dictionary = {}  # library_name -> file_path
+var _error_dialog: AcceptDialog = null
+var _info_dialog: AcceptDialog = null
 
 func _ready() -> void:
 	"""Initialize the panel and set up connections."""
@@ -53,7 +55,9 @@ func _ready() -> void:
 	
 	# Auto-load first library if available
 	if not available_libraries.is_empty():
-		var first_lib = available_libraries.keys()[0]
+		var lib_names: Array = available_libraries.keys()
+		lib_names.sort()
+		var first_lib: String = lib_names[0]
 		_load_library(first_lib)
 		_select_library_in_dropdown(first_lib)
 		_update_tile_list()
@@ -156,7 +160,7 @@ func _create_new_library() -> void:
 		library_created.emit(new_library)
 		library_loaded.emit(new_library)
 		
-		print("Created library: %s at %s" % [lib_name, save_path])
+		print_verbose("Created library: %s at %s" % [lib_name, _format_display_path(save_path)])
 	)
 	
 	dialog.canceled.connect(dialog.queue_free)
@@ -211,7 +215,7 @@ func _rename_library() -> void:
 		
 		# Remove old file
 		if old_path != new_path:
-			DirAccess.remove_absolute(old_path)
+			DirAccess.remove_absolute(_to_absolute_path(old_path))
 		
 		# Update tracking
 		available_libraries.erase(old_name)
@@ -224,7 +228,7 @@ func _rename_library() -> void:
 		# Emit signal
 		library_renamed.emit(old_name, new_name)
 		
-		print("Renamed library: %s -> %s" % [old_name, new_name])
+		print_verbose("Renamed library: %s -> %s" % [old_name, new_name])
 	)
 	
 	dialog.canceled.connect(dialog.queue_free)
@@ -253,7 +257,7 @@ func _save_library() -> void:
 	# Emit signal
 	library_saved.emit(current_library)
 	
-	print("Saved library: %s" % save_path)
+	print_verbose("Saved library: %s" % _format_display_path(save_path))
 
 func _delete_library() -> void:
 	"""Delete the current library after confirmation."""
@@ -276,7 +280,7 @@ func _delete_library() -> void:
 			return
 		
 		# Delete file
-		var error = DirAccess.remove_absolute(file_path)
+		var error = DirAccess.remove_absolute(_to_absolute_path(file_path))
 		if error != OK:
 			_show_error("Failed to delete library file: " + error_string(error))
 			return
@@ -295,7 +299,7 @@ func _delete_library() -> void:
 		# Emit signal
 		library_deleted.emit(lib_name)
 		
-		print("Deleted library: %s" % lib_name)
+		print_verbose("Deleted library: %s" % lib_name)
 		
 		# Load first available library if we deleted the current one
 		if was_current and not available_libraries.is_empty():
@@ -352,10 +356,11 @@ func _scan_available_libraries() -> void:
 	available_libraries.clear()
 	
 	var libraries_dir = "res://libraries/"
+	var abs_dir := _to_absolute_path(libraries_dir)
 	
 	# Create directory if it doesn't exist
-	if not DirAccess.dir_exists_absolute(libraries_dir):
-		DirAccess.make_dir_recursive_absolute(libraries_dir)
+	if not DirAccess.dir_exists_absolute(abs_dir):
+		DirAccess.make_dir_recursive_absolute(abs_dir)
 	
 	# Scan for .tres files
 	var dir = DirAccess.open(libraries_dir)
@@ -414,7 +419,7 @@ func _load_library(lib_name: String) -> void:
 	current_library = library
 	library_loaded.emit(library)
 	
-	print("Loaded library: %s" % lib_name)
+	print_verbose("Loaded library: %s" % lib_name)
 
 ## ============================================================================
 ## Utility Functions
@@ -427,24 +432,59 @@ func _get_library_save_path(lib_name: String) -> String:
 
 func _show_error(message: String) -> void:
 	"""Show an error dialog."""
-	var dialog = AcceptDialog.new()
-	dialog.title = "Error"
+	var dialog := _ensure_error_dialog()
+	if dialog == null:
+		push_error(message)
+		return
 	dialog.dialog_text = message
-	dialog.confirmed.connect(dialog.queue_free)
-	dialog.canceled.connect(dialog.queue_free)
-	add_child(dialog)
 	dialog.popup_centered()
 	push_error(message)
 
 func _show_info(message: String) -> void:
 	"""Show an info dialog."""
-	var dialog = AcceptDialog.new()
-	dialog.title = "Info"
+	var dialog := _ensure_info_dialog()
+	if dialog == null:
+		print_verbose(message)
+		return
 	dialog.dialog_text = message
-	dialog.confirmed.connect(dialog.queue_free)
-	dialog.canceled.connect(dialog.queue_free)
-	add_child(dialog)
 	dialog.popup_centered()
+
+func _to_absolute_path(path: String) -> String:
+	if path.is_empty():
+		return ""
+	return ProjectSettings.globalize_path(path)
+
+func _format_display_path(path: String) -> String:
+	if path.is_empty():
+		return "(unspecified)"
+	var abs_path := _to_absolute_path(path)
+	if abs_path.is_empty():
+		return path
+	return ProjectSettings.localize_path(abs_path)
+
+func _ensure_error_dialog() -> AcceptDialog:
+	if _error_dialog and is_instance_valid(_error_dialog):
+		return _error_dialog
+	_error_dialog = AcceptDialog.new()
+	_error_dialog.title = "Error"
+	_error_dialog.popup_window = true
+	_error_dialog.min_size = Vector2(320, 0)
+	_error_dialog.close_requested.connect(Callable(_error_dialog, "hide"))
+	_error_dialog.canceled.connect(Callable(_error_dialog, "hide"))
+	add_child(_error_dialog)
+	return _error_dialog
+
+func _ensure_info_dialog() -> AcceptDialog:
+	if _info_dialog and is_instance_valid(_info_dialog):
+		return _info_dialog
+	_info_dialog = AcceptDialog.new()
+	_info_dialog.title = "Info"
+	_info_dialog.popup_window = true
+	_info_dialog.min_size = Vector2(300, 0)
+	_info_dialog.close_requested.connect(Callable(_info_dialog, "hide"))
+	_info_dialog.canceled.connect(Callable(_info_dialog, "hide"))
+	add_child(_info_dialog)
+	return _info_dialog
 
 ## ============================================================================
 ## Tile Import
@@ -513,7 +553,7 @@ func _on_tiles_imported(tiles: Array) -> void:
 	# Update tile list UI (to be implemented)
 	_update_tile_list()
 	
-	print("Added %d tiles to library '%s'" % [tiles.size(), current_library.library_name])
+	print_verbose("Added %d tiles to library '%s'" % [tiles.size(), current_library.library_name])
 
 func _update_tile_list() -> void:
 	"""Update the tile list display."""
@@ -537,7 +577,13 @@ func _update_tile_list() -> void:
 		if not search_text.is_empty() and not tile.name.to_lower().contains(search_text):
 			continue
 		
-		var scene : TileItem = TileItemScene.instantiate()
+		var scene_instance := TileItemScene.instantiate() if TileItemScene else null
+		if scene_instance == null or not (scene_instance is TileItem):
+			push_warning("ModuleLibraryPanel: Tile item scene is invalid; skipping entry.")
+			if scene_instance:
+				scene_instance.queue_free()
+			continue
+		var scene: TileItem = scene_instance
 		tile_grid.add_child(scene)
 		scene.tile = tile
 		

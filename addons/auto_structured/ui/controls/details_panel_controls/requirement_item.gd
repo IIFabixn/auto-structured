@@ -21,8 +21,6 @@ var _requirement: Requirement
 			_update_ui()
 
 func _ready() -> void:
-	if requirement:
-		requirement._init()
 	if delete_button:
 		delete_button.pressed.connect(_on_delete_pressed)
 	

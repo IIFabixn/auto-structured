@@ -8,6 +8,7 @@ const TileImporter = preload("res://addons/auto_structured/core/io/tile_importer
 const LibraryPresets = preload("res://addons/auto_structured/core/library_presets.gd")
 const ImportTileDetailScene = preload("res://addons/auto_structured/ui/controls/import_controls/tile_detail.tscn")
 const ImportTileDetail = preload("res://addons/auto_structured/ui/controls/import_controls/tile_detail.gd")
+const SocketTemplate = preload("res://addons/auto_structured/utils/socket_template.gd")
 
 const SOCKET_KEY_TO_DIRECTION := {
     "up": Vector3i.UP,
@@ -46,12 +47,12 @@ func _ready() -> void:
 
 func setup(file_paths: PackedStringArray, library: ModuleLibrary) -> void:
     """Setup the import dialog with files to import."""
-    print("ImportDialog.setup() called with %d files" % file_paths.size())
+    print_verbose("ImportDialog.setup() called with %d files" % file_paths.size())
     _file_paths = file_paths
     _library = library
     
     if library:
-        print("ImportDialog: Library is: %s" % library.library_name)
+        print_verbose("ImportDialog: Library is: %s" % library.library_name)
     else:
         push_error("ImportDialog: Library is null!")
     # Wait for the dialog to be ready if it isn't yet
@@ -76,11 +77,11 @@ func _populate_tile_list() -> void:
         push_error("ImportDialog: tilesListContainer is null")
         return
     
-    print("ImportDialog: Populating %d files" % _file_paths.size())
+    print_verbose("ImportDialog: Populating %d files" % _file_paths.size())
     
     # Create detail for each file
     for file_path in _file_paths:
-        print("ImportDialog: Creating detail for: %s" % file_path)
+        print_verbose("ImportDialog: Creating detail for: %s" % file_path)
         var detail = ImportTileDetailScene.instantiate() as ImportTileDetail
         if detail:
             tilesListContainer.add_child(detail)
@@ -91,7 +92,7 @@ func _populate_tile_list() -> void:
         else:
             push_error("ImportDialog: Failed to instantiate tile detail for %s" % file_path)
     
-    print("ImportDialog: Created %d tile details" % _tile_details.size())
+    print_verbose("ImportDialog: Created %d tile details" % _tile_details.size())
 
 func _update_counts() -> void:
     """Update the tile count and selected count labels."""
@@ -156,7 +157,7 @@ func _on_confirmed() -> void:
     
     if imported_tiles.size() > 0:
         tiles_imported.emit(imported_tiles)
-        print("Imported %d tiles" % imported_tiles.size())
+        print_verbose("Imported %d tiles" % imported_tiles.size())
 
 func _import_tile_from_config(config: Dictionary) -> Tile:
     """Import a single tile from configuration."""
@@ -185,7 +186,9 @@ func _import_tile_from_config(config: Dictionary) -> Tile:
     for tag in tags:
         tile.add_tag(tag)
     
-    var template_applied := _apply_socket_template(tile, config.get("template_id", -1))
+    var template_key := String(config.get("template_key", ""))
+    var template_id := int(config.get("template_id", -1))
+    var template_applied := _apply_socket_template(tile, template_key, template_id)
     if not template_applied:
         tile.ensure_all_sockets(_library)
     _apply_socket_overrides(tile, config.get("socket_names", {}))
@@ -194,15 +197,39 @@ func _import_tile_from_config(config: Dictionary) -> Tile:
     
     return tile
 
-func _apply_socket_template(tile: Tile, template_id: int) -> bool:
-    var templates := LibraryPresets.get_socket_templates()
-    if _library:
-        templates = _library.get_socket_templates()
-    if template_id < 0 or template_id >= templates.size():
+func _apply_socket_template(tile: Tile, template_key: String, template_id: int) -> bool:
+    var templates := _get_available_templates()
+    var template := _find_template_by_key(templates, template_key)
+    if template == null:
+        template = _find_template_by_id(templates, template_id)
+    if template == null:
         return false
-    var template = templates[template_id]
     LibraryPresets.apply_socket_template(tile, template, _library)
     return true
+
+func _get_available_templates() -> Array:
+    if _library:
+        return _library.get_socket_templates()
+    return LibraryPresets.get_socket_templates()
+
+func _find_template_by_key(templates: Array, template_key: String) -> SocketTemplate:
+    var normalized := _normalize_template_key(template_key)
+    if normalized.is_empty():
+        return null
+    for template in templates:
+        var tpl: SocketTemplate = template
+        if tpl and _normalize_template_key(tpl.template_name) == normalized:
+            return tpl
+    return null
+
+func _find_template_by_id(templates: Array, template_id: int) -> SocketTemplate:
+    if template_id < 0 or template_id >= templates.size():
+        return null
+    var template: SocketTemplate = templates[template_id]
+    return template
+
+func _normalize_template_key(name: String) -> String:
+    return String(name).strip_edges().to_lower()
 
 func _apply_socket_overrides(tile: Tile, socket_names) -> void:
     if not (socket_names is Dictionary):

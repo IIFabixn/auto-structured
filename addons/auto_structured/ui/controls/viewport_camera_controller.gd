@@ -39,6 +39,9 @@ func _init(p_camera: Camera3D, p_viewport_container: Control) -> void:
 	transition_start_position = camera.global_position
 	_load_auto_rotate_setting()
 
+	if viewport_container and not viewport_container.tree_exiting.is_connected(_on_viewport_container_exiting):
+		viewport_container.tree_exiting.connect(_on_viewport_container_exiting, CONNECT_ONE_SHOT)
+
 ## Call this from the parent's _process function
 func process(delta: float) -> void:
 	if not camera:
@@ -153,13 +156,10 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 			is_right_clicking = true
 			auto_rotate = false
 			# Don't set manually_disabled flag when right-clicking (temporary pause)
-			
-			viewport_container.mouse_filter = Control.MOUSE_FILTER_STOP
-			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+			_set_mouse_capture(true)
 		else:
 			is_right_clicking = false
-			viewport_container.mouse_filter = Control.MOUSE_FILTER_PASS
-			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+			_set_mouse_capture(false)
 
 			# Calculate orbit distance based on current camera position
 			var offset = camera.global_position - orbit_target
@@ -170,15 +170,9 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 
 	# Zoom with scroll wheel (move camera forward/backward)
 	elif event.button_index == MOUSE_BUTTON_WHEEL_UP:
-		if camera:
-			orbit_distance -= 1.0
-			if orbit_distance < 1.0:
-				orbit_distance = 1.0
+		_adjust_orbit_distance(-1.0)
 	elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-		if camera:
-			orbit_distance += 1.0
-			if orbit_distance < 1.0:
-				orbit_distance = 1.0
+		_adjust_orbit_distance(1.0)
 
 ## Handle mouse motion events - rotate camera when right-clicking
 func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
@@ -243,3 +237,26 @@ func set_auto_rotate(enabled: bool) -> void:
 ## Get the current auto-rotate state
 func get_auto_rotate() -> bool:
 	return auto_rotate
+
+func _adjust_orbit_distance(delta: float) -> void:
+	orbit_distance = clamp(orbit_distance + delta, 1.0, 10_000.0)
+	_sync_camera_to_orbit_distance()
+
+func _sync_camera_to_orbit_distance() -> void:
+	if not camera:
+		return
+	var direction := camera.global_position - orbit_target
+	if direction.length() < 0.001:
+		direction = -camera.global_transform.basis.z
+	if direction.length() < 0.001:
+		direction = Vector3.FORWARD
+	camera.global_position = orbit_target + direction.normalized() * orbit_distance
+
+func _set_mouse_capture(enabled: bool) -> void:
+	if viewport_container:
+		viewport_container.mouse_filter = Control.MOUSE_FILTER_STOP if enabled else Control.MOUSE_FILTER_PASS
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED if enabled else Input.MOUSE_MODE_VISIBLE
+
+func _on_viewport_container_exiting() -> void:
+	is_right_clicking = false
+	_set_mouse_capture(false)

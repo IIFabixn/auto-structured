@@ -53,7 +53,6 @@ const REQUIREMENT_MENU_META_TYPES := "requirement_type_defs"
 @onready var add_requirement_menu_button: MenuButton = %AddRequirementMenuButton
 @onready var requirements_container: VBoxContainer = %RequirementsContainer
 
-@onready var add_socket_button: TextureButton = %AddSocketButton
 @onready var manage_sockets_button: Button = %ManageSocketsButton
 
 @onready var upSocketLineEdit: LineEdit = %UpSocketLineEdit
@@ -70,11 +69,16 @@ const REQUIREMENT_MENU_META_TYPES := "requirement_type_defs"
 @onready var previewBackSocketButton: TextureButton = %PreviewBackSocketButton
 
 var _tile: Tile
+var _preview_task_id: int = 0
 @export var tile: Tile:
 	get:
 		return _tile
 	set(value):
+		if _tile == value:
+			return
 		_tile = value
+		if _tile == null:
+			_clear_preview_image()
 		if is_node_ready():
 			_update_ui()
 
@@ -243,6 +247,7 @@ func _on_tile_selected_via_eventbus(selected_tile: Tile, _previous_tile: Tile) -
 		tile = selected_tile
 		show()
 	else:
+		tile = null
 		hide()
 
 func _on_close_pressed() -> void:
@@ -252,9 +257,13 @@ func _on_close_pressed() -> void:
 
 func _update_ui() -> void:
 	"""Update all UI elements to reflect the current tile's properties."""
+	if not is_node_ready():
+		return
 	if add_requirement_menu_button:
 		add_requirement_menu_button.disabled = _tile == null
 	if not _tile:
+		_clear_preview_image()
+		hide()
 		return
 	
 	# Update name
@@ -392,12 +401,27 @@ func _update_socket_line_edit(line_edit: LineEdit, direction: Vector3i) -> void:
 
 func _update_preview_image() -> void:
 	"""Update the preview image/3D representation of the tile."""
-	if not preview_image or not _tile:
+	if not preview_image or not _tile or not is_inside_tree():
+		_clear_preview_image()
 		return
-	
+
+	_preview_task_id += 1
+	var request_id := _preview_task_id
+	var current_tile := _tile
+	preview_image.texture = null
 	var texture = await TileThumbnailGenerator.generate_thumbnail(_tile, self, Vector2i(128, 128))
-	if texture:
-		preview_image.texture = texture
+	if request_id != _preview_task_id:
+		return
+	if not is_instance_valid(self) or not is_instance_valid(preview_image):
+		return
+	if _tile != current_tile:
+		return
+	preview_image.texture = texture
+
+func _clear_preview_image() -> void:
+	_preview_task_id += 1
+	if preview_image:
+		preview_image.texture = null
 
 func _on_requirement_modified(requirement) -> void:
 	"""Handle requirement modification."""

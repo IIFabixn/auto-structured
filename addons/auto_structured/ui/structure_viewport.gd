@@ -24,11 +24,8 @@ func _ready() -> void:
 		validation_bus.validation_warning.connect(_on_validation_warning)
 		validation_bus.validation_info.connect(_on_validation_info)
 		validation_bus.validation_cleared.connect(_on_validation_cleared)
-	
-	if is_node_ready():
-		_propagate_systems()
-	else:
-		ready.connect(_propagate_systems, CONNECT_ONE_SHOT)
+
+	_propagate_systems()
 
 func setup_undo_redo(undo_redo: AutoStructuredUndoRedo) -> void:
 	"""
@@ -36,6 +33,8 @@ func setup_undo_redo(undo_redo: AutoStructuredUndoRedo) -> void:
 	Should be called by the plugin after instantiation.
 	"""
 	undo_redo_manager = undo_redo
+	if is_node_ready():
+		_propagate_systems()
 
 func _propagate_systems() -> void:
 	"""Propagate undo/redo manager and selection manager to all child panels."""
@@ -107,7 +106,7 @@ func _display_validation(message: String, context: int, severity: int) -> void:
 		ValidationEventBus.Severity.WARNING:
 			push_warning(log_message)
 		_:
-			print(log_message)
+			print_verbose(log_message)
 
 func _on_validation_cleared(_context: int) -> void:
 	"""Handle validation cleared event."""

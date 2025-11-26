@@ -6,13 +6,20 @@ class_name Viewport3DGrid extends Node3D
 
 @export var grid_size: int = 20:  ## Number of grid lines in each direction
 	set(value):
-		grid_size = value
+		var clamped := max(1, value)
+		if grid_size == clamped:
+			return
+		grid_size = clamped
 		if is_node_ready():
 			_recreate_grid()
 
+
 @export var grid_spacing: float = 1.0:  ## Space between grid lines
 	set(value):
-		grid_spacing = value
+		var clamped := max(0.001, value)
+		if is_equal_approx(grid_spacing, clamped):
+			return
+		grid_spacing = clamped
 		if is_node_ready():
 			_recreate_grid()
 
@@ -28,9 +35,26 @@ class_name Viewport3DGrid extends Node3D
 		if origin_mesh_instance:
 			origin_mesh_instance.visible = show_origin
 
-@export var grid_center_color: Color = Color(0.7, 0.7, 0.7, 0.8)  ## Color for center grid lines
-@export var grid_line_color: Color = Color(0.4, 0.4, 0.4, 0.5)  ## Color for regular grid lines
-@export var axis_length: float = 2.0  ## Length of the origin axis arrows
+@export var grid_center_color: Color = Color(0.7, 0.7, 0.7, 0.8):
+	set(value):
+		grid_center_color = value
+		if is_node_ready():
+			_recreate_grid()
+
+@export var grid_line_color: Color = Color(0.4, 0.4, 0.4, 0.5):
+	set(value):
+		grid_line_color = value
+		if is_node_ready():
+			_recreate_grid()
+
+@export var axis_length: float = 2.0:
+	set(value):
+		var clamped := max(0.01, value)
+		if is_equal_approx(axis_length, clamped):
+			return
+		axis_length = clamped
+		if is_node_ready():
+			_recreate_origin()
 
 var grid_mesh_instance: MeshInstance3D = null
 var origin_mesh_instance: MeshInstance3D = null
@@ -47,6 +71,13 @@ func _recreate_grid() -> void:
 		grid_mesh_instance.queue_free()
 		grid_mesh_instance = null
 	_create_grid()
+
+func _recreate_origin() -> void:
+	"""Recreate the origin gizmo with updated parameters"""
+	if origin_mesh_instance:
+		origin_mesh_instance.queue_free()
+		origin_mesh_instance = null
+	_create_origin()
 
 
 func _create_grid() -> void:

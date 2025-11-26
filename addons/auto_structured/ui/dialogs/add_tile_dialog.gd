@@ -74,3 +74,4 @@ func _on_confirmed() -> void:
 	if selected_tiles.is_empty():
 		return
 	emit_signal("tiles_selected", selected_tiles)
+	hide()

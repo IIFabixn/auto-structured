@@ -14,6 +14,7 @@ signal tile_deleted(tile: Tile)
 const DELETE = 0
 
 var _tile: Tile
+var _thumbnail_request_id: int = 0
 @export var tile: Tile:
 	get: 
 		return _tile
@@ -55,15 +56,18 @@ func _update_ui() -> void:
 
 func _generate_thumbnail() -> void:
 	"""Generate a thumbnail image for the tile."""
-	if not _tile or not tileImage:
+	if not _tile or not tileImage or not is_inside_tree():
 		return
 	
+	_thumbnail_request_id += 1
+	var request_id := _thumbnail_request_id
 	var current_tile = _tile
 	var texture = await TileThumbnailGenerator.generate_thumbnail(_tile, self, Vector2i(64, 64))
 	
+	if request_id != _thumbnail_request_id:
+		return
 	if not is_instance_valid(self) or not is_instance_valid(tileImage):
 		return
-	
 	if _tile != current_tile:
 		return
 	
