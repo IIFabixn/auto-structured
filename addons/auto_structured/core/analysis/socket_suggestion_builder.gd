@@ -66,17 +66,9 @@ static func analyze_faces(tile: Tile, library: ModuleLibrary, allow_self_match: 
 			info["best_candidate"] = best_within
 		else:
 			info["best_candidate"] = best_any if not best_any.is_empty() else null
-		info["issues"] = _build_analysis_issues(info, face)
+		info["issues"] = _build_analysis_issues(info)
 		result[direction] = info
 	return result
-
-static func _compare_faces(face_a: Dictionary, face_b: Dictionary) -> Variant:
-	var detail := _compare_faces_detailed(face_a, face_b)
-	if detail == null:
-		return null
-	if not detail.get("within_tolerance", false):
-		return null
-	return detail.get("score", null)
 
 static func _compare_faces_detailed(face_a: Dictionary, face_b: Dictionary) -> Dictionary:
 	if face_a.is_empty() or face_b.is_empty():
@@ -122,8 +114,6 @@ static func _gather_candidates(tile: Tile, direction: Vector3i, face: Dictionary
 		if rotations.is_empty():
 			rotations = [0]
 		for rotation in rotations:
-			if is_self and not allow_self_match:
-				continue
 			var use_cache := rotation == 0
 			var other_faces := MeshOutlineAnalyzer.get_face_signatures_for_tile(other_tile, use_cache, rotation)
 			if other_faces.is_empty():
@@ -215,7 +205,7 @@ static func _build_socket_guid_index(library: ModuleLibrary) -> Dictionary:
 	return index
 
 
-static func _build_analysis_issues(info: Dictionary, face: Dictionary) -> Array[String]:
+static func _build_analysis_issues(info: Dictionary) -> Array[String]:
 	var issues: Array[String] = []
 	if not info.get("has_socket", false):
 		issues.append("No socket defined on this face; connections will be skipped.")

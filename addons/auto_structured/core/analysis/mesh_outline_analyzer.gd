@@ -7,7 +7,6 @@ const Tile := preload("res://addons/auto_structured/core/tile.gd")
 const BASE_TOLERANCE_FACTOR := 0.002  # 0.2% of diagonal
 const MIN_TOLERANCE := 0.001
 const FACE_TOLERANCE_FACTOR := 0.02  # 2% of axis length
-const EPSILON := 0.0001
 const MIN_FACE_DIMENSION := 0.0001
 const MIN_FACE_POINTS := 3
 
