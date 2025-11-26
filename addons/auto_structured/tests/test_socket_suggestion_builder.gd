@@ -138,12 +138,12 @@ func test_builder_face_comparison() -> void:
 		"center": Vector2(0.0, 0.0)
 	}
 	
-	var score = SocketSuggestionBuilder._compare_faces(face_a, face_b)
+	var score = SocketSuggestionBuilder._compare_faces_detailed(face_a, face_b)
 	assert_not_null(score, "Identical faces should match", test_name)
 	assert_true(score < 0.1, "Identical faces should have low score", test_name)
 	
 	# Test empty faces
-	var empty_score = SocketSuggestionBuilder._compare_faces({}, face_a)
+	var empty_score = SocketSuggestionBuilder._compare_faces_detailed({}, face_a)
 	assert_null(empty_score, "Empty face should return null", test_name)
 
 func test_builder_matching_faces() -> void:
@@ -159,7 +159,7 @@ func test_builder_matching_faces() -> void:
 		"center": Vector2(0.005, 0.005)      # Slightly offset
 	}
 	
-	var score = SocketSuggestionBuilder._compare_faces(face_a, face_b)
+	var score = SocketSuggestionBuilder._compare_faces_detailed(face_a, face_b)
 	assert_not_null(score, "Nearly identical faces should match", test_name)
 	assert_true(score < 1.0, "Nearly identical faces should have reasonable score", test_name)
 
