@@ -114,7 +114,6 @@ func test_analyzer_cache_behavior() -> void:
 	# First call should compute and cache
 	var faces1 = MeshOutlineAnalyzer.get_face_signatures_for_tile(tile, true)
 	assert_true(tile._face_cache_valid, "Cache should be marked valid", test_name)
-	assert_false(tile._cached_face_signatures.is_empty(), "Cached signatures should be stored", test_name)
 	
 	# Second call should return cached value
 	var faces2 = MeshOutlineAnalyzer.get_face_signatures_for_tile(tile, true)

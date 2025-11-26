@@ -10,28 +10,34 @@ const MeshOutlineAnalyzer := preload("res://addons/auto_structured/core/analysis
 static func build_suggestions(tile: Tile, library: ModuleLibrary, allow_self_match: bool = false) -> Array:
 	if tile == null or library == null:
 		return []
-	var face_map := MeshOutlineAnalyzer.get_face_signatures_for_tile(tile)
-	if face_map.is_empty():
-		return []
 	var guid_index := _build_socket_guid_index(library)
+	var analysis := analyze_faces(tile, library, allow_self_match, guid_index)
+	if analysis.is_empty():
+		return []
 	var suggestions: Array = []
-	for direction in face_map.keys():
-		var face: Dictionary = face_map[direction]
-		if face.is_empty():
-			continue
-		var suggestion := _find_best_match_for_face(tile, direction, face, library, allow_self_match, guid_index)
-		if suggestion:
+	for direction in analysis.keys():
+		var info: Dictionary = analysis.get(direction, {})
+		var candidates: Array = info.get("candidates", [])
+		for candidate in candidates:
+			var detail: Dictionary = candidate.get("detail", {})
+			if not detail.get("within_tolerance", false):
+				continue
+			var suggestion := _candidate_to_suggestion(direction, candidate, guid_index)
+			if suggestion.is_empty():
+				continue
 			suggestions.append(suggestion)
 	return suggestions
 
-static func analyze_faces(tile: Tile, library: ModuleLibrary, allow_self_match: bool = false) -> Dictionary:
+static func analyze_faces(tile: Tile, library: ModuleLibrary, allow_self_match: bool = false, guid_index: Dictionary = {}) -> Dictionary:
 	var result: Dictionary = {}
 	if tile == null or library == null:
 		return result
 	var face_map := MeshOutlineAnalyzer.get_face_signatures_for_tile(tile)
 	if face_map.is_empty():
 		return result
-	var guid_index := _build_socket_guid_index(library)
+	var index := guid_index
+	if index.is_empty():
+		index = _build_socket_guid_index(library)
 	for direction in face_map.keys():
 		var face: Dictionary = face_map[direction]
 		var info := {
@@ -40,9 +46,11 @@ static func analyze_faces(tile: Tile, library: ModuleLibrary, allow_self_match: 
 			"suggestion": {},
 			"within_tolerance": false,
 			"best_candidate": null,
-			"issues": []
+			"issues": [],
+			"candidates": []
 		}
 		var candidates := _gather_candidates(tile, direction, face, library, allow_self_match)
+		info["candidates"] = candidates
 		var best_within: Dictionary = {}
 		var best_any: Dictionary = {}
 		for candidate in candidates:
@@ -53,7 +61,7 @@ static func analyze_faces(tile: Tile, library: ModuleLibrary, allow_self_match: 
 				if best_within.is_empty() or float(detail.get("score", INF)) < float(best_within.get("detail", {}).get("score", INF)):
 					best_within = candidate
 		if not best_within.is_empty():
-			info["suggestion"] = _candidate_to_suggestion(direction, best_within, guid_index)
+			info["suggestion"] = _candidate_to_suggestion(direction, best_within, index)
 			info["within_tolerance"] = true
 			info["best_candidate"] = best_within
 		else:
@@ -61,22 +69,6 @@ static func analyze_faces(tile: Tile, library: ModuleLibrary, allow_self_match: 
 		info["issues"] = _build_analysis_issues(info, face)
 		result[direction] = info
 	return result
-
-static func _find_best_match_for_face(tile: Tile, direction: Vector3i, face: Dictionary, library: ModuleLibrary, allow_self_match: bool, guid_index: Dictionary) -> Dictionary:
-	var candidates := _gather_candidates(tile, direction, face, library, allow_self_match)
-	var best_candidate: Dictionary = {}
-	var best_score: float = INF
-	for candidate in candidates:
-		var detail: Dictionary = candidate.get("detail", {})
-		if not detail.get("within_tolerance", false):
-			continue
-		var score := float(detail.get("score", INF))
-		if score < best_score:
-			best_score = score
-			best_candidate = candidate
-	if best_candidate.is_empty():
-		return {}
-	return _candidate_to_suggestion(direction, best_candidate, guid_index)
 
 static func _compare_faces(face_a: Dictionary, face_b: Dictionary) -> Variant:
 	var detail := _compare_faces_detailed(face_a, face_b)
@@ -121,35 +113,48 @@ static func _gather_candidates(tile: Tile, direction: Vector3i, face: Dictionary
 	var opposite := Vector3i(-direction.x, -direction.y, -direction.z)
 	var candidates: Array = []
 	for other_tile in library.tiles:
-		if not allow_self_match and other_tile == tile:
+		if other_tile == null:
 			continue
-		var other_faces := MeshOutlineAnalyzer.get_face_signatures_for_tile(other_tile)
-		if not other_faces.has(opposite):
+		var is_self := other_tile == tile
+		if is_self and not allow_self_match:
 			continue
-		var partner_face: Dictionary = other_faces[opposite]
-		if partner_face.is_empty():
-			continue
-		var detail := _compare_faces_detailed(face, partner_face)
-		if detail.is_empty():
-			continue
-		var partner_sockets := other_tile.get_sockets_in_direction(opposite)
-		if partner_sockets.is_empty():
-			continue
-		for partner_socket in partner_sockets:
-			if partner_socket == null:
+		var rotations := other_tile.get_unique_rotations()
+		if rotations.is_empty():
+			rotations = [0]
+		for rotation in rotations:
+			if is_self and not allow_self_match:
 				continue
-			var type_id := partner_socket.socket_id.strip_edges()
-			if type_id == "" or type_id == "none":
+			var use_cache := rotation == 0
+			var other_faces := MeshOutlineAnalyzer.get_face_signatures_for_tile(other_tile, use_cache, rotation)
+			if other_faces.is_empty():
 				continue
-			var candidate := {
-				"tile": other_tile,
-				"opposite": opposite,
-				"partner_face": partner_face,
-				"partner_socket": partner_socket,
-				"detail": detail,
-				"face": face
-			}
-			candidates.append(candidate)
+			if not other_faces.has(opposite):
+				continue
+			var partner_face: Dictionary = other_faces[opposite]
+			if partner_face.is_empty():
+				continue
+			var detail := _compare_faces_detailed(face, partner_face)
+			if detail.is_empty():
+				continue
+			var partner_sockets: Array = _rotated_sockets_in_direction(other_tile, rotation, opposite)
+			if partner_sockets.is_empty():
+				continue
+			for partner_socket in partner_sockets:
+				if partner_socket == null:
+					continue
+				var type_id: String = partner_socket.socket_id.strip_edges()
+				if type_id == "" or type_id == "none":
+					continue
+				var candidate := {
+					"tile": other_tile,
+					"partner_direction": opposite,
+					"partner_face": partner_face,
+					"partner_socket": partner_socket,
+					"detail": detail.duplicate(true),
+					"face": face,
+					"rotation_degrees": rotation
+				}
+				candidates.append(candidate)
 	return candidates
 
 static func _candidate_to_suggestion(direction: Vector3i, candidate: Dictionary, guid_index: Dictionary) -> Dictionary:
@@ -167,7 +172,8 @@ static func _candidate_to_suggestion(direction: Vector3i, candidate: Dictionary,
 		"socket_id": partner_socket_id,
 		"compatible": compatible_ids,
 		"partner_tile": candidate.get("tile"),
-		"partner_direction": candidate.get("opposite"),
+		"partner_direction": candidate.get("partner_direction"),
+		"partner_rotation": candidate.get("rotation_degrees", 0),
 		"score": candidate.get("detail", {}).get("score", INF),
 		"face": candidate.get("face"),
 		"partner_face": candidate.get("partner_face"),
@@ -208,6 +214,7 @@ static func _build_socket_guid_index(library: ModuleLibrary) -> Dictionary:
 			index[guid] = true
 	return index
 
+
 static func _build_analysis_issues(info: Dictionary, face: Dictionary) -> Array[String]:
 	var issues: Array[String] = []
 	if not info.get("has_socket", false):
@@ -231,3 +238,36 @@ static func _build_analysis_issues(info: Dictionary, face: Dictionary) -> Array[
 			var center_delta: Vector2 = detail.get("center_delta", Vector2.ZERO)
 			issues.append("Accepted match has center offset %.3f / %.3f units." % [center_delta.x, center_delta.y])
 	return issues
+
+static func _rotated_sockets_in_direction(tile: Tile, rotation_degrees: int, direction: Vector3i) -> Array:
+	var sockets_in_direction: Array = []
+	if tile == null:
+		return sockets_in_direction
+	var normalized := int(round(rotation_degrees)) % 360
+	if normalized < 0:
+		normalized += 360
+	for socket in tile.sockets:
+		if socket == null:
+			continue
+		var rotated_dir := _rotate_direction_y(socket.direction, normalized)
+		if rotated_dir == direction:
+			sockets_in_direction.append(socket)
+	return sockets_in_direction
+
+static func _rotate_direction_y(direction: Vector3i, degrees: int) -> Vector3i:
+	var normalized := degrees % 360
+	if normalized < 0:
+		normalized += 360
+	if direction == Vector3i.ZERO:
+		return direction
+	if direction.y != 0 and direction.x == 0 and direction.z == 0:
+		return direction
+	if normalized == 0:
+		return direction
+	var basis := Basis().rotated(Vector3.UP, deg_to_rad(float(normalized)))
+	var rotated := basis * Vector3(direction)
+	return Vector3i(
+		int(round(rotated.x)),
+		int(round(rotated.y)),
+		int(round(rotated.z))
+	)

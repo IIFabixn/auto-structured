@@ -20,6 +20,8 @@ static var _directions := [
 	Vector3i.BACK
 ]
 
+static var _face_signature_cache: Dictionary = {}
+
 ## Returns face signatures for all sides of a tile's mesh/scene.
 ## 
 ## Face signatures contain geometric information about each face:
@@ -39,26 +41,52 @@ static var _directions := [
 ## Returns:
 ##   Dictionary with Vector3i direction keys (RIGHT, LEFT, UP, DOWN, FORWARD, BACK)
 ##   and face signature Dictionary values
-static func get_face_signatures_for_tile(tile: Tile, use_cache: bool = true) -> Dictionary:
+static func get_face_signatures_for_tile(tile: Tile, use_cache: bool = true, rotation_degrees: int = 0) -> Dictionary:
 	if tile == null:
 		return {}
-	
-	# Check cache
-	if use_cache and tile._face_cache_valid and not tile._cached_face_signatures.is_empty():
-		return tile._cached_face_signatures
+	var normalized_rotation := int(round(rotation_degrees)) % 360
+	if normalized_rotation < 0:
+		normalized_rotation += 360
+	var allow_cache := use_cache and normalized_rotation == 0
+	var cache_key := _cache_key_for_tile(tile, normalized_rotation)
+	if allow_cache:
+		if not tile._face_cache_valid:
+			_purge_cached_faces_for_tile(tile)
+		elif _face_signature_cache.has(cache_key):
+			return _face_signature_cache[cache_key]
 	
 	var vertices := _extract_vertices_from_tile(tile)
 	if vertices.is_empty():
 		return {}
+	if normalized_rotation != 0:
+		var basis := Basis().rotated(Vector3.UP, deg_to_rad(float(normalized_rotation)))
+		for i in range(vertices.size()):
+			vertices[i] = basis * vertices[i]
 	
 	var signatures := _compute_face_signatures(vertices)
 	
 	# Store in cache
-	if use_cache:
-		tile._cached_face_signatures = signatures
+	if allow_cache:
+		_face_signature_cache[cache_key] = signatures.duplicate(true)
 		tile._face_cache_valid = true
 	
 	return signatures
+
+static func _cache_key_for_tile(tile: Tile, rotation_degrees: int) -> String:
+	if tile == null:
+		return ""
+	return "%d:%d" % [tile.get_instance_id(), rotation_degrees]
+
+static func _purge_cached_faces_for_tile(tile: Tile) -> void:
+	if tile == null:
+		return
+	var tile_prefix := "%d:" % tile.get_instance_id()
+	var keys_to_erase: Array[String] = []
+	for key in _face_signature_cache.keys():
+		if String(key).begins_with(tile_prefix):
+			keys_to_erase.append(key)
+	for key in keys_to_erase:
+		_face_signature_cache.erase(key)
 
 static func _extract_vertices_from_tile(tile: Tile) -> Array[Vector3]:
 	var vertices: Array[Vector3] = []

@@ -11,6 +11,7 @@ const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
 const SocketSuggestionBuilder = preload("res://addons/auto_structured/core/analysis/socket_suggestion_builder.gd")
 const AddTileDialogScene = preload("res://addons/auto_structured/ui/dialogs/add_tile_dialog.tscn")
+const WARNING_ICON = preload("res://addons/auto_structured/assets/warning.svg")
 
 @onready var socket_list: ItemList = %SocketList
 @onready var socket_info_label: Label = %SelectedSocketInfo
@@ -30,6 +31,7 @@ var _tile: Tile = null
 var _socket_entries: Array[SocketEntry] = []
 var _selected_entries: Array[SocketEntry] = []  # Support multi-selection
 var _suggestions_by_dir: Dictionary = {}
+var _analysis_by_dir: Dictionary = {}
 var _modified_sockets: Dictionary = {}  # Track sockets that were modified
 var _tree_edit_enabled: bool = false
 var _visible_tiles: Dictionary = {}
@@ -71,6 +73,7 @@ func setup(library: ModuleLibrary, tile: Tile) -> void:
 func _rebuild_state() -> void:
 	_socket_entries.clear()
 	_suggestions_by_dir.clear()
+	_analysis_by_dir.clear()
 	_modified_sockets.clear()
 	_socket_states.clear()
 	_selected_entries.clear()
@@ -110,7 +113,8 @@ func _build_socket_entries() -> void:
 		_socket_entries.append(entry)
 
 func _build_suggestions() -> void:
-	var suggestions = SocketSuggestionBuilder.build_suggestions(_tile, _library)
+	_analysis_by_dir = SocketSuggestionBuilder.analyze_faces(_tile, _library, true)
+	var suggestions = SocketSuggestionBuilder.build_suggestions(_tile, _library, true)
 	for suggestion in suggestions:
 		var direction: Vector3i = suggestion.get("direction", Vector3i.ZERO)
 		if not _suggestions_by_dir.has(direction):
@@ -119,6 +123,7 @@ func _build_suggestions() -> void:
 
 func _recalculate_suggestions() -> void:
 	_suggestions_by_dir.clear()
+	_analysis_by_dir.clear()
 	if _tile == null or _library == null:
 		return
 	_build_suggestions()
@@ -507,6 +512,7 @@ func _update_selection() -> void:
 	
 	_update_ui_availability(true)
 	_request_compatibility_refresh()
+	_update_suggestions_label()
 	_update_add_tile_button_state()
 
 func _update_ui_availability(enable: bool) -> void:
@@ -547,10 +553,6 @@ func _refresh_compatibility_view() -> void:
 		return
 	
 	var root = compatibility_tree.create_item()
-	var selected_socket_refs: Dictionary = {}
-	for entry in _selected_entries:
-		if entry.socket:
-			selected_socket_refs[entry.socket] = true
 	var summary_total := 0
 	var summary_enabled := 0
 	var summary_bidirectional := 0
@@ -563,8 +565,6 @@ func _refresh_compatibility_view() -> void:
 		var force_show := bool(visibility.get("force", false))
 		var sockets_to_show: Array = []
 		for socket in tile.sockets:
-			if selected_socket_refs.has(socket):
-				continue
 			var target_id := String(socket.socket_id).strip_edges()
 			if target_id == "":
 				continue
@@ -639,6 +639,14 @@ func _refresh_compatibility_view() -> void:
 			if _is_suggested_target_for_any_selected(target_id):
 				socket_item.set_custom_color(1, Color(0.7, 0.85, 1.0))
 				socket_item.set_custom_color(2, Color(0.7, 0.85, 1.0))
+			var warning_text := _get_warning_for_connection(socket)
+			if warning_text != "" and WARNING_ICON:
+				socket_item.set_icon(2, WARNING_ICON)
+				socket_item.set_tooltip_text(2, warning_text)
+				socket_item.set_icon_modulate(2, Color(1.0, 0.85, 0.3))
+			else:
+				socket_item.set_icon(2, null)
+				socket_item.set_tooltip_text(2, "")
 			summary_total += 1
 			if can_connect:
 				summary_enabled += 1
@@ -681,6 +689,9 @@ func _update_suggestions_label() -> void:
 		var partner_tile: Tile = suggestion.get("partner_tile", null)
 		var tile_name := partner_tile.name if partner_tile else "Unknown"
 		var socket_id: String = suggestion.get("socket_id", "")
+		var rotation_degrees: int = int(suggestion.get("partner_rotation", 0))
+		if rotation_degrees != 0:
+			tile_name = "%s (rotate %d°)" % [tile_name, rotation_degrees]
 		parts.append("%s — %s" % [tile_name, socket_id])
 	suggestions_label.text = "Suggestions: %s" % ", ".join(parts)
 
@@ -839,6 +850,47 @@ func _is_suggested_target(direction: Vector3i, socket_id: String) -> bool:
 			return true
 	return false
 
+func _get_warning_for_connection(target_socket: Socket) -> String:
+	if target_socket == null or _analysis_by_dir.is_empty() or _selected_entries.is_empty():
+		return ""
+	var warnings: Array[String] = []
+	for entry in _selected_entries:
+		if entry == null:
+			continue
+		var analysis: Dictionary = _analysis_by_dir.get(entry.direction, {})
+		if analysis.is_empty():
+			continue
+		var issues: Array = analysis.get("issues", [])
+		if issues.is_empty():
+			continue
+		var best_candidate := analysis.get("best_candidate", {})
+		if typeof(best_candidate) != TYPE_DICTIONARY or best_candidate.is_empty():
+			continue
+		var candidate_socket: Socket = best_candidate.get("partner_socket", null)
+		if candidate_socket != target_socket:
+			continue
+		candidate_socket.ensure_guid()
+		if entry.socket == null:
+			continue
+		entry.socket.ensure_guid()
+		var partner_guid := String(candidate_socket.socket_guid).strip_edges()
+		if partner_guid == "":
+			continue
+		var entry_guid := String(entry.socket.socket_guid).strip_edges()
+		var connected := _pending_contains(entry.socket, partner_guid)
+		if not connected and entry_guid != "":
+			connected = _pending_contains(candidate_socket, entry_guid)
+		if not connected:
+			continue
+		for issue in issues:
+			if issue is String:
+				var text: String = String(issue).strip_edges()
+				if text != "" and not warnings.has(text):
+					warnings.append(text)
+	if warnings.is_empty():
+		return ""
+	return "\n".join(warnings)
+
 func _filtered_suggestions_for_entry(entry: SocketEntry) -> Array:
 	var result: Array = []
 	if entry == null or entry.socket == null:
@@ -870,12 +922,14 @@ func _on_apply_suggestions_pressed() -> void:
 			var partner_tile: Tile = suggestion.get("partner_tile", null)
 			if partner_tile:
 				_add_visible_tile(partner_tile, true)
+			_ensure_socket_state(partner_socket)
+			_ensure_socket_state(entry.socket)
 			
 			# Add bidirectional compatibility
 			_apply_bidirectional_change(entry.socket, partner_socket, true)
 	
 	_update_add_tile_button_state()
-	_request_compatibility_refresh()
+	_refresh_compatibility_view()
 
 func _commit_pending_changes() -> bool:
 	if _modified_sockets.is_empty():
