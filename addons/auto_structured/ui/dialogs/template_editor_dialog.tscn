@@ -1,0 +1,71 @@
+[gd_scene load_steps=2 format=3 uid="uid://bb6d6cx2hjseb"]
+
+[ext_resource type="Script" path="res://addons/auto_structured/ui/dialogs/template_editor_dialog.gd" id="1"]
+
+[node name="TemplateEditorDialog" type="ConfirmationDialog"]
+min_size = Vector2i(560, 400)
+ok_button_text = "Save"
+popup_exclusive = true
+script = ExtResource("1")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -8.0
+
+[node name="VBox" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+custom_minimum_size = Vector2(520, 0)
+
+[node name="NameLabel" type="Label" parent="MarginContainer/VBox"]
+text = "Name"
+
+[node name="TemplateNameLine" type="LineEdit" parent="MarginContainer/VBox"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+placeholder_text = "Template name"
+
+[node name="DescriptionLabel" type="Label" parent="MarginContainer/VBox"]
+text = "Description"
+
+[node name="TemplateDescriptionText" type="TextEdit" parent="MarginContainer/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 90)
+wrap_mode = 3
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="EntriesLabel" type="Label" parent="MarginContainer/VBox"]
+text = "Entries"
+
+[node name="EntriesToolbar" type="HBoxContainer" parent="MarginContainer/VBox"]
+alignment = 2
+
+[node name="TemplateAddEntryButton" type="Button" parent="MarginContainer/VBox/EntriesToolbar"]
+unique_name_in_owner = true
+text = "Add"
+
+[node name="TemplateEditEntryButton" type="Button" parent="MarginContainer/VBox/EntriesToolbar"]
+unique_name_in_owner = true
+text = "Edit"
+disabled = true
+
+[node name="TemplateDeleteEntryButton" type="Button" parent="MarginContainer/VBox/EntriesToolbar"]
+unique_name_in_owner = true
+text = "Delete"
+disabled = true
+
+[node name="TemplateEntriesTree" type="Tree" parent="MarginContainer/VBox"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+size_flags_vertical = 3
+columns = 3
+hide_root = true
+column_titles_visible = true
+*** End of File***

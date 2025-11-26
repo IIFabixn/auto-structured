@@ -78,11 +78,11 @@ func _populate_template_dropdown() -> void:
     templateOptionButton.clear()
     templateOptionButton.add_item("None", -1)
     
-    var templates = LibraryPresets.get_socket_templates()
+    var templates = _get_available_templates()
     for i in range(templates.size()):
         var template = templates[i]
         templateOptionButton.add_item(template.template_name, i)
-        templateOptionButton.set_item_tooltip(i + 1, template.description)
+        templateOptionButton.set_item_tooltip(templateOptionButton.item_count - 1, template.description)
 
 func _get_selected_template_id() -> int:
     """Get the selected template ID (-1 for None)."""
@@ -111,7 +111,7 @@ func setup(library) -> void:
     _populate_template_dropdown()
     
     # Register socket types from all templates so they appear in socket menus
-    var templates = LibraryPresets.get_socket_templates()
+    var templates = _get_available_templates()
     for template in templates:
         _register_template_socket_types(template)
     
@@ -191,6 +191,11 @@ func _register_template_socket_types(template: SocketTemplate) -> void:
         # Register compatible types
         for compat_id in compatible:
             _library.ensure_socket_type(compat_id)
+
+func _get_available_templates() -> Array:
+    if _library:
+        return _library.get_socket_templates()
+    return LibraryPresets.get_socket_templates()
 
 func _update_tags_display() -> void:
     """Update the tags menu button text."""

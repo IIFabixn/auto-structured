@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://bftafm4hdos7e"]
+
+[ext_resource type="Script" uid="uid://cl274n383nr15" path="res://addons/auto_structured/ui/dialogs/template_editor_dialog.gd" id="1_2lfou"]
+
+[node name="TemplateEditorDialog" type="ConfirmationDialog"]
+script = ExtResource("1_2lfou")

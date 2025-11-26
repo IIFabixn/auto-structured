@@ -64,6 +64,7 @@ func setup(path: String, library: ModuleLibrary) -> void:
         await ready
     file_path = path
     _library = library
+    _reload_template_options()
     if fileLabel:
         fileLabel.text = path.get_file()
         fileLabel.tooltip_text = path
@@ -209,15 +210,9 @@ func _on_add_tag_pressed() -> void:
 
 func _setup_template_controls() -> void:
     if templateOptionButton:
-        _templates = LibraryPresets.get_socket_templates()
-        templateOptionButton.clear()
-        templateOptionButton.add_item("No template", -1)
-        for i in range(_templates.size()):
-            var template = _templates[i]
-            templateOptionButton.add_item(template.template_name, i)
-            templateOptionButton.set_item_tooltip(templateOptionButton.item_count - 1, template.description)
-        templateOptionButton.selected = 0
-        templateOptionButton.item_selected.connect(_on_template_selected)
+        _reload_template_options()
+        if not templateOptionButton.item_selected.is_connected(_on_template_selected):
+            templateOptionButton.item_selected.connect(_on_template_selected)
     if resetSocketsButton:
         resetSocketsButton.pressed.connect(func():
             _selected_template_id = -1
@@ -226,6 +221,29 @@ func _setup_template_controls() -> void:
             _reset_socket_names()
             _update_socket_fields()
         )
+
+func _reload_template_options() -> void:
+    if not templateOptionButton:
+        return
+    var previous_name := ""
+    if _selected_template_id >= 0 and _selected_template_id < _templates.size():
+        previous_name = _templates[_selected_template_id].template_name
+    if _library:
+        _templates = _library.get_socket_templates()
+    else:
+        _templates = LibraryPresets.get_socket_templates()
+    templateOptionButton.clear()
+    templateOptionButton.add_item("No template", -1)
+    var selection_index := 0
+    _selected_template_id = -1
+    for i in range(_templates.size()):
+        var template = _templates[i]
+        templateOptionButton.add_item(template.template_name, i)
+        templateOptionButton.set_item_tooltip(templateOptionButton.item_count - 1, template.description)
+        if not previous_name.is_empty() and template.template_name == previous_name:
+            selection_index = templateOptionButton.item_count - 1
+            _selected_template_id = i
+    templateOptionButton.selected = selection_index
 
 func _setup_socket_fields() -> void:
     var field_map := {

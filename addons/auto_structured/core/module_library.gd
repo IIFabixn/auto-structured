@@ -2,6 +2,8 @@
 class_name ModuleLibrary extends Resource
 
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
+const LibraryPresets = preload("res://addons/auto_structured/core/library_presets.gd")
+const SocketTemplate = preload("res://addons/auto_structured/utils/socket_template.gd")
 
 ## Emitted when a tile is added to the library
 signal tile_added(tile: Tile)
@@ -32,6 +34,8 @@ signal library_changed
 @export var socket_types: Array[String] = []  ## Registered socket type IDs for this library
 @export var available_tags: Array[String] = []  ## Available tags for tiles in this library
 @export var cell_world_size: Vector3 = Vector3(1, 1, 1)  ## Size of each grid cell in world units
+@export var custom_socket_templates: Array[SocketTemplate] = []
+@export var hidden_builtin_template_names: Array[String] = []
 
 func ensure_defaults() -> void:
 	"""
@@ -203,6 +207,88 @@ func rename_available_tag(old_name: String, new_name: String) -> bool:
 func get_available_tags() -> Array[String]:
 	"""Get all available tags for this library."""
 	return available_tags.duplicate()
+
+## ============================================================================
+## Socket Templates
+## ============================================================================
+
+static func _normalize_template_key(name: String) -> String:
+	return String(name).strip_edges().to_lower()
+
+func get_socket_templates(include_builtin: bool = true) -> Array[SocketTemplate]:
+	var templates: Array[SocketTemplate] = []
+	var override_keys: Dictionary = {}
+	for template in custom_socket_templates:
+		if template == null:
+			continue
+		var key = _normalize_template_key(template.template_name)
+		if key != "":
+			override_keys[key] = true
+	if include_builtin:
+		var builtin = LibraryPresets.get_socket_templates()
+		for template in builtin:
+			if template == null:
+				continue
+			var key = _normalize_template_key(template.template_name)
+			if key == "":
+				continue
+			if is_builtin_template_hidden(template.template_name):
+				continue
+			if override_keys.has(key):
+				continue
+			templates.append(template)
+	for template in custom_socket_templates:
+		if template:
+			templates.append(template)
+	return templates
+
+func get_custom_socket_templates() -> Array[SocketTemplate]:
+	var templates: Array[SocketTemplate] = []
+	for template in custom_socket_templates:
+		if template:
+			templates.append(template)
+	return templates
+
+func add_custom_socket_template(template: SocketTemplate) -> void:
+	if template == null:
+		return
+	custom_socket_templates.append(template)
+	library_changed.emit()
+
+func remove_custom_socket_template(template: SocketTemplate) -> bool:
+	if template == null:
+		return false
+	var index := custom_socket_templates.find(template)
+	if index == -1:
+		return false
+	custom_socket_templates.remove_at(index)
+	library_changed.emit()
+	return true
+
+func is_builtin_template_hidden(template_name: String) -> bool:
+	var key = _normalize_template_key(template_name)
+	if key == "":
+		return false
+	return hidden_builtin_template_names.has(key)
+
+func hide_builtin_template(template_name: String) -> bool:
+	var key = _normalize_template_key(template_name)
+	if key == "":
+		return false
+	if hidden_builtin_template_names.has(key):
+		return false
+	hidden_builtin_template_names.append(key)
+	library_changed.emit()
+	return true
+
+func restore_all_builtin_templates() -> void:
+	if hidden_builtin_template_names.is_empty():
+		return
+	hidden_builtin_template_names.clear()
+	library_changed.emit()
+
+func has_hidden_builtin_templates() -> bool:
+	return not hidden_builtin_template_names.is_empty()
 
 func get_all_unique_socket_ids() -> Array[String]:
 	"""

@@ -196,6 +196,8 @@ func _import_tile_from_config(config: Dictionary) -> Tile:
 
 func _apply_socket_template(tile: Tile, template_id: int) -> bool:
     var templates := LibraryPresets.get_socket_templates()
+    if _library:
+        templates = _library.get_socket_templates()
     if template_id < 0 or template_id >= templates.size():
         return false
     var template = templates[template_id]

@@ -4,6 +4,8 @@ class_name LibraryManagerDialog extends ConfirmationDialog
 const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.gd")
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const LibraryPresets = preload("res://addons/auto_structured/core/library_presets.gd")
+const SocketTemplate = preload("res://addons/auto_structured/utils/socket_template.gd")
+const TemplateEditorDialogScene = preload("res://addons/auto_structured/ui/dialogs/template_editor_dialog.tscn")
 
 @onready var tabs: TabContainer = %TabContainer
 @onready var tags_search: LineEdit = %TagsSearchLine
@@ -19,6 +21,10 @@ const LibraryPresets = preload("res://addons/auto_structured/core/library_preset
 
 @onready var templates_search: LineEdit = %TemplatesSearchLine
 @onready var templates_tree: Tree = %TemplatesTree
+@onready var template_add_button: Button = %TemplateAddButton
+@onready var template_edit_button: Button = %TemplateEditButton
+@onready var template_delete_button: Button = %TemplateDeleteButton
+@onready var template_restore_button: Button = %TemplateRestoreButton
 @onready var template_title_label: Label = %TemplateTitleLabel
 @onready var template_summary_label: Label = %TemplateSummaryLabel
 @onready var template_description_label: Label = %TemplateDescriptionLabel
@@ -26,6 +32,7 @@ const LibraryPresets = preload("res://addons/auto_structured/core/library_preset
 @onready var template_apply_button: Button = %TemplateApplyButton
 
 var _library: ModuleLibrary = null
+var _template_editor_dialog: TemplateEditorDialog = null
 
 var _tags_original: Array[String] = []
 var _tags_pending: Array[String] = []
@@ -48,6 +55,7 @@ func _ready() -> void:
 		confirmed.connect(_on_dialog_confirmed)
 	_initialize_lists()
 	_connect_ui()
+	_ensure_template_editor_dialog()
 	_refresh_all()
 
 func _initialize_lists() -> void:
@@ -102,6 +110,14 @@ func _connect_ui() -> void:
 			_template_filter = value.strip_edges().to_lower()
 			_refresh_templates_list()
 		)
+	if template_add_button:
+		template_add_button.pressed.connect(_on_add_template_pressed)
+	if template_edit_button:
+		template_edit_button.pressed.connect(_on_edit_template_pressed)
+	if template_delete_button:
+		template_delete_button.pressed.connect(_on_delete_template_pressed)
+	if template_restore_button:
+		template_restore_button.pressed.connect(_on_restore_templates_pressed)
 	if template_apply_button:
 		template_apply_button.pressed.connect(_on_apply_template_pressed)
 	if templates_tree:
@@ -128,8 +144,8 @@ func _reset_state() -> void:
 		tags_search.clear()
 	if templates_search:
 		templates_search.clear()
+	_reload_templates_cache()
 	if _library == null:
-		_templates = LibraryPresets.get_socket_templates()
 		return
 	_tags_original = _library.get_available_tags()
 	_tags_original.sort()
@@ -137,7 +153,6 @@ func _reset_state() -> void:
 	for tag in _tags_original:
 		_tag_forward_map[tag] = tag
 		_tag_reverse_map[tag] = tag
-	_templates = LibraryPresets.get_socket_templates()
 
 func _refresh_all() -> void:
 	_refresh_tags_list()
@@ -166,6 +181,141 @@ func _refresh_tags_list() -> void:
 
 	_update_buttons_state()
 
+func _ensure_template_editor_dialog() -> void:
+	if _template_editor_dialog != null:
+		return
+	if TemplateEditorDialogScene == null:
+		return
+	_template_editor_dialog = TemplateEditorDialogScene.instantiate() as TemplateEditorDialog
+	add_child(_template_editor_dialog)
+
+func _reload_templates_cache() -> void:
+	_templates.clear()
+	var custom_records: Array = []
+	var override_keys: Dictionary = {}
+	if _library != null and _library.custom_socket_templates != null:
+		for template in _library.custom_socket_templates:
+			if template == null:
+				continue
+			var key = _normalize_template_name(template.template_name)
+			if key != "":
+				override_keys[key] = true
+			custom_records.append({
+				"template": template,
+				"is_custom": true
+			})
+	var builtin := LibraryPresets.get_socket_templates()
+	for template in builtin:
+		if template == null:
+			continue
+		if _library != null:
+			if _library.is_builtin_template_hidden(template.template_name):
+				continue
+			var key = _normalize_template_name(template.template_name)
+			if key != "" and override_keys.has(key):
+				continue
+		_templates.append({
+			"template": template,
+			"is_custom": false
+		})
+	_templates.append_array(custom_records)
+	_sort_templates_cache()
+
+func _get_template_record(index: int) -> Dictionary:
+	if index < 0 or index >= _templates.size():
+		return {}
+	var record = _templates[index]
+	if record is Dictionary:
+		return record
+	if record == null:
+		return {}
+	return {
+		"template": record,
+		"is_custom": false
+	}
+
+func _get_template_from_index(index: int) -> SocketTemplate:
+	var record = _get_template_record(index)
+	return record.get("template", null)
+
+func _is_template_custom(index: int) -> bool:
+	var record = _get_template_record(index)
+	return record.get("is_custom", false)
+
+func _find_template_index(template: SocketTemplate) -> int:
+	if template == null:
+		return -1
+	for i in range(_templates.size()):
+		var record = _get_template_record(i)
+		if record.get("template") == template:
+			return i
+	return -1
+
+func _normalize_template_name(name: String) -> String:
+	return String(name).strip_edges().to_lower()
+
+func _sort_templates_cache() -> void:
+	if _templates.size() <= 1:
+		return
+	_templates.sort_custom(Callable(self, "_compare_template_records"))
+
+func _compare_template_records(a, b) -> bool:
+	var template_a: SocketTemplate = a.get("template", null)
+	var template_b: SocketTemplate = b.get("template", null)
+	if template_a == null:
+		return false
+	if template_b == null:
+		return true
+	return template_a.template_name.nocasecmp_to(template_b.template_name) < 0
+
+func _refresh_templates_after_mutation(preferred_template: SocketTemplate = null) -> void:
+	_reload_templates_cache()
+	var next_index = _selected_template_index
+	if preferred_template != null:
+		next_index = _find_template_index(preferred_template)
+	if _templates.is_empty():
+		next_index = -1
+	else:
+		next_index = clamp(next_index, 0, _templates.size() - 1)
+	_selected_template_index = next_index
+	_refresh_templates_list()
+	_update_template_details()
+	_update_buttons_state()
+
+func _ensure_template_is_custom(index: int) -> int:
+	if _library == null:
+		return -1
+	if index < 0 or index >= _templates.size():
+		return -1
+	if _is_template_custom(index):
+		return index
+	var source = _get_template_from_index(index)
+	if source == null:
+		return -1
+	var duplicate = _duplicate_template_resource(source)
+	if duplicate == null:
+		return -1
+	_library.add_custom_socket_template(duplicate)
+	_refresh_templates_after_mutation(duplicate)
+	return _find_template_index(duplicate)
+
+func _duplicate_template_resource(template: SocketTemplate) -> SocketTemplate:
+	if template == null:
+		return null
+	var duplicate = SocketTemplate.new()
+	duplicate.template_name = template.template_name
+	duplicate.description = template.description
+	duplicate.entries = []
+	for entry_data in template.entries:
+		var normalized = SocketTemplate.normalize_entry(entry_data)
+		duplicate.entries.append(SocketTemplate.create_entry(
+			normalized.get("direction", Vector3i.UP),
+			normalized.get("socket_id", "none"),
+			normalized.get("compatible", []),
+			normalized.get("minimum_rotation_degrees", 0)
+		))
+	return duplicate
+
 func _refresh_templates_list() -> void:
 	if templates_tree == null:
 		return
@@ -174,13 +324,21 @@ func _refresh_templates_list() -> void:
 	var filter = _template_filter
 
 	for i in range(_templates.size()):
-		var template = _templates[i]
+		var record = _get_template_record(i)
+		if record.is_empty():
+			continue
+		var template: SocketTemplate = record.get("template")
+		if template == null:
+			continue
 		var label = template.template_name
-		var text_to_match = label.to_lower()
+		var display_label = label
+		if record.get("is_custom", false):
+			display_label = "%s (Custom)" % label
+		var text_to_match = "%s %s" % [label.to_lower(), template.description.to_lower()]
 		if not filter.is_empty() and not text_to_match.contains(filter):
 			continue
 		var item = templates_tree.create_item(root)
-		item.set_text(0, label)
+		item.set_text(0, display_label)
 		item.set_metadata(0, i)
 		if i == _selected_template_index:
 			item.select(0)
@@ -210,6 +368,17 @@ func _update_buttons_state() -> void:
 		tags_revoke_button.disabled = disable_revoke
 
 	var has_template_selection := _selected_template_index >= 0 and _selected_template_index < _templates.size()
+	if template_add_button:
+		template_add_button.disabled = _library == null
+	if template_edit_button:
+		template_edit_button.disabled = not (has_template_selection and _library != null)
+	if template_delete_button:
+		template_delete_button.disabled = not (has_template_selection and _library != null)
+	if template_restore_button:
+		var disable_restore := true
+		if _library != null:
+			disable_restore = not _library.has_hidden_builtin_templates()
+		template_restore_button.disabled = disable_restore
 	if template_apply_button:
 		var disable_template_apply := not has_template_selection or _library == null
 		if not disable_template_apply and _library:
@@ -385,6 +554,68 @@ func _on_template_selected() -> void:
 func _on_template_activated() -> void:
 	_on_apply_template_pressed()
 
+func _on_add_template_pressed() -> void:
+	if _library == null:
+		_show_warning("Templates require an active library.")
+		return
+	_open_template_editor("Create Template", null, func(data: Dictionary):
+		var template := SocketTemplate.new()
+		_apply_template_editor_data(template, data)
+		_library.add_custom_socket_template(template)
+		_refresh_templates_after_mutation(template)
+	)
+
+func _on_edit_template_pressed() -> void:
+	if _library == null:
+		return
+	if _selected_template_index < 0:
+		return
+	var custom_index = _ensure_template_is_custom(_selected_template_index)
+	if custom_index == -1:
+		return
+	_selected_template_index = custom_index
+	var template = _get_template_from_index(custom_index)
+	if template == null:
+		return
+	_open_template_editor("Edit Template", template, func(data: Dictionary):
+		_apply_template_editor_data(template, data)
+		_library.library_changed.emit()
+		_refresh_templates_after_mutation(template)
+	)
+
+func _on_delete_template_pressed() -> void:
+	if _library == null:
+		return
+	if _selected_template_index < 0:
+		return
+	var template = _get_template_from_index(_selected_template_index)
+	if template == null:
+		return
+	if _is_template_custom(_selected_template_index):
+		var confirm = _create_confirmation_dialog("Delete Template", "Delete custom template '%s'?" % template.template_name)
+		confirm.confirmed.connect(func():
+			if _library.remove_custom_socket_template(template):
+				_refresh_templates_after_mutation()
+			confirm.queue_free()
+		)
+		confirm.canceled.connect(confirm.queue_free)
+		confirm.popup_centered()
+		return
+	var hide_confirm = _create_confirmation_dialog("Hide Template", "Hide built-in template '%s'? You can restore hidden templates at any time." % template.template_name)
+	hide_confirm.confirmed.connect(func():
+		if _library.hide_builtin_template(template.template_name):
+			_refresh_templates_after_mutation()
+		hide_confirm.queue_free()
+	)
+	hide_confirm.canceled.connect(hide_confirm.queue_free)
+	hide_confirm.popup_centered()
+
+func _on_restore_templates_pressed() -> void:
+	if _library == null:
+		return
+	_library.restore_all_builtin_templates()
+	_refresh_templates_after_mutation()
+
 func _update_template_details() -> void:
 	if template_entries_tree:
 		template_entries_tree.clear()
@@ -396,7 +627,9 @@ func _update_template_details() -> void:
 		template_description_label.text = ""
 	if _selected_template_index < 0 or _selected_template_index >= _templates.size():
 		return
-	var template = _templates[_selected_template_index]
+	var template = _get_template_from_index(_selected_template_index)
+	if template == null:
+		return
 	if template_title_label:
 		template_title_label.text = template.template_name
 	if template_summary_label:
@@ -423,7 +656,9 @@ func _on_apply_template_pressed() -> void:
 	if _library.tiles.is_empty():
 		_show_warning("No tiles available in this library.")
 		return
-	var template = _templates[_selected_template_index]
+	var template = _get_template_from_index(_selected_template_index)
+	if template == null:
+		return
 	var dialog = _create_selection_dialog("Apply Template", "Select tiles to apply '%s':" % template.template_name, _library.tiles, func(tile: Tile): return tile.name)
 	dialog.confirmed.connect(func():
 		var selected_tiles = _get_dialog_selected_entries(dialog)
@@ -439,7 +674,9 @@ func _apply_template_to_tiles(template_index: int, tiles: Array) -> void:
 		return
 	if template_index < 0 or template_index >= _templates.size():
 		return
-	var template = _templates[template_index]
+	var template = _get_template_from_index(template_index)
+	if template == null:
+		return
 	var modified := false
 	for entry in tiles:
 		if entry is Tile:
@@ -499,6 +736,47 @@ func _map_tag_to_library_names(tag: String) -> Array[String]:
 
 func _direction_to_string(direction: Vector3i) -> String:
 	return "(%d, %d, %d)" % [direction.x, direction.y, direction.z]
+
+func _collect_existing_template_names(exclude_template: SocketTemplate = null) -> Array[String]:
+	var names: Dictionary = {}
+	var builtin = LibraryPresets.get_socket_templates()
+	for template in builtin:
+		if template == null:
+			continue
+		if exclude_template != null and template == exclude_template:
+			continue
+		var normalized = _normalize_template_name(template.template_name)
+		if normalized != "":
+			names[normalized] = true
+	if _library != null and _library.custom_socket_templates != null:
+		for template in _library.custom_socket_templates:
+			if template == null:
+				continue
+			if exclude_template != null and template == exclude_template:
+				continue
+			var normalized = _normalize_template_name(template.template_name)
+			if normalized != "":
+				names[normalized] = true
+	var result: Array[String] = []
+	for key in names.keys():
+		result.append(key)
+	return result
+
+func _open_template_editor(title: String, template: SocketTemplate, on_save: Callable) -> void:
+	_ensure_template_editor_dialog()
+	if _template_editor_dialog == null:
+		_show_warning("Template editor is unavailable.")
+		return
+	var existing_names = _collect_existing_template_names(template)
+	_template_editor_dialog.open_editor(title, template, existing_names, on_save)
+
+func _apply_template_editor_data(template: SocketTemplate, data: Dictionary) -> void:
+	if template == null or data.is_empty():
+		return
+	template.template_name = data.get("name", template.template_name)
+	template.description = data.get("description", template.description)
+	var entries: Array = data.get("entries", [])
+	template.entries = entries.duplicate(true)
 
 func _extract_line_edit_text(dialog: AcceptDialog) -> String:
 	if dialog == null:
