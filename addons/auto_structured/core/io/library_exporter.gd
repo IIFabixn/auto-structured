@@ -102,6 +102,14 @@ static func _library_to_dict(library: ModuleLibrary) -> Dictionary:
 		
 		# Export sockets
 		for socket in tile.sockets:
+			var compat_guids := socket.compatible_sockets.duplicate()
+			var compat_labels: Array[String] = []
+			for guid in compat_guids:
+				var target := library.get_socket_by_guid(guid)
+				if target:
+					compat_labels.append(target.socket_id)
+				else:
+					compat_labels.append("")
 			tile_data["sockets"].append({
 				"direction": {
 					"x": socket.direction.x,
@@ -109,7 +117,9 @@ static func _library_to_dict(library: ModuleLibrary) -> Dictionary:
 					"z": socket.direction.z
 				},
 				"socket_type_id": socket.socket_id,
-				"compatible_sockets": socket.compatible_sockets.duplicate()
+				"socket_guid": socket.socket_guid,
+				"compatible_socket_guids": compat_guids,
+				"compatible_sockets": compat_labels
 			})
 		
 		# Export requirements (basic info)

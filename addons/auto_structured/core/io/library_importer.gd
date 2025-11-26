@@ -92,6 +92,8 @@ static func _dict_to_library(data: Dictionary) -> ModuleLibrary:
 			var tile = _dict_to_tile(tile_data, socket_type_map)
 			if tile:
 				library.tiles.append(tile)
+
+	library.convert_legacy_socket_compatibility()
 	
 	return library
 
@@ -145,11 +147,17 @@ static func _dict_to_tile(data: Dictionary, socket_type_map: Dictionary) -> Tile
 			var socket_type_id = socket_data.get("socket_type_id", "")
 			socket.socket_id = socket_type_id
 			
+			socket.socket_guid = socket_data.get("socket_guid", "")
 			# Import compatible sockets if present
-			if socket_data.has("compatible_sockets"):
-				for compat_id in socket_data["compatible_sockets"]:
-					socket.add_compatible_socket(compat_id)
-			
+			var legacy_types: Array = []
+			# Prefer GUID-based compatibility arrays
+			if socket_data.has("compatible_socket_guids"):
+				for compat_guid in socket_data["compatible_socket_guids"]:
+					socket.add_compatible_socket(compat_guid)
+			elif socket_data.has("compatible_sockets"):
+				legacy_types.assign(socket_data["compatible_sockets"])
+			if not legacy_types.is_empty():
+				socket.set_meta("legacy_compat_types", legacy_types)
 			tile.sockets.append(socket)
 	
 	# Requirements (basic import - might need expansion)

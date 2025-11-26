@@ -11,6 +11,7 @@ func run_all_tests() -> void:
 	
 	test_socket_initialization()
 	test_socket_direction_validation()
+	test_socket_guid_management()
 	test_socket_compatibility()
 	test_socket_id_accessors()
 	test_socket_compatible_list_accessors()
@@ -25,6 +26,22 @@ func test_socket_initialization() -> void:
 	assert_not_null(socket, "Socket should be created", test_name)
 	assert_equal(socket.direction, Vector3i.UP, "Socket should have default UP direction", test_name)
 	assert_equal(socket.socket_id, "", "Socket should have empty socket_id initially", test_name)
+	socket.ensure_guid()
+	assert_false(socket.socket_guid.is_empty(), "Socket should generate GUID on ensure", test_name)
+
+func test_socket_guid_management() -> void:
+	var test_name = "Socket GUID management"
+	var socket = Socket.new()
+	assert_equal(socket.socket_guid, "", "New socket starts without GUID", test_name)
+	socket.ensure_guid()
+	var first_guid = socket.socket_guid
+	assert_true(first_guid.length() == 36, "ensure_guid should create GUID", test_name)
+	socket.ensure_guid()
+	assert_equal(socket.socket_guid, first_guid, "ensure_guid should be stable", test_name)
+	socket.socket_guid = ""
+	assert_false(socket.socket_guid.is_empty(), "Clearing GUID should regenerate", test_name)
+	socket.socket_guid = " custom-guid "
+	assert_equal(socket.socket_guid, "custom-guid", "Setter should trim GUID input", test_name)
 
 func test_socket_direction_validation() -> void:
 	var test_name = "Socket direction validation"
@@ -70,14 +87,19 @@ func test_socket_compatibility() -> void:
 	# Create sockets with compatibility
 	var socket_a = Socket.new()
 	socket_a.socket_id = "type_a"
-	socket_a.add_compatible_socket("type_b")
 	
 	var socket_b = Socket.new()
 	socket_b.socket_id = "type_b"
-	socket_b.add_compatible_socket("type_a")
-	
+
 	var socket_c = Socket.new()
 	socket_c.socket_id = "type_c"
+
+	# Assign GUIDs and compatibility
+	socket_a.ensure_guid()
+	socket_b.ensure_guid()
+	socket_c.ensure_guid()
+	socket_a.add_compatible_socket(socket_b.socket_guid)
+	socket_b.add_compatible_socket(socket_a.socket_guid)
 	
 	# Test compatibility
 	assert_true(socket_a.is_compatible_with(socket_b), "Socket A should be compatible with Socket B", test_name)
@@ -121,14 +143,17 @@ func test_socket_compatible_list_accessors() -> void:
 	assert_equal(compat_list.size(), 0, "New socket should have no compatible sockets", test_name)
 	
 	# Test adding compatible types and reading them back
-	socket.add_compatible_socket("type_a")
-	socket.add_compatible_socket("type_b")
-	socket.add_compatible_socket("type_c")
+	var guid_a = _create_guid()
+	var guid_b = _create_guid()
+	var guid_c = _create_guid()
+	socket.add_compatible_socket(guid_a)
+	socket.add_compatible_socket(guid_b)
+	socket.add_compatible_socket(guid_c)
 	var compat_list2 = socket.compatible_sockets
 	assert_equal(compat_list2.size(), 3, "Should have 3 compatible types after adding", test_name)
-	assert_true("type_a" in compat_list2, "Should contain type_a", test_name)
-	assert_true("type_b" in compat_list2, "Should contain type_b", test_name)
-	assert_true("type_c" in compat_list2, "Should contain type_c", test_name)
+	assert_true(guid_a in compat_list2, "Should contain guid_a", test_name)
+	assert_true(guid_b in compat_list2, "Should contain guid_b", test_name)
+	assert_true(guid_c in compat_list2, "Should contain guid_c", test_name)
 
 func test_socket_add_remove_compatible() -> void:
 	var test_name = "Socket add/remove compatible"
@@ -137,31 +162,38 @@ func test_socket_add_remove_compatible() -> void:
 	socket.socket_id = "test"
 	
 	# Test adding compatible types
-	socket.add_compatible_socket("type_a")
+	var guid_a = _create_guid()
+	var guid_b = _create_guid()
+	socket.add_compatible_socket(guid_a)
 	var compat1 = socket.compatible_sockets
 	assert_equal(compat1.size(), 1, "Should have 1 compatible type after add", test_name)
-	assert_true("type_a" in compat1, "Should contain type_a", test_name)
+	assert_true(guid_a in compat1, "Should contain guid_a", test_name)
 	
-	socket.add_compatible_socket("type_b")
+	socket.add_compatible_socket(guid_b)
 	var compat2 = socket.compatible_sockets
 	assert_equal(compat2.size(), 2, "Should have 2 compatible types", test_name)
 	
 	# Test adding duplicate (should not increase count)
-	socket.add_compatible_socket("type_a")
+	socket.add_compatible_socket(guid_a)
 	var compat3 = socket.compatible_sockets
 	assert_equal(compat3.size(), 2, "Should still have 2 compatible types (no duplicates)", test_name)
 	
 	# Test removing compatible type
-	socket.remove_compatible_socket("type_a")
+	socket.remove_compatible_socket(guid_a)
 	var compat4 = socket.compatible_sockets
 	assert_equal(compat4.size(), 1, "Should have 1 compatible type after remove", test_name)
-	assert_false("type_a" in compat4, "Should not contain type_a after removal", test_name)
-	assert_true("type_b" in compat4, "Should still contain type_b", test_name)
+	assert_false(guid_a in compat4, "Should not contain guid_a after removal", test_name)
+	assert_true(guid_b in compat4, "Should still contain guid_b", test_name)
 	
 	# Test removing non-existent type (should not crash)
 	socket.remove_compatible_socket("type_xyz")
 	var compat5 = socket.compatible_sockets
 	assert_equal(compat5.size(), 1, "Should still have 1 compatible type", test_name)
+
+func _create_guid() -> String:
+	var temp = Socket.new()
+	temp.ensure_guid()
+	return temp.socket_guid
 
 # Helper assertion methods
 func assert_true(condition: bool, message: String, test_name: String) -> void:

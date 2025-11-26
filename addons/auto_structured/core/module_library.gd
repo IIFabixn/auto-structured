@@ -52,6 +52,74 @@ func ensure_defaults() -> void:
 	if cell_world_size.x <= 0.0 or cell_world_size.y <= 0.0 or cell_world_size.z <= 0.0:
 		cell_world_size = Vector3(2, 3, 2)
 
+func convert_legacy_socket_compatibility() -> bool:
+	"""Convert legacy type-based compatibility strings into GUID references."""
+	var sockets_by_type: Dictionary = {}
+	var converted := false
+	for tile in tiles:
+		for socket in tile.sockets:
+			if socket == null:
+				continue
+			socket.ensure_guid()
+			var type_name := String(socket.socket_id).strip_edges()
+			if type_name == "":
+				continue
+			if not sockets_by_type.has(type_name):
+				sockets_by_type[type_name] = []
+			sockets_by_type[type_name].append(socket)
+	for tile in tiles:
+		for socket in tile.sockets:
+			if socket == null:
+				continue
+			var legacy_types: Array[String] = []
+			var guid_entries: Array[String] = []
+			if socket.has_meta("legacy_compat_types"):
+				var meta_list: Array = socket.get_meta("legacy_compat_types")
+				socket.set_meta("legacy_compat_types", null)
+				for type_name in meta_list:
+					var clean_meta := String(type_name).strip_edges()
+					if clean_meta != "":
+						legacy_types.append(clean_meta)
+			for compat_entry in socket.compatible_sockets:
+				var clean_entry := String(compat_entry).strip_edges()
+				if clean_entry == "":
+					continue
+				if _looks_like_guid(clean_entry):
+					guid_entries.append(clean_entry)
+				else:
+					legacy_types.append(clean_entry)
+			if legacy_types.is_empty():
+				continue
+			converted = true
+			socket.compatible_sockets.clear()
+			for guid in guid_entries:
+				socket.add_compatible_socket(guid)
+			for type_name in legacy_types:
+				var targets: Array = sockets_by_type.get(type_name, [])
+				for target in targets:
+					if target and target != socket:
+						socket.add_compatible_socket(target.socket_guid)
+	return converted
+
+static func _looks_like_guid(value: String) -> bool:
+	var clean := String(value).strip_edges()
+	if clean.length() != 36:
+		return false
+	var hyphen_positions := [8, 13, 18, 23]
+	for pos in hyphen_positions:
+		if clean[pos] != "-":
+			return false
+	for i in range(clean.length()):
+		if i in hyphen_positions:
+			continue
+		var char_code := clean[i].unicode_at(0)
+		var is_digit := char_code >= 48 and char_code <= 57
+		var is_lower := char_code >= 97 and char_code <= 102
+		var is_upper := char_code >= 65 and char_code <= 70
+		if not (is_digit or is_lower or is_upper):
+			return false
+	return true
+
 func get_tile_by_name(name: String) -> Tile:
 	for tile in tiles:
 		if tile.name == name:
@@ -252,11 +320,6 @@ func rename_socket_type(old_id: String, new_id: String) -> bool:
 		for socket in tile.sockets:
 			if socket.socket_id == old_id:
 				socket.socket_id = clean_new
-			# Update compatibility references
-			if old_id in socket.compatible_sockets:
-				socket.compatible_sockets.erase(old_id)
-				socket.compatible_sockets.append(clean_new)
-				socket.compatible_sockets.sort()
 	
 	socket_type_renamed.emit(old_id, clean_new)
 	library_changed.emit()
@@ -283,9 +346,6 @@ func delete_socket_type(id: String, fallback_id: String = "none") -> bool:
 		for socket in tile.sockets:
 			if socket.socket_id == normalized_id:
 				socket.socket_id = fallback_id
-			# Remove from compatibility lists
-			if normalized_id in socket.compatible_sockets:
-				socket.compatible_sockets.erase(normalized_id)
 	
 	socket_type_removed.emit(normalized_id)
 	library_changed.emit()
@@ -300,7 +360,15 @@ func validate_library() -> Dictionary:
 		- "valid" (bool): true if no issues found
 		- "issues" (Array[String]): List of validation issues
 	"""
+	convert_legacy_socket_compatibility()
 	var all_socket_ids = get_all_unique_socket_ids()
+	var socket_guid_map: Dictionary = {}
+	for tile in tiles:
+		for socket in tile.sockets:
+			if socket == null:
+				continue
+			socket.ensure_guid()
+			socket_guid_map[socket.socket_guid] = true
 	var issues: Array[String] = []
 	
 	for tile in tiles:
@@ -315,11 +383,26 @@ func validate_library() -> Dictionary:
 				issues.append("Socket '%s' on tile '%s' is not registered in socket_types" % [socket.socket_id, tile.name])
 			
 			# Check if any compatible socket doesn't exist in library
-			for compat_id in socket.compatible_sockets:
-				if compat_id not in all_socket_ids:
-					issues.append("Socket '%s' on tile '%s' references unknown socket type '%s'" % [socket.socket_id, tile.name, compat_id])
+			for compat_guid in socket.compatible_sockets:
+				var clean := String(compat_guid).strip_edges()
+				if clean == "":
+					issues.append("Socket '%s' on tile '%s' has an empty compatibility entry" % [socket.socket_id, tile.name])
+					continue
+				if not socket_guid_map.has(clean):
+					issues.append("Socket '%s' on tile '%s' references unknown socket GUID '%s'" % [socket.socket_id, tile.name, clean])
 	
 	return {"valid": issues.is_empty(), "issues": issues}
+
+func get_socket_by_guid(guid: String) -> Socket:
+	"""Find any socket in the library by its GUID."""
+	var clean := String(guid).strip_edges()
+	if clean == "":
+		return null
+	for tile in tiles:
+		var socket := tile.get_socket_by_guid(clean)
+		if socket:
+			return socket
+	return null
 
 
 ## Add a tile to the library and emit event

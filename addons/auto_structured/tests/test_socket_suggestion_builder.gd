@@ -71,6 +71,8 @@ func test_builder_build_suggestions() -> void:
 	
 	var tiles_array: Array[Tile] = [tile1, tile2]
 	library.tiles = tiles_array
+	library.convert_legacy_socket_compatibility()
+	library.convert_legacy_socket_compatibility()
 	
 	# Build suggestions for tile1
 	var suggestions = SocketSuggestionBuilder.build_suggestions(tile1, library)
@@ -218,6 +220,7 @@ func test_builder_self_match_behavior() -> void:
 	
 	var tiles_array: Array[Tile] = [tile]
 	library.tiles = tiles_array
+	library.convert_legacy_socket_compatibility()
 	
 	# Test with allow_self_match=false (default)
 	var suggestions1 = SocketSuggestionBuilder.build_suggestions(tile, library, false)
@@ -250,6 +253,7 @@ func test_builder_candidate_gathering() -> void:
 		tiles_array.append(candidate)
 	
 	library.tiles = tiles_array
+	library.convert_legacy_socket_compatibility()
 	
 	# Build suggestions - should find all 3 candidates
 	var suggestions = SocketSuggestionBuilder.build_suggestions(tile1, library)
@@ -275,6 +279,7 @@ func test_builder_no_valid_candidates() -> void:
 	
 	var tiles_array: Array[Tile] = [tile1, tile2]
 	library.tiles = tiles_array
+	library.convert_legacy_socket_compatibility()
 	
 	# Small tile should not match large tile
 	var suggestions = SocketSuggestionBuilder.build_suggestions(tile1, library)
@@ -302,6 +307,7 @@ func test_builder_suggestion_structure() -> void:
 	
 	var tiles_array: Array[Tile] = [tile1, tile2]
 	library.tiles = tiles_array
+	library.convert_legacy_socket_compatibility()
 	
 	var suggestions = SocketSuggestionBuilder.build_suggestions(tile1, library)
 	
@@ -325,6 +331,7 @@ func test_builder_analysis_issues() -> void:
 	var tile = _create_cube_tile("NoSockets", Vector3.ONE)
 	var tiles_array: Array[Tile] = [tile]
 	library.tiles = tiles_array
+	library.convert_legacy_socket_compatibility()
 	
 	var analysis = SocketSuggestionBuilder.analyze_faces(tile, library)
 	

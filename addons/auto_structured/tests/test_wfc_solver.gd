@@ -57,9 +57,9 @@ func test_solver_compatibility_basic() -> void:
 	for direction in [Vector3i.RIGHT, Vector3i.LEFT, Vector3i.UP, Vector3i.DOWN, Vector3i.FORWARD, Vector3i.BACK]:
 		var socket = Socket.new()
 		socket.socket_id = "wall"
-		socket.add_compatible_socket("wall")
 		socket.direction = direction
 		tile1.sockets.append(socket)
+	_link_same_type_sockets(tile1.sockets)
 	
 	var tiles: Array[Tile] = [tile1]
 	var grid = WfcGrid.new(Vector3i(2, 2, 2), tiles)
@@ -78,7 +78,6 @@ func test_solver_compatibility_with_sockets() -> void:
 	tile_a.size = Vector3i.ONE
 	var socket_a = Socket.new()
 	socket_a.socket_id = "type_a"
-	socket_a.add_compatible_socket("type_b")
 	socket_a.direction = Vector3i.RIGHT
 	tile_a.sockets.append(socket_a)
 	
@@ -88,9 +87,10 @@ func test_solver_compatibility_with_sockets() -> void:
 	tile_b.size = Vector3i.ONE
 	var socket_b = Socket.new()
 	socket_b.socket_id = "type_b"
-	socket_b.add_compatible_socket("type_a")
 	socket_b.direction = Vector3i.LEFT
 	tile_b.sockets.append(socket_b)
+
+	_make_mutually_compatible(socket_a, socket_b)
 	
 	var tiles: Array[Tile] = [tile_a, tile_b]
 	var grid = WfcGrid.new(Vector3i(2, 1, 1), tiles)
@@ -275,11 +275,27 @@ func create_universal_tile(tile_name: String) -> Tile:
 	for direction in [Vector3i.RIGHT, Vector3i.LEFT, Vector3i.UP, Vector3i.DOWN, Vector3i.FORWARD, Vector3i.BACK]:
 		var socket = Socket.new()
 		socket.socket_id = "universal"
-		socket.add_compatible_socket("universal")
 		socket.direction = direction
 		tile.sockets.append(socket)
+	_link_same_type_sockets(tile.sockets)
 	
 	return tile
+
+func _make_mutually_compatible(socket_a: Socket, socket_b: Socket) -> void:
+	socket_a.ensure_guid()
+	socket_b.ensure_guid()
+	socket_a.add_compatible_socket(socket_b.socket_guid)
+	socket_b.add_compatible_socket(socket_a.socket_guid)
+
+func _link_same_type_sockets(sockets: Array[Socket]) -> void:
+	for socket in sockets:
+		socket.ensure_guid()
+	for i in range(sockets.size()):
+		for j in range(i + 1, sockets.size()):
+			var first: Socket = sockets[i]
+			var second: Socket = sockets[j]
+			if first.socket_id == second.socket_id:
+				_make_mutually_compatible(first, second)
 
 # Helper assertion methods
 func assert_true(condition: bool, message: String, test_name: String) -> void:

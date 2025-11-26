@@ -33,6 +33,7 @@ enum RotationSymmetry {
 @export var sockets: Array[Socket] = []:
 	set(value):
 		sockets = value
+		_ensure_socket_guids()
 		_rebuild_socket_cache()
 		_face_cache_valid = false  ## Invalidate face cache when sockets change
 
@@ -45,11 +46,17 @@ var _face_cache_valid: bool = false
 
 func _rebuild_socket_cache() -> void:
 	"""Rebuild the socket cache whenever sockets are modified. Called automatically."""
+	_ensure_socket_guids()
 	_sockets_by_dir.clear()
 	for s in sockets:
 		if not _sockets_by_dir.has(s.direction):
 			_sockets_by_dir[s.direction] = []
 		_sockets_by_dir[s.direction].append(s)
+
+func _ensure_socket_guids() -> void:
+	for socket in sockets:
+		if socket:
+			socket.ensure_guid()
 
 func get_sockets_in_direction(direction: Vector3i) -> Array[Socket]:
 	"""
@@ -351,4 +358,14 @@ func get_socket_by_direction(direction: Vector3i) -> Socket:
 	var sockets_in_dir = get_sockets_in_direction(direction)
 	if not sockets_in_dir.is_empty():
 		return sockets_in_dir[0]
+	return null
+
+func get_socket_by_guid(guid: String) -> Socket:
+	"""Find a socket on this tile by its GUID."""
+	var clean := String(guid).strip_edges()
+	if clean == "":
+		return null
+	for socket in sockets:
+		if socket and socket.socket_guid == clean:
+			return socket
 	return null

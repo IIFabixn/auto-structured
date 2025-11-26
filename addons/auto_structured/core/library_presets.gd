@@ -121,6 +121,9 @@ static func apply_socket_template(tile: Tile, template: SocketTemplate, library)
 			socket.direction = direction
 			tile.sockets.append(socket)
 
+	if library and library.tiles.has(tile):
+		library.convert_legacy_socket_compatibility()
+
 ## ============================================================================
 ## Tag Presets
 ## ============================================================================

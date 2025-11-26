@@ -206,13 +206,13 @@ func test_can_sockets_connect() -> void:
 	# Create sockets
 	var socket_a = Socket.new()
 	socket_a.socket_id = "a"
-	socket_a.add_compatible_socket("b")
 	socket_a.direction = Vector3i.RIGHT
 	
 	var socket_b = Socket.new()
 	socket_b.socket_id = "b"
-	socket_b.add_compatible_socket("a")
 	socket_b.direction = Vector3i.LEFT
+
+	_link_sockets(socket_a, socket_b)
 	
 	var tile1 = Tile.new()
 	var tile2 = Tile.new()
@@ -229,6 +229,12 @@ func test_can_sockets_connect() -> void:
 	# Test incompatible sockets
 	var cannot_connect = WfcHelper.can_sockets_connect(socket_a, socket_c, tile1, tile2)
 	assert_false(cannot_connect, "Incompatible sockets should not be able to connect", test_name)
+
+func _link_sockets(a: Socket, b: Socket) -> void:
+	a.ensure_guid()
+	b.ensure_guid()
+	a.add_compatible_socket(b.socket_guid)
+	b.add_compatible_socket(a.socket_guid)
 
 # Helper assertion methods
 func assert_true(condition: bool, message: String, test_name: String) -> void:

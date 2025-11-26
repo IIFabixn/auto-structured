@@ -8,7 +8,13 @@ const Requirement = preload("res://addons/auto_structured/core/requirements/requ
 	set(value):
 		socket_id = value.strip_edges() if value else ""
 
-## List of socket IDs that are compatible with this socket
+## Stable GUID for this specific socket instance (used for compatibility links)
+@export var socket_guid: String = "":
+	set(value):
+		var clean := String(value).strip_edges()
+		socket_guid = clean if clean != "" else _generate_guid()
+
+## List of socket GUIDs that are compatible with this socket
 @export var compatible_sockets: Array[String] = []
 
 ## Requirements that the neighboring tile must satisfy to connect to this socket
@@ -46,16 +52,17 @@ func is_compatible_with(other: Socket) -> bool:
 	"""
 	if other == null:
 		return false
-	
-	# Check if this socket's compatible list includes the other's ID
-	return other.socket_id in compatible_sockets
+
+	ensure_guid()
+	other.ensure_guid()
+	return other.socket_guid in compatible_sockets
 
 func add_compatible_socket(id: String) -> void:
 	"""
-	Add a socket ID to the compatibility list.
+	Add a socket GUID to the compatibility list.
 	
 	Args:
-		id: The socket ID to add
+		id: The socket GUID to add
 	"""
 	var clean := String(id).strip_edges()
 	if clean == "" or clean in compatible_sockets:
@@ -65,11 +72,34 @@ func add_compatible_socket(id: String) -> void:
 
 func remove_compatible_socket(id: String) -> void:
 	"""
-	Remove a socket ID from the compatibility list.
+	Remove a socket GUID from the compatibility list.
 	
 	Args:
-		id: The socket ID to remove
+		id: The socket GUID to remove
 	"""
 	var clean := String(id).strip_edges()
 	if clean in compatible_sockets:
 		compatible_sockets.erase(clean)
+
+func ensure_guid() -> void:
+	"""Guarantee this socket has a valid GUID."""
+	if String(socket_guid).strip_edges() == "":
+		socket_guid = _generate_guid()
+
+func _generate_guid() -> String:
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	var bytes := PackedByteArray()
+	bytes.resize(16)
+	for i in range(bytes.size()):
+		bytes[i] = rng.randi() & 0xFF
+	var hex := ""
+	for value in bytes:
+		hex += "%02x" % value
+	return "%s-%s-%s-%s-%s" % [
+		hex.substr(0, 8),
+		hex.substr(8, 4),
+		hex.substr(12, 4),
+		hex.substr(16, 4),
+		hex.substr(20, 12)
+	]
