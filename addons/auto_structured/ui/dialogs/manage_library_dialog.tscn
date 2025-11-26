@@ -140,14 +140,14 @@ columns = 2
 column_titles_visible = true
 hide_root = true
 
-[node name="Sockets" type="Control" parent="MarginContainer/VBoxContainer/TabContainer"]
+[node name="Templates" type="Control" parent="MarginContainer/VBoxContainer/TabContainer"]
 visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 metadata/_tab_index = 1
 
-[node name="SocketsSplit" type="HSplitContainer" parent="MarginContainer/VBoxContainer/TabContainer/Sockets"]
+[node name="TemplatesSplit" type="HSplitContainer" parent="MarginContainer/VBoxContainer/TabContainer/Templates"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -158,44 +158,23 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 split_offset = 280
 
-[node name="SocketsLeftPanel" type="VBoxContainer" parent="MarginContainer/VBoxContainer/TabContainer/Sockets/SocketsSplit"]
+[node name="TemplatesLeftPanel" type="VBoxContainer" parent="MarginContainer/VBoxContainer/TabContainer/Templates/TemplatesSplit"]
 custom_minimum_size = Vector2(260, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="SocketsSearchRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer/TabContainer/Sockets/SocketsSplit/SocketsLeftPanel"]
+[node name="TemplatesSearchRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer/TabContainer/Templates/TemplatesSplit/TemplatesLeftPanel"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="SocketsSearchLine" type="LineEdit" parent="MarginContainer/VBoxContainer/TabContainer/Sockets/SocketsSplit/SocketsLeftPanel/SocketsSearchRow"]
+[node name="TemplatesSearchLine" type="LineEdit" parent="MarginContainer/VBoxContainer/TabContainer/Templates/TemplatesSplit/TemplatesLeftPanel/TemplatesSearchRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-placeholder_text = "Search socket types"
+placeholder_text = "Search templates"
 
-[node name="SocketsAddButton" type="Button" parent="MarginContainer/VBoxContainer/TabContainer/Sockets/SocketsSplit/SocketsLeftPanel/SocketsSearchRow"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Add"
-
-[node name="SocketsActionRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer/TabContainer/Sockets/SocketsSplit/SocketsLeftPanel"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="SocketsRenameButton" type="Button" parent="MarginContainer/VBoxContainer/TabContainer/Sockets/SocketsSplit/SocketsLeftPanel/SocketsActionRow"]
-unique_name_in_owner = true
-layout_mode = 2
-disabled = true
-text = "Rename"
-
-[node name="SocketsDeleteButton" type="Button" parent="MarginContainer/VBoxContainer/TabContainer/Sockets/SocketsSplit/SocketsLeftPanel/SocketsActionRow"]
-unique_name_in_owner = true
-layout_mode = 2
-disabled = true
-text = "Delete"
-
-[node name="SocketsTree" type="Tree" parent="MarginContainer/VBoxContainer/TabContainer/Sockets/SocketsSplit/SocketsLeftPanel"]
+[node name="TemplatesTree" type="Tree" parent="MarginContainer/VBoxContainer/TabContainer/Templates/TemplatesSplit/TemplatesLeftPanel"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -203,42 +182,35 @@ size_flags_vertical = 3
 column_titles_visible = true
 hide_root = true
 
-[node name="SocketsRightPanel" type="VBoxContainer" parent="MarginContainer/VBoxContainer/TabContainer/Sockets/SocketsSplit"]
+[node name="TemplatesRightPanel" type="VBoxContainer" parent="MarginContainer/VBoxContainer/TabContainer/Templates/TemplatesSplit"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="SocketsUsageTitle" type="Label" parent="MarginContainer/VBoxContainer/TabContainer/Sockets/SocketsSplit/SocketsRightPanel"]
+[node name="TemplateTitleLabel" type="Label" parent="MarginContainer/VBoxContainer/TabContainer/Templates/TemplatesSplit/TemplatesRightPanel"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Tile sockets using this type"
+text = "Templates"
 
-[node name="SocketsUsageSummary" type="Label" parent="MarginContainer/VBoxContainer/TabContainer/Sockets/SocketsSplit/SocketsRightPanel"]
+[node name="TemplateSummaryLabel" type="Label" parent="MarginContainer/VBoxContainer/TabContainer/Templates/TemplatesSplit/TemplatesRightPanel"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HeaderSmall"
-text = "Select a socket type to view usage"
+text = "Select a template to view details"
 
-[node name="SocketsUsageButtons" type="HBoxContainer" parent="MarginContainer/VBoxContainer/TabContainer/Sockets/SocketsSplit/SocketsRightPanel"]
+[node name="TemplateDescriptionLabel" type="Label" parent="MarginContainer/VBoxContainer/TabContainer/Templates/TemplatesSplit/TemplatesRightPanel"]
 unique_name_in_owner = true
 layout_mode = 2
-alignment = 1
+autowrap_mode = 2
 
-[node name="SocketsAssignButton" type="Button" parent="MarginContainer/VBoxContainer/TabContainer/Sockets/SocketsSplit/SocketsRightPanel/SocketsUsageButtons"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-disabled = true
-text = "Assign to sockets"
-
-[node name="SocketsRevokeButton" type="Button" parent="MarginContainer/VBoxContainer/TabContainer/Sockets/SocketsSplit/SocketsRightPanel/SocketsUsageButtons"]
+[node name="TemplateApplyButton" type="Button" parent="MarginContainer/VBoxContainer/TabContainer/Templates/TemplatesSplit/TemplatesRightPanel"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 disabled = true
-text = "Revoke from sockets"
+text = "Apply to tiles"
 
-[node name="SocketsUsageTree" type="Tree" parent="MarginContainer/VBoxContainer/TabContainer/Sockets/SocketsSplit/SocketsRightPanel"]
+[node name="TemplateEntriesTree" type="Tree" parent="MarginContainer/VBoxContainer/TabContainer/Templates/TemplatesSplit/TemplatesRightPanel"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
