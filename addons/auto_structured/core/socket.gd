@@ -45,7 +45,8 @@ func is_compatible_with(other: Socket) -> bool:
 	Check if this socket is compatible with another socket.
 
 	Args:
-		other: The socket to check compatibility against
+		other: The socket to check compatibility against (compatibility is defined
+			by this socket's compatible_sockets list)
 
 	Returns:
 		true if compatible, false otherwise
@@ -54,8 +55,10 @@ func is_compatible_with(other: Socket) -> bool:
 		return false
 
 	ensure_guid()
-	other.ensure_guid()
-	return other.socket_guid in compatible_sockets
+	var other_guid := String(other.socket_guid).strip_edges()
+	if other_guid == "":
+		return false
+	return other_guid in compatible_sockets
 
 func add_compatible_socket(id: String) -> void:
 	"""

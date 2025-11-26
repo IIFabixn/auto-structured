@@ -301,7 +301,11 @@ func get_all_unique_socket_ids() -> Array[String]:
 	var unique_ids: Dictionary = {}
 	
 	for tile in tiles:
+		if tile == null:
+			continue
 		for socket in tile.sockets:
+			if socket == null:
+				continue
 			if socket.socket_id and not unique_ids.has(socket.socket_id):
 				unique_ids[socket.socket_id] = true
 				socket_ids.append(socket.socket_id)
@@ -428,10 +432,20 @@ func delete_socket_type(id: String, fallback_id: String = "none") -> bool:
 	socket_types.erase(normalized_id)
 	
 	# Update sockets referencing this type
+	var modified_tiles := false
 	for tile in tiles:
+		if tile == null:
+			continue
+		var updated_tile := false
 		for socket in tile.sockets:
+			if socket == null:
+				continue
 			if socket.socket_id == normalized_id:
 				socket.socket_id = fallback_id
+				updated_tile = true
+		if updated_tile:
+			notify_tile_modified(tile, "sockets")
+			modified_tiles = true
 	
 	socket_type_removed.emit(normalized_id)
 	library_changed.emit()
@@ -447,9 +461,10 @@ func validate_library() -> Dictionary:
 		- "issues" (Array[String]): List of validation issues
 	"""
 	convert_legacy_socket_compatibility()
-	var all_socket_ids = get_all_unique_socket_ids()
 	var socket_guid_map: Dictionary = {}
 	for tile in tiles:
+		if tile == null:
+			continue
 		for socket in tile.sockets:
 			if socket == null:
 				continue
@@ -458,7 +473,11 @@ func validate_library() -> Dictionary:
 	var issues: Array[String] = []
 	
 	for tile in tiles:
+		if tile == null:
+			continue
 		for socket in tile.sockets:
+			if socket == null:
+				continue
 			# Check if socket ID is empty
 			if socket.socket_id.strip_edges().is_empty():
 				issues.append("Tile '%s' has a socket with empty socket_id" % tile.name)

@@ -71,6 +71,8 @@ func _rebuild_socket_cache() -> void:
 	_ensure_socket_guids()
 	_sockets_by_dir.clear()
 	for s in sockets:
+		if s == null:
+			continue
 		if not _sockets_by_dir.has(s.direction):
 			_sockets_by_dir[s.direction] = []
 		_sockets_by_dir[s.direction].append(s)
@@ -189,7 +191,6 @@ func add_socket(socket: Socket) -> void:
 	sockets_copy.assign(sockets)
 	sockets_copy.append(socket)
 	sockets = sockets_copy
-	_rebuild_socket_cache()
 
 func remove_socket(socket: Socket) -> void:
 	"""
@@ -203,7 +204,6 @@ func remove_socket(socket: Socket) -> void:
 	sockets_copy.assign(sockets)
 	sockets_copy.erase(socket)
 	sockets = sockets_copy
-	_rebuild_socket_cache()
 
 func ensure_all_sockets(library = null) -> void:
 	"""
@@ -221,6 +221,10 @@ func ensure_all_sockets(library = null) -> void:
 		Vector3i.FORWARD, # (0, 0, -1)
 		Vector3i.BACK     # (0, 0, 1)
 	]
+
+	if library:
+		if library.has_method("ensure_socket_type"):
+			library.ensure_socket_type("none")
 	
 	for direction in directions:
 		var existing = get_sockets_in_direction(direction)
