@@ -4,15 +4,10 @@ class_name ImportDialog extends ConfirmationDialog
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.gd")
 const TileImporter = preload("res://addons/auto_structured/core/io/tile_importer.gd")
-const LibraryPresets = preload("res://addons/auto_structured/core/library_presets.gd")
-const BatchControlsScene = preload("res://addons/auto_structured/ui/controls/import_controls/batch_controls.tscn")
-const BatchControls = preload("res://addons/auto_structured/ui/controls/import_controls/batch_controls.gd")
-const ImportTileDetailSene = preload("res://addons/auto_structured/ui/controls/import_controls/tile_detail.tscn")
+const ImportTileDetailScene = preload("res://addons/auto_structured/ui/controls/import_controls/tile_detail.tscn")
 const ImportTileDetail = preload("res://addons/auto_structured/ui/controls/import_controls/tile_detail.gd")
 
 signal tiles_imported(tiles: Array[Tile])
-
-@onready var batchControls: BatchControls = %BatchControls
 
 @onready var tilesContLabel: Label = %TilesContLabel
 @onready var selectAllButton: Button = %SelectAllButton
@@ -33,12 +28,6 @@ func _ready() -> void:
     
     if deselectAllButton:
         deselectAllButton.pressed.connect(_on_deselect_all)
-    
-    if batchControls:
-        if batchControls.applyAllButton:
-            batchControls.applyAllButton.pressed.connect(_on_apply_to_all)
-        if batchControls.applySelectedButton:
-            batchControls.applySelectedButton.pressed.connect(_on_apply_to_selected)
 
 ## ============================================================================
 ## Public API
@@ -57,12 +46,6 @@ func setup(file_paths: PackedStringArray, library: ModuleLibrary) -> void:
     # Wait for the dialog to be ready if it isn't yet
     if not is_node_ready():
         await ready
-    
-    # Setup batch controls with library reference
-    if batchControls:
-        batchControls.setup(library)
-    else:
-        push_error("ImportDialog: batchControls is null!")
     
     _populate_tile_list()
     _update_counts()
@@ -87,17 +70,13 @@ func _populate_tile_list() -> void:
     # Create detail for each file
     for file_path in _file_paths:
         print("ImportDialog: Creating detail for: %s" % file_path)
-        var detail = ImportTileDetailSene.instantiate() as ImportTileDetail
+        var detail = ImportTileDetailScene.instantiate() as ImportTileDetail
         if detail:
             tilesListContainer.add_child(detail)
             detail.setup(file_path, _library)
             _tile_details.append(detail)
-            
-            # Connect checkbox signal to update counts
-            if detail.checkedCheckBox:
-                detail.checkedCheckBox.toggled.connect(_on_tile_check_changed)
-            else:
-                push_warning("ImportDialog: Tile detail missing checkedCheckBox")
+            if detail.has_signal("selection_changed"):
+                detail.selection_changed.connect(_on_tile_check_changed)
         else:
             push_error("ImportDialog: Failed to instantiate tile detail for %s" % file_path)
     
@@ -110,14 +89,10 @@ func _update_counts() -> void:
     if tilesContLabel:
         var tile_text = "Tile" if _tile_details.size() == 1 else "Tiles"
         tilesContLabel.text = "%s (%d)" % [tile_text, _tile_details.size()]
-    
-    if batchControls and batchControls.applySelectedButton:
-        if selected_count > 0:
-            batchControls.applySelectedButton.text = "Apply to Selected (%d)" % selected_count
-            batchControls.applySelectedButton.disabled = false
-        else:
-            batchControls.applySelectedButton.text = "Apply to Selected"
-            batchControls.applySelectedButton.disabled = true
+
+    var ok_button := get_ok_button()
+    if ok_button:
+        ok_button.disabled = selected_count == 0
 
 func _get_selected_count() -> int:
     """Get the number of selected tiles."""
@@ -126,33 +101,6 @@ func _get_selected_count() -> int:
         if detail.is_checked():
             count += 1
     return count
-
-## ============================================================================
-## Batch Operations
-## ============================================================================
-
-func _on_apply_to_all() -> void:
-    """Apply batch settings to all tiles."""
-    if not batchControls:
-        return
-    
-    var config = batchControls.get_config()
-    
-    for detail in _tile_details:
-        detail.set_config(config)
-        detail.reset_override()
-
-func _on_apply_to_selected() -> void:
-    """Apply batch settings to selected tiles only."""
-    if not batchControls:
-        return
-    
-    var config = batchControls.get_config()
-    
-    for detail in _tile_details:
-        if detail.is_checked():
-            detail.set_config(config)
-            detail.reset_override()
 
 func _on_select_all() -> void:
     """Select all tiles."""
@@ -180,9 +128,15 @@ func _on_confirmed() -> void:
         push_error("No library provided for import")
         return
     
+    if _get_selected_count() == 0:
+        push_warning("No tiles selected for import")
+        return
+    
     var imported_tiles: Array[Tile] = []
     
     for detail in _tile_details:
+        if not detail.is_checked():
+            continue
         var config = detail.get_config()
         var tile = _import_tile_from_config(config)
         
@@ -201,7 +155,7 @@ func _import_tile_from_config(config: Dictionary) -> Tile:
     
     # Create import options
     var options = TileImporter.ImportOptions.new()
-    options.auto_generate_sockets = false  # We'll apply template instead
+    options.auto_generate_sockets = false  # We'll ensure GUID sockets after import
     options.name_from_filename = false  # Use custom name
     options.add_filename_as_tag = false  # Use custom tags
     
@@ -220,23 +174,8 @@ func _import_tile_from_config(config: Dictionary) -> Tile:
     for tag in tags:
         tile.add_tag(tag)
     
-    # Apply template if selected (ID 0 = none, 1+ = template)
-    var template_id = config.get("template_id", 0)
-    if template_id > 0:
-        var template_index = template_id - 1  # Convert ID to array index
-        var templates = LibraryPresets.get_socket_templates()
-        if template_index >= 0 and template_index < templates.size():
-            var template = templates[template_index]
-            LibraryPresets.apply_socket_template(tile, template, _library)
-    
-    # Ensure tile has default sockets if none were created
-    if tile.sockets.is_empty():
-        tile.ensure_all_sockets(_library)
-    
-    # Apply symmetry detection
-    if config.get("auto_detect_symmetry", true):
-        tile.rotation_symmetry = Tile.RotationSymmetry.AUTO
-    else:
-        tile.rotation_symmetry = Tile.RotationSymmetry.FULL
+    # Ensure tile has default sockets using GUID flow
+    tile.ensure_all_sockets(_library)
+    tile.rotation_symmetry = config.get("rotation_symmetry", Tile.RotationSymmetry.AUTO)
     
     return tile

@@ -1,7 +1,6 @@
-[gd_scene load_steps=3 format=3 uid="uid://5e2kbcet8of4"]
+[gd_scene load_steps=2 format=3 uid="uid://5e2kbcet8of4"]
 
 [ext_resource type="Script" uid="uid://cg6cxpgcxekue" path="res://addons/auto_structured/ui/dialogs/import_dialog.gd" id="1_b6i1b"]
-[ext_resource type="PackedScene" uid="uid://du74fcrodqjeg" path="res://addons/auto_structured/ui/controls/import_controls/batch_controls.tscn" id="2_bryyu"]
 
 [node name="ConfirmationDialog" type="ConfirmationDialog"]
 oversampling_override = 1.0
@@ -23,36 +22,26 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="BatchControls" parent="ScrollContainer/VBoxContainer" instance=ExtResource("2_bryyu")]
-unique_name_in_owner = true
+[node name="HBoxContainer" type="HBoxContainer" parent="ScrollContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="HSeparator" type="HSeparator" parent="ScrollContainer/VBoxContainer"]
-layout_mode = 2
-
-[node name="VBoxContainer" type="VBoxContainer" parent="ScrollContainer/VBoxContainer"]
-layout_mode = 2
-
-[node name="HBoxContainer" type="HBoxContainer" parent="ScrollContainer/VBoxContainer/VBoxContainer"]
-layout_mode = 2
-
-[node name="TilesContLabel" type="Label" parent="ScrollContainer/VBoxContainer/VBoxContainer/HBoxContainer"]
+[node name="TilesContLabel" type="Label" parent="ScrollContainer/VBoxContainer/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Tiles (4)"
 
-[node name="SelectAllButton" type="Button" parent="ScrollContainer/VBoxContainer/VBoxContainer/HBoxContainer"]
+[node name="SelectAllButton" type="Button" parent="ScrollContainer/VBoxContainer/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Select All"
 
-[node name="DeselectAllButton" type="Button" parent="ScrollContainer/VBoxContainer/VBoxContainer/HBoxContainer"]
+[node name="DeselectAllButton" type="Button" parent="ScrollContainer/VBoxContainer/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Deselect All"
 
-[node name="TilesListContainer" type="VBoxContainer" parent="ScrollContainer/VBoxContainer/VBoxContainer"]
+[node name="TilesListContainer" type="VBoxContainer" parent="ScrollContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3

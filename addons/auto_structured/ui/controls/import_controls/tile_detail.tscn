@@ -1,10 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://4ww4tre3f5lf"]
+[gd_scene load_steps=3 format=3 uid="uid://4ww4tre3f5lf"]
 
 [ext_resource type="Script" uid="uid://dln85pjx582m7" path="res://addons/auto_structured/ui/controls/import_controls/tile_detail.gd" id="1_7mers"]
 [ext_resource type="Texture2D" uid="uid://cklj47goa3tag" path="res://addons/auto_structured/assets/add.svg" id="1_jiuvt"]
-[ext_resource type="Texture2D" uid="uid://c34jwa30cwwl1" path="res://addons/auto_structured/assets/collapse.svg" id="2_7mers"]
 
-[node name="VBoxContainer" type="VBoxContainer"]
+[node name="ImportTileDetail" type="VBoxContainer"]
 offset_right = 362.0
 offset_bottom = 517.0
 script = ExtResource("1_7mers")
@@ -12,269 +11,101 @@ script = ExtResource("1_7mers")
 [node name="HBoxContainer" type="HBoxContainer" parent="."]
 layout_mode = 2
 
-[node name="CheckedCheckBox" type="CheckBox" parent="HBoxContainer"]
+[node name="IncludeCheckBox" type="CheckBox" parent="HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
+text = "Import"
 
-[node name="NameLabel" type="Label" parent="HBoxContainer"]
+[node name="FileLabel" type="Label" parent="HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-text = "wall_01"
-
-[node name="OverrideCheckButton" type="CheckButton" parent="HBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Override"
+text = "Tile.glb"
+clip_text = true
 
 [node name="DetailsContainer" type="VBoxContainer" parent="."]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="GridContainer" type="GridContainer" parent="DetailsContainer"]
+[node name="DetailsGrid" type="GridContainer" parent="DetailsContainer"]
 layout_mode = 2
 columns = 2
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 6
 
-[node name="Label" type="Label" parent="DetailsContainer/GridContainer"]
+[node name="TileNameLabel" type="Label" parent="DetailsContainer/DetailsGrid"]
+layout_mode = 2
+text = "Tile Name"
+
+[node name="NameLineEdit" type="LineEdit" parent="DetailsContainer/DetailsGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "wall_corner"
+
+[node name="SizeLabel" type="Label" parent="DetailsContainer/DetailsGrid"]
 layout_mode = 2
 text = "Size"
 
-[node name="SizeContainer" type="HBoxContainer" parent="DetailsContainer/GridContainer"]
+[node name="SizeContainer" type="HBoxContainer" parent="DetailsContainer/DetailsGrid"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_constants/separation = 6
 
-[node name="XSizeSpinBox" type="SpinBox" parent="DetailsContainer/GridContainer/SizeContainer"]
+[node name="XSizeSpinBox" type="SpinBox" parent="DetailsContainer/DetailsGrid/SizeContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 prefix = "x"
+min_value = 1.0
+step = 1.0
 
-[node name="YSizeSpinBox" type="SpinBox" parent="DetailsContainer/GridContainer/SizeContainer"]
+[node name="YSizeSpinBox" type="SpinBox" parent="DetailsContainer/DetailsGrid/SizeContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 prefix = "y"
+min_value = 1.0
+step = 1.0
 
-[node name="ZSizeSpinBox" type="SpinBox" parent="DetailsContainer/GridContainer/SizeContainer"]
+[node name="ZSizeSpinBox" type="SpinBox" parent="DetailsContainer/DetailsGrid/SizeContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 prefix = "z"
+min_value = 1.0
+step = 1.0
 
-[node name="Label2" type="Label" parent="DetailsContainer/GridContainer"]
-layout_mode = 2
-text = "Template"
-
-[node name="TemplateContainer" type="HBoxContainer" parent="DetailsContainer/GridContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="TemplateOptionButton" type="OptionButton" parent="DetailsContainer/GridContainer/TemplateContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-selected = 0
-item_count = 4
-popup/item_0/text = "None (No Template)"
-popup/item_0/id = 0
-popup/item_1/text = "Floor - 4 Way"
-popup/item_1/id = 1
-popup/item_2/text = "Wall - Straight"
-popup/item_2/id = 2
-popup/item_3/text = "Corner - L Shape"
-popup/item_3/id = 3
-
-[node name="AddTemplateButton" type="TextureButton" parent="DetailsContainer/GridContainer/TemplateContainer"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(24, 24)
-layout_mode = 2
-texture_normal = ExtResource("1_jiuvt")
-stretch_mode = 3
-
-[node name="TagsLabel" type="Label" parent="DetailsContainer/GridContainer"]
+[node name="TagsLabel" type="Label" parent="DetailsContainer/DetailsGrid"]
 layout_mode = 2
 text = "Tags"
 
-[node name="TagsContainer" type="HBoxContainer" parent="DetailsContainer/GridContainer"]
+[node name="TagsContainer" type="HBoxContainer" parent="DetailsContainer/DetailsGrid"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_constants/separation = 6
 
-[node name="TagsMenuButton" type="MenuButton" parent="DetailsContainer/GridContainer/TagsContainer"]
+[node name="TagsMenuButton" type="MenuButton" parent="DetailsContainer/DetailsGrid/TagsContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-icon = ExtResource("2_7mers")
-flat = false
-icon_alignment = 2
+text = "No tags"
 
-[node name="AddTagButton" type="TextureButton" parent="DetailsContainer/GridContainer/TagsContainer"]
+[node name="AddTagButton" type="TextureButton" parent="DetailsContainer/DetailsGrid/TagsContainer"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 texture_normal = ExtResource("1_jiuvt")
 stretch_mode = 3
 
-[node name="FoldableContainer" type="FoldableContainer" parent="DetailsContainer"]
+[node name="RotationLabel" type="Label" parent="DetailsContainer/DetailsGrid"]
 layout_mode = 2
-folded = true
-title = "Advance"
+text = "Rotation Symmetry"
 
-[node name="VBoxContainer" type="VBoxContainer" parent="DetailsContainer/FoldableContainer"]
-visible = false
-layout_mode = 2
-
-[node name="HBoxContainer" type="HBoxContainer" parent="DetailsContainer/FoldableContainer/VBoxContainer"]
-layout_mode = 2
-
-[node name="SocketsLabel" type="Label" parent="DetailsContainer/FoldableContainer/VBoxContainer/HBoxContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Sockets:"
-
-[node name="AddSocketTypeButton" type="TextureButton" parent="DetailsContainer/FoldableContainer/VBoxContainer/HBoxContainer"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(24, 24)
-layout_mode = 2
-texture_normal = ExtResource("1_jiuvt")
-stretch_mode = 3
-
-[node name="SocketsContainer" type="GridContainer" parent="DetailsContainer/FoldableContainer/VBoxContainer"]
-layout_mode = 2
-columns = 4
-
-[node name="UpSocketLabel" type="Label" parent="DetailsContainer/FoldableContainer/VBoxContainer/SocketsContainer"]
-layout_mode = 2
-text = "Up"
-
-[node name="UpSocketMenuButton" type="MenuButton" parent="DetailsContainer/FoldableContainer/VBoxContainer/SocketsContainer"]
+[node name="RotationSymmetryOptionButton" type="OptionButton" parent="DetailsContainer/DetailsGrid"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-text = "None"
-icon = ExtResource("2_7mers")
-alignment = 0
-icon_alignment = 2
-item_count = 2
-popup/item_0/text = "Test"
-popup/item_0/checkable = 1
-popup/item_0/id = 0
-popup/item_1/text = "test"
-popup/item_1/checkable = 1
-popup/item_1/id = 1
 
-[node name="DownSocketLabel" type="Label" parent="DetailsContainer/FoldableContainer/VBoxContainer/SocketsContainer"]
+[node name="Divider" type="HSeparator" parent="DetailsContainer"]
 layout_mode = 2
-text = "Down"
-
-[node name="DownSocketMenuButton" type="MenuButton" parent="DetailsContainer/FoldableContainer/VBoxContainer/SocketsContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-text = "wall_connection
-"
-icon = ExtResource("2_7mers")
-alignment = 0
-icon_alignment = 2
-item_count = 2
-popup/item_0/text = "Test"
-popup/item_0/checkable = 1
-popup/item_0/id = 0
-popup/item_1/text = "test"
-popup/item_1/checkable = 1
-popup/item_1/id = 1
-
-[node name="LeftSocketLabel" type="Label" parent="DetailsContainer/FoldableContainer/VBoxContainer/SocketsContainer"]
-layout_mode = 2
-text = "Left"
-
-[node name="LeftSocketMenuButton" type="MenuButton" parent="DetailsContainer/FoldableContainer/VBoxContainer/SocketsContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Any"
-icon = ExtResource("2_7mers")
-alignment = 0
-icon_alignment = 2
-item_count = 2
-popup/item_0/text = "Test"
-popup/item_0/checkable = 1
-popup/item_0/id = 0
-popup/item_1/text = "test"
-popup/item_1/checkable = 1
-popup/item_1/id = 1
-
-[node name="RightSocketLabel" type="Label" parent="DetailsContainer/FoldableContainer/VBoxContainer/SocketsContainer"]
-layout_mode = 2
-text = "Right"
-
-[node name="RightSocketMenuButton" type="MenuButton" parent="DetailsContainer/FoldableContainer/VBoxContainer/SocketsContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-text = "wall_connection, corner_connection"
-icon = ExtResource("2_7mers")
-alignment = 0
-icon_alignment = 2
-item_count = 2
-popup/item_0/text = "Test"
-popup/item_0/checkable = 1
-popup/item_0/id = 0
-popup/item_1/text = "test"
-popup/item_1/checkable = 1
-popup/item_1/id = 1
-
-[node name="FrontSocketLabel" type="Label" parent="DetailsContainer/FoldableContainer/VBoxContainer/SocketsContainer"]
-layout_mode = 2
-text = "Front"
-
-[node name="FrontSocketMenuButton" type="MenuButton" parent="DetailsContainer/FoldableContainer/VBoxContainer/SocketsContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-text = "wall_connection
-"
-icon = ExtResource("2_7mers")
-alignment = 0
-icon_alignment = 2
-item_count = 2
-popup/item_0/text = "Test"
-popup/item_0/checkable = 1
-popup/item_0/id = 0
-popup/item_1/text = "test"
-popup/item_1/checkable = 1
-popup/item_1/id = 1
-
-[node name="BackSocketLabel" type="Label" parent="DetailsContainer/FoldableContainer/VBoxContainer/SocketsContainer"]
-layout_mode = 2
-text = "Back"
-
-[node name="BackSocketMenuButton" type="MenuButton" parent="DetailsContainer/FoldableContainer/VBoxContainer/SocketsContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-text = "wall_connection"
-icon = ExtResource("2_7mers")
-alignment = 0
-icon_alignment = 2
-item_count = 2
-popup/item_0/text = "Test"
-popup/item_0/checkable = 1
-popup/item_0/id = 0
-popup/item_1/text = "test"
-popup/item_1/checkable = 1
-popup/item_1/id = 1
-
-[node name="AutoSymmetryDetectionCheckBox" type="CheckBox" parent="DetailsContainer/FoldableContainer/VBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Auto-detect symmetry"
-
-[node name="RotationalVarianceCheckBox" type="CheckBox" parent="DetailsContainer/FoldableContainer/VBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Generate rotational variants"
-
-[node name="SelfMatchCheckBox" type="CheckBox" parent="DetailsContainer/FoldableContainer/VBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Include self-match"
