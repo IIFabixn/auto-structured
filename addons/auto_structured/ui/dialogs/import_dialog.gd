@@ -2,10 +2,21 @@
 class_name ImportDialog extends ConfirmationDialog
 
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
+const Socket = preload("res://addons/auto_structured/core/socket.gd")
 const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.gd")
 const TileImporter = preload("res://addons/auto_structured/core/io/tile_importer.gd")
+const LibraryPresets = preload("res://addons/auto_structured/core/library_presets.gd")
 const ImportTileDetailScene = preload("res://addons/auto_structured/ui/controls/import_controls/tile_detail.tscn")
 const ImportTileDetail = preload("res://addons/auto_structured/ui/controls/import_controls/tile_detail.gd")
+
+const SOCKET_KEY_TO_DIRECTION := {
+    "up": Vector3i.UP,
+    "down": Vector3i.DOWN,
+    "left": Vector3i.LEFT,
+    "right": Vector3i.RIGHT,
+    "forward": Vector3i.FORWARD,
+    "back": Vector3i.BACK
+}
 
 signal tiles_imported(tiles: Array[Tile])
 
@@ -174,8 +185,42 @@ func _import_tile_from_config(config: Dictionary) -> Tile:
     for tag in tags:
         tile.add_tag(tag)
     
-    # Ensure tile has default sockets using GUID flow
+    var template_applied := _apply_socket_template(tile, config.get("template_id", -1))
+    if not template_applied:
+        tile.ensure_all_sockets(_library)
+    _apply_socket_overrides(tile, config.get("socket_names", {}))
     tile.ensure_all_sockets(_library)
     tile.rotation_symmetry = config.get("rotation_symmetry", Tile.RotationSymmetry.AUTO)
     
     return tile
+
+func _apply_socket_template(tile: Tile, template_id: int) -> bool:
+    var templates := LibraryPresets.get_socket_templates()
+    if template_id < 0 or template_id >= templates.size():
+        return false
+    var template = templates[template_id]
+    LibraryPresets.apply_socket_template(tile, template, _library)
+    return true
+
+func _apply_socket_overrides(tile: Tile, socket_names) -> void:
+    if not (socket_names is Dictionary):
+        return
+    if socket_names.is_empty():
+        return
+    for key in socket_names.keys():
+        if not SOCKET_KEY_TO_DIRECTION.has(key):
+            continue
+        var direction: Vector3i = SOCKET_KEY_TO_DIRECTION[key]
+        var socket_id := String(socket_names[key]).strip_edges()
+        if socket_id.is_empty():
+            socket_id = "none"
+        if _library:
+            _library.ensure_socket_type(socket_id)
+        var socket := tile.get_socket_by_direction(direction)
+        if socket:
+            socket.socket_id = socket_id
+        else:
+            var new_socket := Socket.new()
+            new_socket.direction = direction
+            new_socket.socket_id = socket_id
+            tile.add_socket(new_socket)

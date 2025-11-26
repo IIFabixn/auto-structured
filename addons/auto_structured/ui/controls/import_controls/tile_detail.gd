@@ -6,6 +6,18 @@ signal selection_changed(checked: bool)
 
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.gd")
+const LibraryPresets = preload("res://addons/auto_structured/core/library_presets.gd")
+
+const DIRECTION_KEYS := {
+    "up": Vector3i.UP,
+    "down": Vector3i.DOWN,
+    "left": Vector3i.LEFT,
+    "right": Vector3i.RIGHT,
+    "forward": Vector3i.FORWARD,
+    "back": Vector3i.BACK
+}
+
+const DIRECTION_ORDER := ["up", "down", "left", "right", "forward", "back"]
 
 @onready var includeCheckBox: CheckBox = %IncludeCheckBox
 @onready var fileLabel: Label = %FileLabel
@@ -16,14 +28,30 @@ const ModuleLibrary = preload("res://addons/auto_structured/core/module_library.
 @onready var tagsMenuButton: MenuButton = %TagsMenuButton
 @onready var addTagButton: TextureButton = %AddTagButton
 @onready var rotationSymmetryOptionButton: OptionButton = %RotationSymmetryOptionButton
+@onready var templateOptionButton: OptionButton = %TemplateOptionButton
+@onready var resetSocketsButton: Button = %ResetSocketsButton
+@onready var upSocketLineEdit: LineEdit = %UpSocketLineEdit
+@onready var downSocketLineEdit: LineEdit = %DownSocketLineEdit
+@onready var leftSocketLineEdit: LineEdit = %LeftSocketLineEdit
+@onready var rightSocketLineEdit: LineEdit = %RightSocketLineEdit
+@onready var frontSocketLineEdit: LineEdit = %FrontSocketLineEdit
+@onready var backSocketLineEdit: LineEdit = %BackSocketLineEdit
 
 var file_path: String = ""
 var _library: ModuleLibrary = null
 var _tags: Array[String] = []
+var _socket_names: Dictionary = {}
+var _templates: Array = []
+var _selected_template_id: int = -1
+var _updating_socket_fields := false
 
 func _ready() -> void:
     _setup_rotation_symmetry_options()
     _setup_tag_menu()
+    _setup_template_controls()
+    _setup_socket_fields()
+    _reset_socket_names()
+    _update_socket_fields()
     if includeCheckBox:
         includeCheckBox.toggled.connect(func(checked: bool):
             selection_changed.emit(checked)
@@ -32,6 +60,8 @@ func _ready() -> void:
         addTagButton.pressed.connect(_on_add_tag_pressed)
 
 func setup(path: String, library: ModuleLibrary) -> void:
+    if not is_node_ready():
+        await ready
     file_path = path
     _library = library
     if fileLabel:
@@ -50,6 +80,11 @@ func setup(path: String, library: ModuleLibrary) -> void:
     _tags.clear()
     _update_tags_display()
     _select_rotation_symmetry(Tile.RotationSymmetry.AUTO)
+    _selected_template_id = -1
+    if templateOptionButton:
+        templateOptionButton.selected = 0
+    _reset_socket_names()
+    _update_socket_fields()
 
 func is_checked() -> bool:
     return includeCheckBox.button_pressed if includeCheckBox else false
@@ -64,7 +99,9 @@ func get_config() -> Dictionary:
         "tile_name": nameLineEdit.text if nameLineEdit else file_path.get_file().get_basename(),
         "size": Vector3i(int(xSizeSpinBox.value), int(ySizeSpinBox.value), int(zSizeSpinBox.value)),
         "tags": _tags.duplicate(),
-        "rotation_symmetry": _get_selected_rotation_symmetry()
+        "rotation_symmetry": _get_selected_rotation_symmetry(),
+        "template_id": _selected_template_id,
+        "socket_names": _socket_names.duplicate(true)
     }
 
 func _setup_rotation_symmetry_options() -> void:
@@ -169,3 +206,106 @@ func _on_add_tag_pressed() -> void:
     add_child(dialog)
     dialog.popup_centered()
     tag_edit.grab_focus()
+
+func _setup_template_controls() -> void:
+    if templateOptionButton:
+        _templates = LibraryPresets.get_socket_templates()
+        templateOptionButton.clear()
+        templateOptionButton.add_item("No template", -1)
+        for i in range(_templates.size()):
+            var template = _templates[i]
+            templateOptionButton.add_item(template.template_name, i)
+            templateOptionButton.set_item_tooltip(templateOptionButton.item_count - 1, template.description)
+        templateOptionButton.selected = 0
+        templateOptionButton.item_selected.connect(_on_template_selected)
+    if resetSocketsButton:
+        resetSocketsButton.pressed.connect(func():
+            _selected_template_id = -1
+            if templateOptionButton:
+                templateOptionButton.selected = 0
+            _reset_socket_names()
+            _update_socket_fields()
+        )
+
+func _setup_socket_fields() -> void:
+    var field_map := {
+        "up": upSocketLineEdit,
+        "down": downSocketLineEdit,
+        "left": leftSocketLineEdit,
+        "right": rightSocketLineEdit,
+        "forward": frontSocketLineEdit,
+        "back": backSocketLineEdit
+    }
+    for key in DIRECTION_ORDER:
+        var captured_key: String = key
+        var field: LineEdit = field_map.get(captured_key)
+        if field:
+            field.text_changed.connect(func(text: String):
+                _on_socket_text_changed(captured_key, text)
+            )
+
+func _on_socket_text_changed(key: String, text: String) -> void:
+    if _updating_socket_fields:
+        return
+    var clean := text.strip_edges()
+    if clean.is_empty():
+        clean = "none"
+    _socket_names[key] = clean
+
+func _reset_socket_names() -> void:
+    _socket_names.clear()
+    for key in DIRECTION_ORDER:
+        _socket_names[key] = "none"
+
+func _update_socket_fields() -> void:
+    _updating_socket_fields = true
+    for key in DIRECTION_ORDER:
+        var field: LineEdit = _get_socket_field(key)
+        if field:
+            field.text = _socket_names.get(key, "none")
+    _updating_socket_fields = false
+
+func _get_socket_field(key: String) -> LineEdit:
+    match key:
+        "up":
+            return upSocketLineEdit
+        "down":
+            return downSocketLineEdit
+        "left":
+            return leftSocketLineEdit
+        "right":
+            return rightSocketLineEdit
+        "forward":
+            return frontSocketLineEdit
+        "back":
+            return backSocketLineEdit
+    return null
+
+func _on_template_selected(index: int) -> void:
+    if not templateOptionButton:
+        return
+    _selected_template_id = templateOptionButton.get_item_id(index)
+    if _selected_template_id < 0:
+        return
+    _apply_template(_selected_template_id)
+
+func _apply_template(template_id: int) -> void:
+    if template_id < 0 or template_id >= _templates.size():
+        return
+    var template = _templates[template_id]
+    _reset_socket_names()
+    for entry_data in template.entries:
+        var entry = entry_data if entry_data is Dictionary else {}
+        var dir: Vector3i = entry.get("direction", Vector3i.UP)
+        var socket_id: String = str(entry.get("socket_id", "none"))
+        var key := _direction_to_key(dir)
+        if key == "":
+            continue
+        _socket_names[key] = socket_id
+    _update_socket_fields()
+
+func _direction_to_key(direction: Vector3i) -> String:
+    for key in DIRECTION_KEYS.keys():
+        if DIRECTION_KEYS[key] == direction:
+            return key
+    return ""

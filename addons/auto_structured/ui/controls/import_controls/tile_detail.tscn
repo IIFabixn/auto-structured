@@ -107,5 +107,89 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 
+[node name="TemplateLabel" type="Label" parent="DetailsContainer/DetailsGrid"]
+layout_mode = 2
+text = "Template"
+
+[node name="TemplateContainer" type="HBoxContainer" parent="DetailsContainer/DetailsGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="TemplateOptionButton" type="OptionButton" parent="DetailsContainer/DetailsGrid/TemplateContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ResetSocketsButton" type="Button" parent="DetailsContainer/DetailsGrid/TemplateContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Reset"
+
+[node name="SocketsLabel" type="Label" parent="DetailsContainer"]
+layout_mode = 2
+text = "Socket IDs"
+
+[node name="SocketsGrid" type="GridContainer" parent="DetailsContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+columns = 2
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 4
+
+[node name="UpLabel" type="Label" parent="DetailsContainer/SocketsGrid"]
+layout_mode = 2
+text = "Up"
+
+[node name="UpSocketLineEdit" type="LineEdit" parent="DetailsContainer/SocketsGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DownLabel" type="Label" parent="DetailsContainer/SocketsGrid"]
+layout_mode = 2
+text = "Down"
+
+[node name="DownSocketLineEdit" type="LineEdit" parent="DetailsContainer/SocketsGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="LeftLabel" type="Label" parent="DetailsContainer/SocketsGrid"]
+layout_mode = 2
+text = "Left"
+
+[node name="LeftSocketLineEdit" type="LineEdit" parent="DetailsContainer/SocketsGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="DetailsContainer/SocketsGrid"]
+layout_mode = 2
+text = "Right"
+
+[node name="RightSocketLineEdit" type="LineEdit" parent="DetailsContainer/SocketsGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="FrontLabel" type="Label" parent="DetailsContainer/SocketsGrid"]
+layout_mode = 2
+text = "Front"
+
+[node name="FrontSocketLineEdit" type="LineEdit" parent="DetailsContainer/SocketsGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BackLabel" type="Label" parent="DetailsContainer/SocketsGrid"]
+layout_mode = 2
+text = "Back"
+
+[node name="BackSocketLineEdit" type="LineEdit" parent="DetailsContainer/SocketsGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
 [node name="Divider" type="HSeparator" parent="DetailsContainer"]
 layout_mode = 2

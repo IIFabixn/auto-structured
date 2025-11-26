@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="ModuleLibrary" load_steps=37 format=3 uid="uid://hhr1fq3dnn8k"]
+[gd_resource type="Resource" script_class="ModuleLibrary" load_steps=45 format=3 uid="uid://hhr1fq3dnn8k"]
 
 [ext_resource type="Script" uid="uid://n5qundf42kiu" path="res://addons/auto_structured/core/module_library.gd" id="1_k0n0c"]
 [ext_resource type="Script" uid="uid://c7f03neubtkf3" path="res://addons/auto_structured/core/tile.gd" id="2_53rky"]
@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://dvmtflhjehotm" path="res://sample/modules/wall.tscn" id="6_k1ovt"]
 [ext_resource type="PackedScene" uid="uid://cvdf8f47a4oa1" path="res://sample/modules/door.tscn" id="7_rqldo"]
 [ext_resource type="PackedScene" uid="uid://khrtlct1n2sc" path="res://sample/modules/wall_corner.tscn" id="8_iupn8"]
+[ext_resource type="PackedScene" uid="uid://dkbqpf1v23wwk" path="res://sample/modules/outside_floor.tscn" id="9_pi2wf"]
 
 [sub_resource type="Resource" id="Resource_rqldo"]
 script = ExtResource("5_rqldo")
@@ -34,7 +35,7 @@ direction = Vector3i(0, 0, -1)
 script = ExtResource("5_rqldo")
 socket_id = "wall_outside"
 socket_guid = "9490a087-9d2d-0573-a8d0-910c198155f7"
-compatible_sockets = Array[String](["floor_side", "none"])
+compatible_sockets = Array[String](["00864b0b-1789-edee-8212-2223c7077341", "a9fffeb6-ce68-9df7-db46-f6e6c342f9b0", "floor_side", "none"])
 direction = Vector3i(0, 0, 1)
 
 [sub_resource type="Resource" id="Resource_murai"]
@@ -93,6 +94,7 @@ direction = Vector3i(0, 0, -1)
 script = ExtResource("5_rqldo")
 socket_id = "door_outside"
 socket_guid = "5cdd5b11-3424-3f18-f21e-85047da3b50a"
+compatible_sockets = Array[String](["00864b0b-1789-edee-8212-2223c7077341", "a9fffeb6-ce68-9df7-db46-f6e6c342f9b0"])
 direction = Vector3i(0, 0, 1)
 
 [sub_resource type="Resource" id="Resource_aoeot"]
@@ -167,8 +169,9 @@ direction = Vector3i(1, 0, 0)
 
 [sub_resource type="Resource" id="Resource_qipsd"]
 script = ExtResource("5_rqldo")
-socket_id = "none"
+socket_id = "corner_outside"
 socket_guid = "ec81dfb1-815b-e90b-780d-041147047306"
+compatible_sockets = Array[String](["00864b0b-1789-edee-8212-2223c7077341", "a9fffeb6-ce68-9df7-db46-f6e6c342f9b0"])
 direction = Vector3i(-1, 0, 0)
 
 [sub_resource type="Resource" id="Resource_iyrpm"]
@@ -179,8 +182,9 @@ direction = Vector3i(0, 0, -1)
 
 [sub_resource type="Resource" id="Resource_mysar"]
 script = ExtResource("5_rqldo")
-socket_id = "none"
+socket_id = "corner_outside"
 socket_guid = "07a842ec-6598-30d1-70d1-0e92a99d251f"
+compatible_sockets = Array[String](["00864b0b-1789-edee-8212-2223c7077341", "a9fffeb6-ce68-9df7-db46-f6e6c342f9b0"])
 direction = Vector3i(0, 0, 1)
 
 [sub_resource type="Resource" id="Resource_wu18d"]
@@ -190,8 +194,53 @@ scene = ExtResource("8_iupn8")
 rotation_symmetry = 1
 sockets = Array[ExtResource("5_rqldo")]([SubResource("Resource_hkoat"), SubResource("Resource_8x41a"), SubResource("Resource_phhm4"), SubResource("Resource_qipsd"), SubResource("Resource_iyrpm"), SubResource("Resource_mysar")])
 
+[sub_resource type="Resource" id="Resource_uq8r8"]
+script = ExtResource("5_rqldo")
+socket_id = "none"
+socket_guid = "8b8071d5-a503-426b-2906-73451e1f4ff8"
+
+[sub_resource type="Resource" id="Resource_e1a5f"]
+script = ExtResource("5_rqldo")
+socket_id = "none"
+socket_guid = "d11c14fc-343d-1fc8-ea91-c2cb7d61c011"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_tfyii"]
+script = ExtResource("5_rqldo")
+socket_id = "floor_side"
+socket_guid = "00864b0b-1789-edee-8212-2223c7077341"
+compatible_sockets = Array[String](["07a842ec-6598-30d1-70d1-0e92a99d251f", "5cdd5b11-3424-3f18-f21e-85047da3b50a", "9490a087-9d2d-0573-a8d0-910c198155f7", "ec81dfb1-815b-e90b-780d-041147047306"])
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_xc15g"]
+script = ExtResource("5_rqldo")
+socket_id = "floor_side"
+socket_guid = "a9fffeb6-ce68-9df7-db46-f6e6c342f9b0"
+compatible_sockets = Array[String](["07a842ec-6598-30d1-70d1-0e92a99d251f", "5cdd5b11-3424-3f18-f21e-85047da3b50a", "9490a087-9d2d-0573-a8d0-910c198155f7", "ec81dfb1-815b-e90b-780d-041147047306"])
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_3b0sh"]
+script = ExtResource("5_rqldo")
+socket_id = "floor_side"
+socket_guid = "a8667c28-e999-b3dc-076a-f2fe744a67d0"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_dmy7n"]
+script = ExtResource("5_rqldo")
+socket_id = "floor_side"
+socket_guid = "ef556a8e-bd7a-0764-ab05-1b80172b689d"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_ur0v5"]
+script = ExtResource("2_53rky")
+name = "outside_floor"
+scene = ExtResource("9_pi2wf")
+tags = Array[String](["stone"])
+sockets = Array[ExtResource("5_rqldo")]([SubResource("Resource_uq8r8"), SubResource("Resource_e1a5f"), SubResource("Resource_tfyii"), SubResource("Resource_xc15g"), SubResource("Resource_3b0sh"), SubResource("Resource_dmy7n")])
+
 [resource]
 script = ExtResource("1_k0n0c")
 library_name = "Test2"
-tiles = Array[ExtResource("2_53rky")]([SubResource("Resource_2rp5i"), SubResource("Resource_aoeot"), SubResource("Resource_bbx3i"), SubResource("Resource_wu18d")])
-socket_types = Array[String](["any", "corner_block", "corner_left", "corner_right", "corner_side", "door_left", "door_outside", "door_right", "doot_inside", "floor_bottom", "floor_side", "floor_top", "none", "wall_forward", "wall_inside", "wall_left", "wall_outside", "wall_right", "wall_side", "wall_top"])
+tiles = Array[ExtResource("2_53rky")]([SubResource("Resource_2rp5i"), SubResource("Resource_aoeot"), SubResource("Resource_bbx3i"), SubResource("Resource_wu18d"), SubResource("Resource_ur0v5")])
+socket_types = Array[String](["any", "corner_block", "corner_left", "corner_left_outside", "corner_outside", "corner_right", "corner_side", "door_left", "door_outside", "door_right", "doot_inside", "floor_bottom", "floor_side", "floor_top", "none", "wall_forward", "wall_inside", "wall_left", "wall_outside", "wall_right", "wall_side", "wall_top"])
+available_tags = Array[String](["stone"])
