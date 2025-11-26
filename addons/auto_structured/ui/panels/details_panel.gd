@@ -29,10 +29,6 @@ const SocketManagerDialogScene = preload("res://addons/auto_structured/ui/dialog
 const REQUIREMENTS_DIR := "res://addons/auto_structured/core/requirements"
 const REQUIREMENT_MENU_META_TYPES := "requirement_type_defs"
 
-const SOCKET_MENU_ID_NONE := 1000000
-const SOCKET_MENU_ID_ANY := 1000001
-const SOCKET_MENU_META_TYPES := "socket_type_mapping"
-
 @onready var close_button: TextureButton = %CloseButton
 
 @onready var name_label: Label = %NameLabel
@@ -60,17 +56,17 @@ const SOCKET_MENU_META_TYPES := "socket_type_mapping"
 @onready var add_socket_button: TextureButton = %AddSocketButton
 @onready var manage_sockets_button: Button = %ManageSocketsButton
 
-@onready var upSocketMenuButton: MenuButton = %UpSocketMenuButton
+@onready var upSocketLineEdit: LineEdit = %UpSocketLineEdit
 @onready var previewUpSocketButton: TextureButton = %PreviewUpSocketButton
-@onready var downSocketMenuButton: MenuButton = %DownSocketMenuButton
+@onready var downSocketLineEdit: LineEdit = %DownSocketLineEdit
 @onready var previewDownSocketButton: TextureButton = %PreviewDownSocketButton
-@onready var leftSocketMenuButton: MenuButton = %LeftSocketMenuButton
+@onready var leftSocketLineEdit: LineEdit = %LeftSocketLineEdit
 @onready var previewLeftSocketButton: TextureButton = %PreviewLeftSocketButton
-@onready var rightSocketMenuButton: MenuButton = %RightSocketMenuButton
+@onready var rightSocketLineEdit: LineEdit = %RightSocketLineEdit
 @onready var previewRightSocketButton: TextureButton = %PreviewRightSocketButton
-@onready var frontSocketMenuButton: MenuButton = %FrontSocketMenuButton
+@onready var frontSocketLineEdit: LineEdit = %FrontSocketLineEdit
 @onready var previewFrontSocketButton: TextureButton = %PreviewFrontSocketButton
-@onready var backSocketMenuButton: MenuButton = %BackSocketMenuButton
+@onready var backSocketLineEdit: LineEdit = %BackSocketLineEdit
 @onready var previewBackSocketButton: TextureButton = %PreviewBackSocketButton
 
 var _tile: Tile
@@ -131,13 +127,13 @@ func _ready() -> void:
 		if not popup.id_pressed.is_connected(_on_tag_menu_item_pressed):
 			popup.id_pressed.connect(_on_tag_menu_item_pressed)
 	
-	# Connect socket menu buttons and preview buttons
-	_setup_socket_button(upSocketMenuButton, previewUpSocketButton, Vector3i.UP)
-	_setup_socket_button(downSocketMenuButton, previewDownSocketButton, Vector3i.DOWN)
-	_setup_socket_button(leftSocketMenuButton, previewLeftSocketButton, Vector3i.LEFT)
-	_setup_socket_button(rightSocketMenuButton, previewRightSocketButton, Vector3i.RIGHT)
-	_setup_socket_button(frontSocketMenuButton, previewFrontSocketButton, Vector3i.FORWARD)
-	_setup_socket_button(backSocketMenuButton, previewBackSocketButton, Vector3i.BACK)
+	# Connect socket input fields and preview buttons
+	_setup_socket_field(upSocketLineEdit, previewUpSocketButton, Vector3i.UP)
+	_setup_socket_field(downSocketLineEdit, previewDownSocketButton, Vector3i.DOWN)
+	_setup_socket_field(leftSocketLineEdit, previewLeftSocketButton, Vector3i.LEFT)
+	_setup_socket_field(rightSocketLineEdit, previewRightSocketButton, Vector3i.RIGHT)
+	_setup_socket_field(frontSocketLineEdit, previewFrontSocketButton, Vector3i.FORWARD)
+	_setup_socket_field(backSocketLineEdit, previewBackSocketButton, Vector3i.BACK)
 
 	if manage_sockets_button and not manage_sockets_button.pressed.is_connected(_on_manage_sockets_pressed):
 		manage_sockets_button.pressed.connect(_on_manage_sockets_pressed)
@@ -357,45 +353,42 @@ func _update_sockets_display() -> void:
 		return
 	
 	# Update all 6 directional socket menu buttons
-	_update_socket_menu_button_text(upSocketMenuButton, Vector3i.UP)
-	_update_socket_menu_button_text(downSocketMenuButton, Vector3i.DOWN)
-	_update_socket_menu_button_text(leftSocketMenuButton, Vector3i.LEFT)
-	_update_socket_menu_button_text(rightSocketMenuButton, Vector3i.RIGHT)
-	_update_socket_menu_button_text(frontSocketMenuButton, Vector3i.FORWARD)
-	_update_socket_menu_button_text(backSocketMenuButton, Vector3i.BACK)
+	_update_socket_line_edit(upSocketLineEdit, Vector3i.UP)
+	_update_socket_line_edit(downSocketLineEdit, Vector3i.DOWN)
+	_update_socket_line_edit(leftSocketLineEdit, Vector3i.LEFT)
+	_update_socket_line_edit(rightSocketLineEdit, Vector3i.RIGHT)
+	_update_socket_line_edit(frontSocketLineEdit, Vector3i.FORWARD)
+	_update_socket_line_edit(backSocketLineEdit, Vector3i.BACK)
 
-func _update_socket_menu_button_text(menu_button: MenuButton, direction: Vector3i) -> void:
-	"""Update a single socket menu button's text based on tile's sockets for that direction."""
-	if not menu_button or not _tile:
+func _update_socket_line_edit(line_edit: LineEdit, direction: Vector3i) -> void:
+	"""Update a socket line edit to reflect the tile configuration."""
+	if not line_edit or not _tile:
 		return
-	
-	# Get sockets for this direction
+
+	line_edit.editable = true
+	line_edit.placeholder_text = "none"
 	var sockets_in_direction = _tile.get_sockets_in_direction(direction)
-	
 	if sockets_in_direction.is_empty():
-		menu_button.text = "none"
+		line_edit.text = ""
+		line_edit.tooltip_text = "No socket assigned"
 		return
 
-	var has_any_type := false
-	var display_ids: Array[String] = []
-	for socket in sockets_in_direction:
-		var type_id: String = socket.socket_id.strip_edges()
-		if type_id == "any":
-			has_any_type = true
-		elif type_id != "" and type_id != "none":
-			if not display_ids.has(type_id):
-				display_ids.append(type_id)
-
-	if has_any_type and display_ids.is_empty():
-		menu_button.text = "any"
+	if sockets_in_direction.size() > 1:
+		line_edit.text = ""
+		line_edit.placeholder_text = "Multiple (use Manage)"
+		line_edit.tooltip_text = "Multiple sockets exist in this direction. Use Manage Sockets to edit them."
+		line_edit.editable = false
 		return
 
-	if display_ids.is_empty():
-		menu_button.text = "none"
-		return
-
-	display_ids.sort()
-	menu_button.text = ", ".join(display_ids)
+	var socket: Socket = sockets_in_direction[0]
+	var type_id: String = socket.socket_id.strip_edges()
+	if type_id == "" or type_id == "none":
+		line_edit.text = ""
+	else:
+		line_edit.text = type_id
+	line_edit.tooltip_text = "Edit socket ID for %s" % _direction_to_label(direction)
+	line_edit.editable = true
+	line_edit.caret_column = line_edit.text.length()
 
 func _update_preview_image() -> void:
 	"""Update the preview image/3D representation of the tile."""
@@ -536,23 +529,14 @@ func _on_tag_menu_item_pressed(id: int) -> void:
 	_update_tags_display()
 	tile_modified.emit(_tile)
 
-func _setup_socket_button(menu_button: MenuButton, preview_button: TextureButton, direction: Vector3i) -> void:
-	"""Setup a socket menu button and its preview button for a specific direction."""
-	if not menu_button:
-		return
-	
-	# Connect menu button popup
-	var popup = menu_button.get_popup()
-	if popup:
-		# Store direction in metadata for later use
-		menu_button.set_meta("socket_direction", direction)
-		
-		if not popup.about_to_popup.is_connected(_on_socket_menu_about_to_popup.bind(direction)):
-			popup.about_to_popup.connect(_on_socket_menu_about_to_popup.bind(direction))
-		if not popup.id_pressed.is_connected(_on_socket_menu_item_pressed.bind(direction)):
-			popup.id_pressed.connect(_on_socket_menu_item_pressed.bind(direction))
-	
-	# Connect preview button
+func _setup_socket_field(line_edit: LineEdit, preview_button: TextureButton, direction: Vector3i) -> void:
+	"""Wire up inline socket editing and preview controls for a direction."""
+	if line_edit:
+		line_edit.set_meta("socket_direction", direction)
+		if not line_edit.text_submitted.is_connected(_on_socket_line_edit_submitted.bind(direction)):
+			line_edit.text_submitted.connect(_on_socket_line_edit_submitted.bind(direction))
+		if not line_edit.focus_exited.is_connected(_on_socket_line_edit_focus_exited.bind(direction)):
+			line_edit.focus_exited.connect(_on_socket_line_edit_focus_exited.bind(direction))
 	if preview_button:
 		preview_button.set_meta("socket_direction", direction)
 		if not preview_button.pressed.is_connected(_on_preview_socket_pressed.bind(direction)):
@@ -588,90 +572,13 @@ func _on_manage_sockets_pressed() -> void:
 	dialog.popup_centered_ratio(0.75)
 	dialog.grab_focus()
 
-func _on_socket_menu_about_to_popup(direction: Vector3i) -> void:
-	"""Populate socket menu when it's about to open."""
-	if not _tile:
-		return
-	
-	var library = _get_library()
-	if not library:
-		return
-	
-	# Find the menu button for this direction
-	var menu_button = _get_socket_menu_button_for_direction(direction)
-	if not menu_button:
-		return
-	
-	var popup = menu_button.get_popup()
-	popup.clear()
+func _on_socket_line_edit_submitted(new_text: String, direction: Vector3i) -> void:
+	_apply_socket_line_edit(direction, new_text)
 
-	var current_sockets = _tile.get_sockets_in_direction(direction)
-	var selected_type_ids: Array[String] = []
-	var has_any_type := false
-	for socket in current_sockets:
-		var type_id: String = socket.socket_id.strip_edges()
-		if type_id == "any":
-			has_any_type = true
-		elif type_id != "" and type_id != "none":
-			if not selected_type_ids.has(type_id):
-				selected_type_ids.append(type_id)
-
-	var none_selected := current_sockets.is_empty() or (selected_type_ids.is_empty() and not has_any_type)
-	var any_selected := has_any_type and selected_type_ids.is_empty()
-
-	var none_index := popup.get_item_count()
-	popup.add_radio_check_item("None", SOCKET_MENU_ID_NONE)
-	popup.set_item_checked(none_index, none_selected)
-
-	var any_index := popup.get_item_count()
-	popup.add_radio_check_item("Any", SOCKET_MENU_ID_ANY)
-	popup.set_item_checked(any_index, any_selected)
-
-	popup.add_separator()
-
-	var socket_types = library.get_socket_types()
-	var selectable_types: Array[String] = []
-	for socket_id in socket_types:
-		var type_id: String = socket_id.strip_edges()
-		if type_id == "" or type_id == "none" or type_id == "any":
-			continue
-		selectable_types.append(type_id)
-
-	menu_button.set_meta(SOCKET_MENU_META_TYPES, selectable_types)
-
-	for i in range(selectable_types.size()):
-		var socket_id: String = selectable_types[i]
-		var label := socket_id
-		var item_index := popup.get_item_count()
-		popup.add_check_item(label, i)
-		popup.set_item_checked(item_index, selected_type_ids.has(socket_id))
-
-func _on_socket_menu_item_pressed(id: int, direction: Vector3i) -> void:
-	"""Handle socket menu item press - toggle socket type on/off for this direction."""
-	if not _tile:
-		return
-	
-	var library = _get_library()
-	if not library:
-		return
-
-	match id:
-		SOCKET_MENU_ID_NONE:
-			_clear_direction_sockets(direction)
-		SOCKET_MENU_ID_ANY:
-			_set_direction_to_any(direction, library)
-		_:
-			var menu_button = _get_socket_menu_button_for_direction(direction)
-			if not menu_button:
-				return
-			var selectable_types: Array = menu_button.get_meta(SOCKET_MENU_META_TYPES, [])
-			if id < 0 or id >= selectable_types.size():
-				return
-			var socket_id: String = selectable_types[id]
-			_toggle_socket_type(direction, socket_id)
-	
-	_update_sockets_display()
-	tile_modified.emit(_tile)
+func _on_socket_line_edit_focus_exited(direction: Vector3i) -> void:
+	var line_edit := _get_socket_line_edit_for_direction(direction)
+	if line_edit:
+		_apply_socket_line_edit(direction, line_edit.text)
 
 func _on_preview_socket_pressed(direction: Vector3i) -> void:
 	"""Handle preview socket button press - emit request_preview signal."""
@@ -689,78 +596,62 @@ func _on_preview_socket_pressed(direction: Vector3i) -> void:
 	var socket = sockets_in_direction[0]
 	request_preview.emit(_tile, socket)
 
-func _get_socket_menu_button_for_direction(direction: Vector3i) -> MenuButton:
-	"""Get the menu button for a specific direction."""
+func _get_socket_line_edit_for_direction(direction: Vector3i) -> LineEdit:
 	if direction == Vector3i.UP:
-		return upSocketMenuButton
+		return upSocketLineEdit
 	elif direction == Vector3i.DOWN:
-		return downSocketMenuButton
+		return downSocketLineEdit
 	elif direction == Vector3i.LEFT:
-		return leftSocketMenuButton
+		return leftSocketLineEdit
 	elif direction == Vector3i.RIGHT:
-		return rightSocketMenuButton
+		return rightSocketLineEdit
 	elif direction == Vector3i.FORWARD:
-		return frontSocketMenuButton
+		return frontSocketLineEdit
 	elif direction == Vector3i.BACK:
-		return backSocketMenuButton
+		return backSocketLineEdit
 	return null
 
-func _clear_direction_sockets(direction: Vector3i) -> void:
-	"""Remove all sockets for a given direction."""
+func _apply_socket_line_edit(direction: Vector3i, raw_text: String) -> void:
 	if not _tile:
 		return
-	var sockets = _tile.get_sockets_in_direction(direction)
-	for socket in sockets:
-		_tile.remove_socket(socket)
-
-func _set_direction_to_any(direction: Vector3i, library: ModuleLibrary) -> void:
-	"""Replace sockets in the direction with a single 'any' socket."""
-	if not _tile:
+	var sockets := _tile.get_sockets_in_direction(direction)
+	if sockets.size() > 1:
+		# Avoid editing multi-socket setups here.
+		_update_socket_line_edit(_get_socket_line_edit_for_direction(direction), direction)
 		return
-	_clear_direction_sockets(direction)
-	var socket = Socket.new()
-	socket.direction = direction
-	socket.socket_id = "any"
-	_tile.add_socket(socket)
+	var cleaned := raw_text.strip_edges()
+	var placeholder := "none"
+	var socket: Socket = null
+	if sockets.is_empty():
+		socket = Socket.new()
+		socket.direction = direction
+		_tile.add_socket(socket)
+	else:
+		socket = sockets[0]
+	if cleaned == "":
+		socket.socket_id = placeholder
+	else:
+		socket.socket_id = cleaned
+		var library = _get_library()
+		if library:
+			library.ensure_socket_type(cleaned)
+	_update_socket_line_edit(_get_socket_line_edit_for_direction(direction), direction)
+	tile_modified.emit(_tile)
 
-func _toggle_socket_type(direction: Vector3i, socket_id: String) -> void:
-	"""Toggle a specific socket type for a direction."""
-	if socket_id.strip_edges() == "":
-		return
-	if not _tile:
-		return
-
-	var sockets = _tile.get_sockets_in_direction(direction)
-	for socket in sockets:
-		if socket.socket_id == socket_id:
-			_tile.remove_socket(socket)
-			return
-
-	_remove_placeholder_sockets(direction)
-	_remove_any_socket(direction)
-	var new_socket = Socket.new()
-	new_socket.direction = direction
-	new_socket.socket_id = socket_id
-	_tile.add_socket(new_socket)
-
-func _remove_placeholder_sockets(direction: Vector3i) -> void:
-	"""Remove sockets with empty ID or 'none' marker in a direction."""
-	if not _tile:
-		return
-	var sockets = _tile.get_sockets_in_direction(direction)
-	for socket in sockets:
-		var type_id: String = socket.socket_id.strip_edges()
-		if type_id == "" or type_id == "none":
-			_tile.remove_socket(socket)
-
-func _remove_any_socket(direction: Vector3i) -> void:
-	"""Remove wildcard 'any' sockets from a direction."""
-	if not _tile:
-		return
-	var sockets = _tile.get_sockets_in_direction(direction)
-	for socket in sockets:
-		if socket.socket_id.strip_edges() == "any":
-			_tile.remove_socket(socket)
+func _direction_to_label(direction: Vector3i) -> String:
+	if direction == Vector3i.UP:
+		return "Up"
+	elif direction == Vector3i.DOWN:
+		return "Down"
+	elif direction == Vector3i.LEFT:
+		return "Left"
+	elif direction == Vector3i.RIGHT:
+		return "Right"
+	elif direction == Vector3i.FORWARD:
+		return "Forward"
+	elif direction == Vector3i.BACK:
+		return "Back"
+	return "(%d, %d, %d)" % [direction.x, direction.y, direction.z]
 
 func _setup_requirement_menu() -> void:
 	"""Connect signals for the add requirement menu and preload available requirement types."""

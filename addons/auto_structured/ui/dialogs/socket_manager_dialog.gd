@@ -81,7 +81,7 @@ func _rebuild_state() -> void:
 		_refresh_compatibility_view()
 		return
 	_build_socket_entries()
-	_build_suggestions()
+	_recalculate_suggestions()
 	_initialize_visible_tiles()
 	_refresh_socket_list()
 	if _socket_entries.is_empty():
@@ -116,6 +116,12 @@ func _build_suggestions() -> void:
 		if not _suggestions_by_dir.has(direction):
 			_suggestions_by_dir[direction] = []
 		_suggestions_by_dir[direction].append(suggestion)
+
+func _recalculate_suggestions() -> void:
+	_suggestions_by_dir.clear()
+	if _tile == null or _library == null:
+		return
+	_build_suggestions()
 
 func _ensure_socket_state(socket: Socket) -> Dictionary:
 	if socket == null:
@@ -266,10 +272,7 @@ func _get_addable_tiles() -> Array:
 	return available
 
 func _is_valid_socket_id(socket_id: String) -> bool:
-	if socket_id == "":
-		return false
-	var lowered := socket_id.strip_edges().to_lower()
-	return lowered != "none" and lowered != "any"
+	return socket_id.strip_edges() != ""
 
 func _load_remove_tile_icon() -> Texture2D:
 	if has_theme_icon("Remove", "EditorIcons"):
@@ -340,6 +343,7 @@ func _on_add_tile_dialog_tiles_selected(tiles: Array) -> void:
 	for tile in tiles:
 		if tile:
 			_add_visible_tile(tile, true)
+	_recalculate_suggestions()
 	_request_compatibility_refresh()
 	_update_add_tile_button_state()
 
@@ -661,13 +665,11 @@ func _find_tile_for_socket(socket: Socket) -> Tile:
 func _update_suggestions_label() -> void:
 	if suggestions_label == null or _selected_entries.is_empty():
 		return
-	# Collect all suggestions for selected sockets
+	# Collect all suggestions for selected sockets, excluding existing links
 	var all_suggestions: Array = []
 	for entry in _selected_entries:
-		var suggestions: Array = _suggestions_by_dir.get(entry.direction, [])
-		all_suggestions.append_array(suggestions)
-	var suggestions := all_suggestions
-	if suggestions.is_empty():
+		all_suggestions.append_array(_filtered_suggestions_for_entry(entry))
+	if all_suggestions.is_empty():
 		suggestions_label.text = "No analyser suggestions for this socket."
 		if apply_suggestions_button:
 			apply_suggestions_button.disabled = true
@@ -675,7 +677,7 @@ func _update_suggestions_label() -> void:
 	if apply_suggestions_button:
 		apply_suggestions_button.disabled = not _tree_edit_enabled
 	var parts: Array[String] = []
-	for suggestion in suggestions:
+	for suggestion in all_suggestions:
 		var partner_tile: Tile = suggestion.get("partner_tile", null)
 		var tile_name := partner_tile.name if partner_tile else "Unknown"
 		var socket_id: String = suggestion.get("socket_id", "")
@@ -812,11 +814,21 @@ func _has_any_selected_partial_compatibility(target: Socket) -> bool:
 func _is_suggested_target_for_any_selected(socket_id: String) -> bool:
 	"""Check if socket_id is a suggested target for any selected socket."""
 	for entry in _selected_entries:
+		if entry == null or entry.socket == null:
+			continue
 		var suggestions: Array = _suggestions_by_dir.get(entry.direction, [])
 		for suggestion in suggestions:
 			var suggested_id: String = suggestion.get("socket_id", "")
-			if suggested_id == socket_id:
-				return true
+			if suggested_id != socket_id:
+				continue
+			var partner_socket: Socket = suggestion.get("partner_socket", null)
+			if partner_socket == null:
+				continue
+			partner_socket.ensure_guid()
+			var partner_guid := String(partner_socket.socket_guid).strip_edges()
+			if partner_guid == "" or _pending_contains(entry.socket, partner_guid):
+				continue
+			return true
 	return false
 
 func _is_suggested_target(direction: Vector3i, socket_id: String) -> bool:
@@ -827,21 +839,42 @@ func _is_suggested_target(direction: Vector3i, socket_id: String) -> bool:
 			return true
 	return false
 
+func _filtered_suggestions_for_entry(entry: SocketEntry) -> Array:
+	var result: Array = []
+	if entry == null or entry.socket == null:
+		return result
+	var suggestions: Array = _suggestions_by_dir.get(entry.direction, [])
+	var pending := _get_pending_socket_guids(entry.socket)
+	for suggestion in suggestions:
+		var partner_socket: Socket = suggestion.get("partner_socket", null)
+		if partner_socket == null:
+			continue
+		partner_socket.ensure_guid()
+		var partner_guid := String(partner_socket.socket_guid).strip_edges()
+		if partner_guid == "" or partner_guid in pending:
+			continue
+		result.append(suggestion)
+	return result
+
 func _on_apply_suggestions_pressed() -> void:
 	"""Apply all suggestions for all selected sockets."""
 	if _selected_entries.is_empty():
 		return
 	
 	for entry in _selected_entries:
-		var suggestions: Array = _suggestions_by_dir.get(entry.direction, [])
+		var suggestions: Array = _filtered_suggestions_for_entry(entry)
 		for suggestion in suggestions:
 			var partner_socket: Socket = suggestion.get("partner_socket", null)
 			if partner_socket == null:
 				continue
+			var partner_tile: Tile = suggestion.get("partner_tile", null)
+			if partner_tile:
+				_add_visible_tile(partner_tile, true)
 			
 			# Add bidirectional compatibility
 			_apply_bidirectional_change(entry.socket, partner_socket, true)
 	
+	_update_add_tile_button_state()
 	_request_compatibility_refresh()
 
 func _commit_pending_changes() -> bool:

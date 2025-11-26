@@ -5,8 +5,26 @@ const Socket = preload("res://addons/auto_structured/core/socket.gd")
 const Requirement = preload("res://addons/auto_structured/core/requirements/requirement.gd")
 
 @export var name: String = ""
-@export var mesh: Mesh = null
-@export var scene: PackedScene = null
+var _mesh_resource: Mesh = null
+var _scene_resource: PackedScene = null
+
+@export var mesh: Mesh = null:
+	set(value):
+		if _mesh_resource == value:
+			return
+		_mesh_resource = value
+		_invalidate_face_cache()
+	get:
+		return _mesh_resource
+
+@export var scene: PackedScene = null:
+	set(value):
+		if _scene_resource == value:
+			return
+		_scene_resource = value
+		_invalidate_face_cache()
+	get:
+		return _scene_resource
 @export var size: Vector3i = Vector3i.ONE  ## Size of the tile in grid units (default 1x1x1). Must be integer.
 @export var tags: Array[String] = []
 
@@ -35,7 +53,7 @@ enum RotationSymmetry {
 		sockets = value
 		_ensure_socket_guids()
 		_rebuild_socket_cache()
-		_face_cache_valid = false  ## Invalidate face cache when sockets change
+		_invalidate_face_cache()  ## Geometry-adjacent data changed
 
 ## Precomputed socket cache for O(1) lookups by direction
 var _sockets_by_dir: Dictionary = {}
@@ -43,6 +61,10 @@ var _sockets_by_dir: Dictionary = {}
 ## Cache for face signatures to avoid expensive recomputation
 var _cached_face_signatures: Dictionary = {}
 var _face_cache_valid: bool = false
+
+func _invalidate_face_cache() -> void:
+	_cached_face_signatures.clear()
+	_face_cache_valid = false
 
 func _rebuild_socket_cache() -> void:
 	"""Rebuild the socket cache whenever sockets are modified. Called automatically."""

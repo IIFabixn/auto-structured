@@ -252,14 +252,11 @@ columns = 3
 layout_mode = 2
 text = "Up"
 
-[node name="UpSocketMenuButton" type="MenuButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
+[node name="UpSocketLineEdit" type="LineEdit" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-icon = ExtResource("3_qj0jw")
-alignment = 0
-clip_text = true
-icon_alignment = 2
+placeholder_text = "none"
 metadata/socket_direction = Vector3i(0, 1, 0)
 
 [node name="PreviewUpSocketButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
@@ -275,16 +272,12 @@ metadata/socket_direction = Vector3i(0, 1, 0)
 layout_mode = 2
 text = "Down"
 
-[node name="DownSocketMenuButton" type="MenuButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
+[node name="DownSocketLineEdit" type="LineEdit" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-text = "
-"
-icon = ExtResource("3_qj0jw")
-alignment = 0
-clip_text = true
-icon_alignment = 2
+placeholder_text = "none"
+metadata/socket_direction = Vector3i(0, -1, 0)
 metadata/socket_direction = Vector3i(0, -1, 0)
 
 [node name="PreviewDownSocketButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
@@ -300,14 +293,11 @@ metadata/socket_direction = Vector3i(0, -1, 0)
 layout_mode = 2
 text = "Left"
 
-[node name="LeftSocketMenuButton" type="MenuButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
+[node name="LeftSocketLineEdit" type="LineEdit" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-icon = ExtResource("3_qj0jw")
-alignment = 0
-clip_text = true
-icon_alignment = 2
+placeholder_text = "none"
 metadata/socket_direction = Vector3i(-1, 0, 0)
 
 [node name="PreviewLeftSocketButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
@@ -323,14 +313,11 @@ metadata/socket_direction = Vector3i(-1, 0, 0)
 layout_mode = 2
 text = "Right"
 
-[node name="RightSocketMenuButton" type="MenuButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
+[node name="RightSocketLineEdit" type="LineEdit" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-icon = ExtResource("3_qj0jw")
-alignment = 0
-clip_text = true
-icon_alignment = 2
+placeholder_text = "none"
 metadata/socket_direction = Vector3i(1, 0, 0)
 
 [node name="PreviewRightSocketButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
@@ -346,16 +333,12 @@ metadata/socket_direction = Vector3i(1, 0, 0)
 layout_mode = 2
 text = "Front"
 
-[node name="FrontSocketMenuButton" type="MenuButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
+[node name="FrontSocketLineEdit" type="LineEdit" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-text = "
-"
-icon = ExtResource("3_qj0jw")
-alignment = 0
-clip_text = true
-icon_alignment = 2
+placeholder_text = "none"
+metadata/socket_direction = Vector3i(0, 0, -1)
 metadata/socket_direction = Vector3i(0, 0, -1)
 
 [node name="PreviewFrontSocketButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
@@ -371,14 +354,11 @@ metadata/socket_direction = Vector3i(0, 0, -1)
 layout_mode = 2
 text = "Back"
 
-[node name="BackSocketMenuButton" type="MenuButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
+[node name="BackSocketLineEdit" type="LineEdit" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-icon = ExtResource("3_qj0jw")
-alignment = 0
-clip_text = true
-icon_alignment = 2
+placeholder_text = "none"
 metadata/socket_direction = Vector3i(0, 0, 1)
 
 [node name="PreviewBackSocketButton" type="TextureButton" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Sockets/VBoxContainer/SocketsContainer"]

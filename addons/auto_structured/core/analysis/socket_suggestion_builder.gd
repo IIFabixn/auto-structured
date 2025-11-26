@@ -13,12 +13,13 @@ static func build_suggestions(tile: Tile, library: ModuleLibrary, allow_self_mat
 	var face_map := MeshOutlineAnalyzer.get_face_signatures_for_tile(tile)
 	if face_map.is_empty():
 		return []
+	var guid_index := _build_socket_guid_index(library)
 	var suggestions: Array = []
 	for direction in face_map.keys():
 		var face: Dictionary = face_map[direction]
 		if face.is_empty():
 			continue
-		var suggestion := _find_best_match_for_face(tile, direction, face, library, allow_self_match)
+		var suggestion := _find_best_match_for_face(tile, direction, face, library, allow_self_match, guid_index)
 		if suggestion:
 			suggestions.append(suggestion)
 	return suggestions
@@ -30,11 +31,12 @@ static func analyze_faces(tile: Tile, library: ModuleLibrary, allow_self_match: 
 	var face_map := MeshOutlineAnalyzer.get_face_signatures_for_tile(tile)
 	if face_map.is_empty():
 		return result
+	var guid_index := _build_socket_guid_index(library)
 	for direction in face_map.keys():
 		var face: Dictionary = face_map[direction]
 		var info := {
 			"direction": direction,
-			"has_socket": tile.get_socket_by_direction(direction) != null,
+			"has_socket": not tile.get_sockets_in_direction(direction).is_empty(),
 			"suggestion": {},
 			"within_tolerance": false,
 			"best_candidate": null,
@@ -51,7 +53,7 @@ static func analyze_faces(tile: Tile, library: ModuleLibrary, allow_self_match: 
 				if best_within.is_empty() or float(detail.get("score", INF)) < float(best_within.get("detail", {}).get("score", INF)):
 					best_within = candidate
 		if not best_within.is_empty():
-			info["suggestion"] = _candidate_to_suggestion(direction, best_within, library)
+			info["suggestion"] = _candidate_to_suggestion(direction, best_within, guid_index)
 			info["within_tolerance"] = true
 			info["best_candidate"] = best_within
 		else:
@@ -60,7 +62,7 @@ static func analyze_faces(tile: Tile, library: ModuleLibrary, allow_self_match: 
 		result[direction] = info
 	return result
 
-static func _find_best_match_for_face(tile: Tile, direction: Vector3i, face: Dictionary, library: ModuleLibrary, allow_self_match: bool) -> Dictionary:
+static func _find_best_match_for_face(tile: Tile, direction: Vector3i, face: Dictionary, library: ModuleLibrary, allow_self_match: bool, guid_index: Dictionary) -> Dictionary:
 	var candidates := _gather_candidates(tile, direction, face, library, allow_self_match)
 	var best_candidate: Dictionary = {}
 	var best_score: float = INF
@@ -74,7 +76,7 @@ static func _find_best_match_for_face(tile: Tile, direction: Vector3i, face: Dic
 			best_candidate = candidate
 	if best_candidate.is_empty():
 		return {}
-	return _candidate_to_suggestion(direction, best_candidate, library)
+	return _candidate_to_suggestion(direction, best_candidate, guid_index)
 
 static func _compare_faces(face_a: Dictionary, face_b: Dictionary) -> Variant:
 	var detail := _compare_faces_detailed(face_a, face_b)
@@ -130,31 +132,36 @@ static func _gather_candidates(tile: Tile, direction: Vector3i, face: Dictionary
 		var detail := _compare_faces_detailed(face, partner_face)
 		if detail.is_empty():
 			continue
-		var partner_socket := other_tile.get_socket_by_direction(opposite)
-		# Skip candidates without valid socket IDs
-		if partner_socket == null or partner_socket.socket_id.is_empty():
+		var partner_sockets := other_tile.get_sockets_in_direction(opposite)
+		if partner_sockets.is_empty():
 			continue
-		var candidate := {
-			"tile": other_tile,
-			"opposite": opposite,
-			"partner_face": partner_face,
-			"partner_socket": partner_socket,
-			"detail": detail,
-			"face": face
-		}
-		candidates.append(candidate)
+		for partner_socket in partner_sockets:
+			if partner_socket == null:
+				continue
+			var type_id := partner_socket.socket_id.strip_edges()
+			if type_id == "" or type_id == "none":
+				continue
+			var candidate := {
+				"tile": other_tile,
+				"opposite": opposite,
+				"partner_face": partner_face,
+				"partner_socket": partner_socket,
+				"detail": detail,
+				"face": face
+			}
+			candidates.append(candidate)
 	return candidates
 
-static func _candidate_to_suggestion(direction: Vector3i, candidate: Dictionary, library: ModuleLibrary) -> Dictionary:
+static func _candidate_to_suggestion(direction: Vector3i, candidate: Dictionary, guid_index: Dictionary) -> Dictionary:
 	var partner_socket: Socket = candidate.get("partner_socket")
 	if partner_socket == null or partner_socket.socket_id.is_empty():
 		return {}
+	partner_socket.ensure_guid()
 	var partner_socket_id := partner_socket.socket_id.strip_edges()
 	if partner_socket_id == "" or partner_socket_id == "none":
 		return {}
 	# Socket ID is already registered in the library through the socket itself
-	var compatible_ids: Array[String] = []
-	compatible_ids.assign(partner_socket.compatible_sockets)
+	var compatible_ids := _clean_compatibility_list(partner_socket, guid_index)
 	return {
 		"direction": direction,
 		"socket_id": partner_socket_id,
@@ -167,6 +174,39 @@ static func _candidate_to_suggestion(direction: Vector3i, candidate: Dictionary,
 		"partner_socket": partner_socket,
 		"detail": candidate.get("detail")
 	}
+
+static func _clean_compatibility_list(partner_socket: Socket, guid_index: Dictionary) -> Array[String]:
+	var cleaned: Array[String] = []
+	if partner_socket == null:
+		return cleaned
+	var seen: Dictionary = {}
+	for compat_guid in partner_socket.compatible_sockets:
+		var clean := String(compat_guid).strip_edges()
+		if clean == "" or seen.has(clean):
+			continue
+		if not guid_index.is_empty() and not guid_index.has(clean):
+			continue
+		seen[clean] = true
+		cleaned.append(clean)
+	cleaned.sort()
+	return cleaned
+
+static func _build_socket_guid_index(library: ModuleLibrary) -> Dictionary:
+	var index: Dictionary = {}
+	if library == null:
+		return index
+	for tile in library.tiles:
+		if tile == null:
+			continue
+		for socket in tile.sockets:
+			if socket == null:
+				continue
+			socket.ensure_guid()
+			var guid := String(socket.socket_guid).strip_edges()
+			if guid == "":
+				continue
+			index[guid] = true
+	return index
 
 static func _build_analysis_issues(info: Dictionary, face: Dictionary) -> Array[String]:
 	var issues: Array[String] = []

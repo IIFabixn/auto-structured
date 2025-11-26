@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="ModuleLibrary" load_steps=29 format=3 uid="uid://hhr1fq3dnn8k"]
+[gd_resource type="Resource" script_class="ModuleLibrary" load_steps=37 format=3 uid="uid://hhr1fq3dnn8k"]
 
 [ext_resource type="Script" uid="uid://n5qundf42kiu" path="res://addons/auto_structured/core/module_library.gd" id="1_k0n0c"]
 [ext_resource type="Script" uid="uid://c7f03neubtkf3" path="res://addons/auto_structured/core/tile.gd" id="2_53rky"]
@@ -7,44 +7,45 @@
 [ext_resource type="Script" uid="uid://bddgr0flhmhcl" path="res://addons/auto_structured/core/socket.gd" id="5_rqldo"]
 [ext_resource type="PackedScene" uid="uid://dvmtflhjehotm" path="res://sample/modules/wall.tscn" id="6_k1ovt"]
 [ext_resource type="PackedScene" uid="uid://cvdf8f47a4oa1" path="res://sample/modules/door.tscn" id="7_rqldo"]
+[ext_resource type="PackedScene" uid="uid://khrtlct1n2sc" path="res://sample/modules/wall_corner.tscn" id="8_iupn8"]
 
 [sub_resource type="Resource" id="Resource_rqldo"]
 script = ExtResource("5_rqldo")
-socket_id = "floor_side"
+socket_id = "wall_right"
 socket_guid = "1ccfeb3d-a9af-f8fc-e6ad-18e5bd1cf615"
-compatible_sockets = Array[String](["floor_side"])
+compatible_sockets = Array[String](["a75921a1-90b9-63fc-2ad1-5f54623cccd8", "floor_side"])
 direction = Vector3i(1, 0, 0)
 
 [sub_resource type="Resource" id="Resource_4ec60"]
 script = ExtResource("5_rqldo")
-socket_id = "floor_side"
+socket_id = "wall_left"
 socket_guid = "109a88c9-aaf2-7ff6-f232-38747765ffd9"
-compatible_sockets = Array[String](["floor_side"])
+compatible_sockets = Array[String](["df3e326f-4842-0e30-5bb9-4fedcbe11fa1", "floor_side"])
 direction = Vector3i(-1, 0, 0)
 
 [sub_resource type="Resource" id="Resource_6ltd1"]
 script = ExtResource("5_rqldo")
-socket_id = "floor_side"
+socket_id = "wall_inside"
 socket_guid = "9d3f51a0-128b-b911-da77-3b028a299556"
-compatible_sockets = Array[String](["floor_side"])
+compatible_sockets = Array[String](["28ab1965-56bc-d8b0-441b-14451b1b9891", "4be860e6-b8a9-db9b-fc04-dc2236c1e81d", "61f39d73-a771-fc5e-a9cb-03dcf4369554", "be644825-d5a5-39ec-adef-a41225911fb3", "floor_side"])
 direction = Vector3i(0, 0, -1)
 
 [sub_resource type="Resource" id="Resource_a2x8y"]
 script = ExtResource("5_rqldo")
-socket_id = "floor_side"
+socket_id = "wall_outside"
 socket_guid = "9490a087-9d2d-0573-a8d0-910c198155f7"
 compatible_sockets = Array[String](["floor_side", "none"])
 direction = Vector3i(0, 0, 1)
 
 [sub_resource type="Resource" id="Resource_murai"]
 script = ExtResource("5_rqldo")
-socket_id = "floor_top"
+socket_id = "none"
 socket_guid = "15602ea1-da6b-d905-7c04-1c4a34040397"
 compatible_sockets = Array[String](["floor_top", "none"])
 
 [sub_resource type="Resource" id="Resource_3vl5h"]
 script = ExtResource("5_rqldo")
-socket_id = "floor_bottom"
+socket_id = "none"
 socket_guid = "9d7cfdc4-7b05-35de-ede3-3a6b00002622"
 compatible_sockets = Array[String](["floor_bottom"])
 direction = Vector3i(0, -1, 0)
@@ -69,25 +70,28 @@ direction = Vector3i(0, -1, 0)
 
 [sub_resource type="Resource" id="Resource_s6wr4"]
 script = ExtResource("5_rqldo")
-socket_id = "none"
+socket_id = "door_right"
 socket_guid = "df3e326f-4842-0e30-5bb9-4fedcbe11fa1"
+compatible_sockets = Array[String](["109a88c9-aaf2-7ff6-f232-38747765ffd9"])
 direction = Vector3i(1, 0, 0)
 
 [sub_resource type="Resource" id="Resource_3t8ws"]
 script = ExtResource("5_rqldo")
-socket_id = "none"
+socket_id = "door_left"
 socket_guid = "a75921a1-90b9-63fc-2ad1-5f54623cccd8"
+compatible_sockets = Array[String](["1ccfeb3d-a9af-f8fc-e6ad-18e5bd1cf615"])
 direction = Vector3i(-1, 0, 0)
 
 [sub_resource type="Resource" id="Resource_sic6b"]
 script = ExtResource("5_rqldo")
-socket_id = "none"
+socket_id = "doot_inside"
 socket_guid = "4025ce58-4466-79c6-6a74-28d57e35b701"
+compatible_sockets = Array[String](["28ab1965-56bc-d8b0-441b-14451b1b9891", "4be860e6-b8a9-db9b-fc04-dc2236c1e81d", "61f39d73-a771-fc5e-a9cb-03dcf4369554", "be644825-d5a5-39ec-adef-a41225911fb3"])
 direction = Vector3i(0, 0, -1)
 
 [sub_resource type="Resource" id="Resource_kew22"]
 script = ExtResource("5_rqldo")
-socket_id = "none"
+socket_id = "door_outside"
 socket_guid = "5cdd5b11-3424-3f18-f21e-85047da3b50a"
 direction = Vector3i(0, 0, 1)
 
@@ -111,26 +115,30 @@ direction = Vector3i(0, -1, 0)
 
 [sub_resource type="Resource" id="Resource_3j4ih"]
 script = ExtResource("5_rqldo")
-socket_id = "none"
+socket_id = "floor_side"
 socket_guid = "28ab1965-56bc-d8b0-441b-14451b1b9891"
+compatible_sockets = Array[String](["4025ce58-4466-79c6-6a74-28d57e35b701", "9d3f51a0-128b-b911-da77-3b028a299556"])
 direction = Vector3i(1, 0, 0)
 
 [sub_resource type="Resource" id="Resource_3lwuf"]
 script = ExtResource("5_rqldo")
-socket_id = "none"
+socket_id = "floor_side"
 socket_guid = "61f39d73-a771-fc5e-a9cb-03dcf4369554"
+compatible_sockets = Array[String](["4025ce58-4466-79c6-6a74-28d57e35b701", "9d3f51a0-128b-b911-da77-3b028a299556"])
 direction = Vector3i(-1, 0, 0)
 
 [sub_resource type="Resource" id="Resource_3r4si"]
 script = ExtResource("5_rqldo")
-socket_id = "none"
+socket_id = "floor_side"
 socket_guid = "be644825-d5a5-39ec-adef-a41225911fb3"
+compatible_sockets = Array[String](["4025ce58-4466-79c6-6a74-28d57e35b701", "9d3f51a0-128b-b911-da77-3b028a299556"])
 direction = Vector3i(0, 0, -1)
 
 [sub_resource type="Resource" id="Resource_ym6o8"]
 script = ExtResource("5_rqldo")
-socket_id = "none"
+socket_id = "floor_side"
 socket_guid = "4be860e6-b8a9-db9b-fc04-dc2236c1e81d"
+compatible_sockets = Array[String](["4025ce58-4466-79c6-6a74-28d57e35b701", "9d3f51a0-128b-b911-da77-3b028a299556"])
 direction = Vector3i(0, 0, 1)
 
 [sub_resource type="Resource" id="Resource_bbx3i"]
@@ -140,8 +148,50 @@ scene = ExtResource("4_k1ovt")
 rotation_symmetry = 1
 sockets = Array[ExtResource("5_rqldo")]([SubResource("Resource_iupn8"), SubResource("Resource_pi2wf"), SubResource("Resource_3j4ih"), SubResource("Resource_3lwuf"), SubResource("Resource_3r4si"), SubResource("Resource_ym6o8")])
 
+[sub_resource type="Resource" id="Resource_hkoat"]
+script = ExtResource("5_rqldo")
+socket_id = "none"
+socket_guid = "6b6b15df-50d5-fee3-c74c-41276f739af0"
+
+[sub_resource type="Resource" id="Resource_8x41a"]
+script = ExtResource("5_rqldo")
+socket_id = "none"
+socket_guid = "a6c5e4ac-641d-fb8a-d39d-86ede38c9369"
+direction = Vector3i(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_phhm4"]
+script = ExtResource("5_rqldo")
+socket_id = "corner_right"
+socket_guid = "5b419eb9-f3ab-4dd2-0f35-762fb8f171cd"
+direction = Vector3i(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_qipsd"]
+script = ExtResource("5_rqldo")
+socket_id = "none"
+socket_guid = "ec81dfb1-815b-e90b-780d-041147047306"
+direction = Vector3i(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_iyrpm"]
+script = ExtResource("5_rqldo")
+socket_id = "corner_left"
+socket_guid = "4b56c637-fcac-734c-edc2-4c113ac32bd8"
+direction = Vector3i(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_mysar"]
+script = ExtResource("5_rqldo")
+socket_id = "none"
+socket_guid = "07a842ec-6598-30d1-70d1-0e92a99d251f"
+direction = Vector3i(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_wu18d"]
+script = ExtResource("2_53rky")
+name = "wall_corner"
+scene = ExtResource("8_iupn8")
+rotation_symmetry = 1
+sockets = Array[ExtResource("5_rqldo")]([SubResource("Resource_hkoat"), SubResource("Resource_8x41a"), SubResource("Resource_phhm4"), SubResource("Resource_qipsd"), SubResource("Resource_iyrpm"), SubResource("Resource_mysar")])
+
 [resource]
 script = ExtResource("1_k0n0c")
 library_name = "Test2"
-tiles = Array[ExtResource("2_53rky")]([SubResource("Resource_2rp5i"), SubResource("Resource_aoeot"), SubResource("Resource_bbx3i")])
-socket_types = Array[String](["any", "corner_block", "corner_side", "floor_bottom", "floor_side", "floor_top", "none", "wall_forward", "wall_side", "wall_top"])
+tiles = Array[ExtResource("2_53rky")]([SubResource("Resource_2rp5i"), SubResource("Resource_aoeot"), SubResource("Resource_bbx3i"), SubResource("Resource_wu18d")])
+socket_types = Array[String](["any", "corner_block", "corner_left", "corner_right", "corner_side", "door_left", "door_outside", "door_right", "doot_inside", "floor_bottom", "floor_side", "floor_top", "none", "wall_forward", "wall_inside", "wall_left", "wall_outside", "wall_right", "wall_side", "wall_top"])
