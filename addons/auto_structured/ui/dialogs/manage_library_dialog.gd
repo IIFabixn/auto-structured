@@ -7,6 +7,15 @@ const LibraryPresets = preload("res://addons/auto_structured/core/library_preset
 const SocketTemplate = preload("res://addons/auto_structured/utils/socket_template.gd")
 const TemplateEditorDialogScene = preload("res://addons/auto_structured/ui/dialogs/template_editor_dialog.tscn")
 
+const DIRECTION_LABELS := {
+	Vector3i(0, 1, 0): "Up",
+	Vector3i(0, -1, 0): "Down",
+	Vector3i(1, 0, 0): "Right",
+	Vector3i(-1, 0, 0): "Left",
+	Vector3i(0, 0, 1): "Forward",
+	Vector3i(0, 0, -1): "Back"
+}
+
 @onready var tabs: TabContainer = %TabContainer
 @onready var tags_search: LineEdit = %TagsSearchLine
 @onready var tags_tree: Tree = %TagsTree
@@ -735,6 +744,8 @@ func _map_tag_to_library_names(tag: String) -> Array[String]:
 	return names
 
 func _direction_to_string(direction: Vector3i) -> String:
+	if DIRECTION_LABELS.has(direction):
+		return DIRECTION_LABELS[direction]
 	return "(%d, %d, %d)" % [direction.x, direction.y, direction.z]
 
 func _collect_existing_template_names(exclude_template: SocketTemplate = null) -> Array[String]:

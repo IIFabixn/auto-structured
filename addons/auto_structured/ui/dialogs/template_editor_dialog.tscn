@@ -44,23 +44,6 @@ size_flags_vertical = 3
 [node name="EntriesLabel" type="Label" parent="MarginContainer/VBox"]
 text = "Entries"
 
-[node name="EntriesToolbar" type="HBoxContainer" parent="MarginContainer/VBox"]
-alignment = 2
-
-[node name="TemplateAddEntryButton" type="Button" parent="MarginContainer/VBox/EntriesToolbar"]
-unique_name_in_owner = true
-text = "Add"
-
-[node name="TemplateEditEntryButton" type="Button" parent="MarginContainer/VBox/EntriesToolbar"]
-unique_name_in_owner = true
-text = "Edit"
-disabled = true
-
-[node name="TemplateDeleteEntryButton" type="Button" parent="MarginContainer/VBox/EntriesToolbar"]
-unique_name_in_owner = true
-text = "Delete"
-disabled = true
-
 [node name="TemplateEntriesTree" type="Tree" parent="MarginContainer/VBox"]
 unique_name_in_owner = true
 size_flags_horizontal = 3

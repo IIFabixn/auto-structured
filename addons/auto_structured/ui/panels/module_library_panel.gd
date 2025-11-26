@@ -84,7 +84,7 @@ func _setup_library_menu() -> void:
 	popup.add_separator()
 	popup.add_item("Rename Library", RENAME)
 	popup.add_item("Save Library", SAVE)
-	popup.add_item("Manage Tags & Socket Types", MANAGE)
+	popup.add_item("Manage Tags & Templates", MANAGE)
 	popup.add_separator()
 	popup.add_item("Delete Library", DELETE)
 	

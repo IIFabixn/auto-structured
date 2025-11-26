@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="ModuleLibrary" load_steps=46 format=3 uid="uid://hhr1fq3dnn8k"]
+[gd_resource type="Resource" script_class="ModuleLibrary" load_steps=47 format=3 uid="uid://hhr1fq3dnn8k"]
 
 [ext_resource type="Script" uid="uid://06kkr0akplb" path="res://addons/auto_structured/utils/socket_template.gd" id="1_3j4ih"]
 [ext_resource type="Script" uid="uid://n5qundf42kiu" path="res://addons/auto_structured/core/module_library.gd" id="1_k0n0c"]
@@ -10,6 +10,16 @@
 [ext_resource type="PackedScene" uid="uid://cvdf8f47a4oa1" path="res://sample/modules/door.tscn" id="7_rqldo"]
 [ext_resource type="PackedScene" uid="uid://khrtlct1n2sc" path="res://sample/modules/wall_corner.tscn" id="8_iupn8"]
 [ext_resource type="PackedScene" uid="uid://dkbqpf1v23wwk" path="res://sample/modules/outside_floor.tscn" id="9_pi2wf"]
+
+[sub_resource type="Resource" id="Resource_rxijo"]
+script = ExtResource("1_3j4ih")
+template_name = "Door"
+entries = [{
+"compatible": Array[String]([]),
+"direction": Vector3i(0, 0, 1),
+"minimum_rotation_degrees": 0,
+"socket_id": "door_inside"
+}]
 
 [sub_resource type="Resource" id="Resource_rqldo"]
 script = ExtResource("5_rqldo")
@@ -245,4 +255,4 @@ library_name = "Test2"
 tiles = Array[ExtResource("2_53rky")]([SubResource("Resource_2rp5i"), SubResource("Resource_aoeot"), SubResource("Resource_bbx3i"), SubResource("Resource_wu18d"), SubResource("Resource_ur0v5")])
 socket_types = Array[String](["any", "corner_block", "corner_left", "corner_left_outside", "corner_outside", "corner_right", "corner_side", "door_left", "door_outside", "door_right", "doot_inside", "floor_bottom", "floor_side", "floor_top", "none", "wall_forward", "wall_inside", "wall_left", "wall_outside", "wall_right", "wall_side", "wall_top"])
 available_tags = Array[String](["stone"])
-hidden_builtin_template_names = null
+custom_socket_templates = Array[ExtResource("1_3j4ih")]([SubResource("Resource_rxijo")])
