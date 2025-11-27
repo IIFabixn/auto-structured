@@ -70,11 +70,18 @@ func _propagate_systems() -> void:
 			viewport_panel.setup_undo_redo(undo_redo_manager)
 		if viewport_panel.has_method("setup_selection_manager"):
 			viewport_panel.setup_selection_manager(selection_manager)
+		if module_library_control and module_library_control.current_library and viewport_panel.has_method("setup_library"):
+			viewport_panel.setup_library(module_library_control.current_library)
+		if details_panel and details_panel.has_signal("request_preview") and viewport_panel.has_method("handle_socket_preview_request"):
+			if not details_panel.request_preview.is_connected(viewport_panel.handle_socket_preview_request):
+				details_panel.request_preview.connect(viewport_panel.handle_socket_preview_request)
 
 func _on_library_loaded(library: ModuleLibrary) -> void:
 	"""Handle library loaded event - propagate to details panel."""
 	if details_panel and details_panel.has_method("setup_library"):
 		details_panel.setup_library(library)
+	if viewport_panel and viewport_panel.has_method("setup_library"):
+		viewport_panel.setup_library(library)
 
 func _on_tile_modified_in_details(tile: Tile) -> void:
 	"""Handle tile modification from details panel - trigger library save."""

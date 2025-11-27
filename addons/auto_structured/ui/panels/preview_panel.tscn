@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://c42yn8m3jhp6p"]
+[gd_scene load_steps=15 format=3 uid="uid://c42yn8m3jhp6p"]
 
 [ext_resource type="Script" uid="uid://dhawin6ohfkr1" path="res://addons/auto_structured/ui/panels/preview_panel.gd" id="1_qeup7"]
 [ext_resource type="Texture2D" uid="uid://cklj47goa3tag" path="res://addons/auto_structured/assets/add.svg" id="2_8vq50"]
@@ -6,6 +6,9 @@
 [ext_resource type="Texture2D" uid="uid://r7yic3lsjybn" path="res://addons/auto_structured/assets/solve.svg" id="3_flumd"]
 [ext_resource type="Texture2D" uid="uid://dr5j07nhioqfw" path="res://addons/auto_structured/assets/tools.svg" id="3_kwnk8"]
 [ext_resource type="Texture2D" uid="uid://bp051udsevt4u" path="res://addons/auto_structured/assets/icon_GUI_tab_menu_hl.svg" id="6_kwnk8"]
+[ext_resource type="Script" uid="uid://cwl75rggdrkvu" path="res://addons/auto_structured/ui/controls/viewport_3d_grid.gd" id="6_xn4ju"]
+[ext_resource type="PackedScene" uid="uid://gy1bxv0g7grm" path="res://addons/auto_structured/ui/dialogs/wfc_setup_dialog.tscn" id="7_wfcsetup"]
+[ext_resource type="Script" uid="uid://blisi1if1wkjx" path="res://addons/auto_structured/ui/controls/viewport_camera_controller.gd" id="8_ki8ef"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_qo023"]
 
@@ -70,6 +73,7 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 tooltip_text = "Opens a dialog to configure ..."
+disabled = true
 texture_normal = ExtResource("3_kwnk8")
 stretch_mode = 3
 
@@ -101,6 +105,7 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 tooltip_text = "Additional options"
+disabled = true
 icon = ExtResource("6_kwnk8")
 icon_alignment = 1
 
@@ -113,6 +118,7 @@ layout_mode = 2
 size_flags_vertical = 3
 
 [node name="SubViewportContainer" type="SubViewportContainer" parent="Panel/MarginContainer/VBoxContainer/SplitContainer/PanelContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 stretch = true
@@ -122,12 +128,30 @@ unique_name_in_owner = true
 own_world_3d = true
 world_3d = SubResource("World3D_s3do3")
 handle_input_locally = false
-size = Vector2i(1152, 492)
+size = Vector2i(1152, 577)
 render_target_update_mode = 4
 
-[node name="PreviewCamera" type="Camera3D" parent="Panel/MarginContainer/VBoxContainer/SplitContainer/PanelContainer/SubViewportContainer/PreviewViewport"]
+[node name="PreviewRoot" type="Node3D" parent="Panel/MarginContainer/VBoxContainer/SplitContainer/PanelContainer/SubViewportContainer/PreviewViewport"]
+unique_name_in_owner = true
+
+[node name="ViewportGrid" type="Node3D" parent="Panel/MarginContainer/VBoxContainer/SplitContainer/PanelContainer/SubViewportContainer/PreviewViewport/PreviewRoot"]
+unique_name_in_owner = true
+script = ExtResource("6_xn4ju")
+
+[node name="BaseTileRoot" type="Node3D" parent="Panel/MarginContainer/VBoxContainer/SplitContainer/PanelContainer/SubViewportContainer/PreviewViewport/PreviewRoot"]
+unique_name_in_owner = true
+
+[node name="SocketPreviewRoot" type="Node3D" parent="Panel/MarginContainer/VBoxContainer/SplitContainer/PanelContainer/SubViewportContainer/PreviewViewport/PreviewRoot"]
+unique_name_in_owner = true
+
+[node name="WfcRoot" type="Node3D" parent="Panel/MarginContainer/VBoxContainer/SplitContainer/PanelContainer/SubViewportContainer/PreviewViewport/PreviewRoot"]
+unique_name_in_owner = true
+
+[node name="PreviewCamera" type="Camera3D" parent="Panel/MarginContainer/VBoxContainer/SplitContainer/PanelContainer/SubViewportContainer/PreviewViewport" node_paths=PackedStringArray("viewport_container")]
 unique_name_in_owner = true
 transform = Transform3D(0.98374504, 0.04648845, -0.1734489, 0, 0.96590793, 0.25888634, 0.17957087, -0.2546782, 0.950207, -1.7344892, 2.5888631, 9.502069)
+script = ExtResource("8_ki8ef")
+viewport_container = NodePath("../..")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="Panel/MarginContainer/VBoxContainer/SplitContainer/PanelContainer/SubViewportContainer/PreviewViewport"]
 transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 5, 0)
@@ -148,6 +172,7 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 8
 size_flags_vertical = 8
+disabled = true
 icon = ExtResource("6_kwnk8")
 flat = false
 icon_alignment = 1
@@ -156,15 +181,28 @@ icon_alignment = 1
 layout_mode = 2
 
 [node name="Label" type="Label" parent="Panel/MarginContainer/VBoxContainer/SplitContainer/VBoxContainer"]
+unique_name_in_owner = true
 layout_mode = 2
-text = "Make a choise"
+text = "Select a tile to preview."
 
 [node name="ScrollContainer" type="ScrollContainer" parent="Panel/MarginContainer/VBoxContainer/SplitContainer/VBoxContainer"]
+unique_name_in_owner = true
+visible = false
 custom_minimum_size = Vector2(0, 81)
 layout_mode = 2
 
 [node name="StepOptionsContainer" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/SplitContainer/VBoxContainer/ScrollContainer"]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
 size_flags_horizontal = 6
 size_flags_vertical = 3
+
+[node name="SocketCycleTimer" type="Timer" parent="."]
+unique_name_in_owner = true
+wait_time = 3.0
+
+[node name="WfcSetupDialog" parent="." instance=ExtResource("7_wfcsetup")]
+unique_name_in_owner = true
+size = Vector2i(420, 100)
+ok_button_text = "Apply"

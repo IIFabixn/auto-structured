@@ -739,7 +739,7 @@ func _on_tree_item_edited() -> void:
 
 func _apply_connection_change(source: Socket, target: Socket, enable: bool) -> void:
 	"""Apply one-way connection change from source to target."""
-	if source == null or target == null or source == target:
+	if source == null or target == null:
 		return
 	
 	source.ensure_guid()
@@ -762,7 +762,7 @@ func _apply_connection_change(source: Socket, target: Socket, enable: bool) -> v
 
 func _apply_bidirectional_change(source: Socket, target: Socket, enable: bool) -> void:
 	"""Apply bidirectional compatibility change between two sockets."""
-	if source == null or target == null or source == target:
+	if source == null or target == null:
 		return
 	source.ensure_guid()
 	target.ensure_guid()

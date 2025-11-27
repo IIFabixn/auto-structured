@@ -114,6 +114,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 value = 1.0
 prefix = "x"
+select_all_on_focus = true
 
 [node name="YSizeSpinBox" type="SpinBox" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer/SizeContainer"]
 unique_name_in_owner = true
@@ -121,6 +122,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 value = 1.0
 prefix = "y"
+select_all_on_focus = true
 
 [node name="ZSizeSpinBox" type="SpinBox" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer/SizeContainer"]
 unique_name_in_owner = true
@@ -128,6 +130,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 value = 1.0
 prefix = "z"
+select_all_on_focus = true
 
 [node name="TagsContainer" type="HBoxContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer"]
 layout_mode = 2
@@ -165,6 +168,7 @@ layout_mode = 2
 min_value = 0.01
 step = 0.01
 value = 0.01
+select_all_on_focus = true
 
 [node name="RotationSymmetryLabel" type="Label" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer/Generel/VBoxContainer"]
 layout_mode = 2

@@ -1,5 +1,5 @@
 @tool
-class_name ViewportCameraController extends RefCounted
+class_name ViewportCameraController extends Camera3D
 
 const RESUME_DELAY: float = 2.0 # seconds before auto-rotate resumes
 const AUTO_ROTATE_SPEED: float = 12.0 # degrees per second
@@ -8,6 +8,7 @@ const MOVEMENT_SPEED_FAST: float = 30.0 # units per second with shift
 const MOVEMENT_SPEED_SLOW: float = 3.0 # units per second with alt
 const TRANSITION_DURATION: float = 2.0 # seconds to transition to orbit mode
 const ORBIT_LERP_SPEED: float = 2.0 # smoothing factor for orbit transition
+const ALIGN_DURATION: float = 0.5 # seconds for manual alignment lerp
 const SETTINGS_FILE_PATH := "user://auto_structured_settings.cfg"
 const SETTINGS_SECTION_CAMERA := "viewport_camera"
 const SETTINGS_KEY_AUTO_ROTATE := "auto_rotate_enabled"
@@ -27,16 +28,20 @@ var transition_timer: float = 0.0 # tracks transition progress
 var transition_start_basis: Basis # Camera orientation at start of transition
 var transition_start_position: Vector3 # Camera position at start of transition
 
+# Manual alignment
+var align_active: bool = false
+var align_elapsed: float = 0.0
+var align_start_position: Vector3 = Vector3.ZERO
+var align_start_basis: Basis = Basis.IDENTITY
+var align_target_position: Vector3 = Vector3.ZERO
+var align_target_basis: Basis = Basis.IDENTITY
+
 # References
-var camera: Camera3D = null
-var viewport_container: Control = null
+@export var viewport_container: Control
 
-func _init(p_camera: Camera3D, p_viewport_container: Control) -> void:
-	camera = p_camera
-	viewport_container = p_viewport_container
-
-	transition_start_basis = camera.global_transform.basis
-	transition_start_position = camera.global_position
+func _ready() -> void:
+	transition_start_basis = global_transform.basis
+	transition_start_position = global_transform.origin
 	_load_auto_rotate_setting()
 
 	if viewport_container and not viewport_container.tree_exiting.is_connected(_on_viewport_container_exiting):
@@ -44,7 +49,8 @@ func _init(p_camera: Camera3D, p_viewport_container: Control) -> void:
 
 ## Call this from the parent's _process function
 func process(delta: float) -> void:
-	if not camera:
+	if align_active:
+		_align_step(delta)
 		return
 	
 	# Handle WASD movement when right-clicking
@@ -60,13 +66,13 @@ func process(delta: float) -> void:
 		
 		# Get movement input
 		if Input.is_key_pressed(KEY_W):
-			movement -= camera.global_transform.basis.z
+			movement -= global_transform.basis.z
 		if Input.is_key_pressed(KEY_S):
-			movement += camera.global_transform.basis.z
+			movement += global_transform.basis.z
 		if Input.is_key_pressed(KEY_A):
-			movement -= camera.global_transform.basis.x
+			movement -= global_transform.basis.x
 		if Input.is_key_pressed(KEY_D):
-			movement += camera.global_transform.basis.x
+			movement += global_transform.basis.x
 		if Input.is_key_pressed(KEY_Q) or Input.is_key_pressed(KEY_E):
 			# Q/E for vertical movement
 			if Input.is_key_pressed(KEY_Q):
@@ -77,7 +83,7 @@ func process(delta: float) -> void:
 		# Normalize and apply movement
 		if movement.length() > 0:
 			movement = movement.normalized()
-			camera.global_position += movement * speed * delta
+			global_position += movement * speed * delta
 	else:
 		# Handle resume timer and auto-rotation
 		if resume_timer > 0.0:
@@ -85,8 +91,8 @@ func process(delta: float) -> void:
 			if resume_timer <= 0.0 and not auto_rotate_manually_disabled:
 				auto_rotate = true
 				transition_timer = 0.0 # Start transition
-				transition_start_basis = camera.global_transform.basis # Store starting orientation
-				transition_start_position = camera.global_position # Store starting position
+				transition_start_basis = global_transform.basis # Store starting orientation
+				transition_start_position = global_transform.origin # Store starting position
 		
 		# Auto-rotate around orbit target
 		if auto_rotate:
@@ -103,7 +109,7 @@ func process(delta: float) -> void:
 			var rotation_angle = deg_to_rad(AUTO_ROTATE_SPEED * delta)
 			
 			# Get current offset from orbit target
-			var offset = camera.global_position - orbit_target
+			var offset = global_transform.origin - orbit_target
 			var current_distance = offset.length()
 			
 			# Smoothly transition distance to orbit_distance during transition
@@ -127,20 +133,20 @@ func process(delta: float) -> void:
 				new_offset = new_offset.normalized() * target_distance
 			
 			# Apply new position
-			camera.global_position = orbit_target + new_offset
+			global_transform.origin = orbit_target + new_offset
 			
 			# Calculate target orientation (looking at orbit target)
 			# Only update rotation if camera is not at the exact target position
-			if camera.global_position.distance_to(orbit_target) > 0.001:
-				var target_basis = camera.global_transform.looking_at(orbit_target, Vector3.UP).basis
+			if global_transform.origin.distance_to(orbit_target) > 0.001:
+				var target_basis = global_transform.looking_at(orbit_target, Vector3.UP).basis
 				
 				# Blend between starting orientation and target orientation
 				if transition_progress < 1.0:
 					# Gradually rotate from start orientation towards target over TRANSITION_DURATION
-					camera.global_transform.basis = transition_start_basis.slerp(target_basis, smooth_progress)
+					global_transform.basis = transition_start_basis.slerp(target_basis, smooth_progress)
 				else:
 					# After transition, keep looking at target
-					camera.global_transform.basis = target_basis
+					global_transform.basis = target_basis
 
 ## Process input events from the viewport
 func handle_input(event: InputEvent) -> void:
@@ -153,6 +159,7 @@ func handle_input(event: InputEvent) -> void:
 func _handle_mouse_button(event: InputEventMouseButton) -> void:
 	if event.button_index == MOUSE_BUTTON_RIGHT:
 		if event.pressed:
+			align_active = false
 			is_right_clicking = true
 			auto_rotate = false
 			# Don't set manually_disabled flag when right-clicking (temporary pause)
@@ -162,7 +169,7 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 			_set_mouse_capture(false)
 
 			# Calculate orbit distance based on current camera position
-			var offset = camera.global_position - orbit_target
+			var offset = global_transform.origin - orbit_target
 			orbit_distance = offset.length()
 			# Start resume timer only if not manually disabled
 			if not auto_rotate_manually_disabled:
@@ -183,17 +190,14 @@ func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
 	var delta = event.relative
 	
 	# Apply rotation to camera
-	camera.rotation_degrees.y -= delta.x * 0.1 # Yaw
-	camera.rotation_degrees.x -= delta.y * 0.1 # Pitch
+	rotation_degrees.y -= delta.x * 0.1 # Yaw
+	rotation_degrees.x -= delta.y * 0.1 # Pitch
 
 ## Frame the camera to show the entire structure
-func frame_structure() -> void:
-	if not camera:
-		return
-	
+func frame_structure() -> void:	
 	# Reset to default position and rotation
 	orbit_target = Vector3.ZERO
-	camera.look_at(orbit_target, Vector3.UP)
+	look_at(orbit_target, Vector3.UP)
 
 func _load_auto_rotate_setting() -> void:
 	var config := ConfigFile.new()
@@ -228,8 +232,8 @@ func set_auto_rotate(enabled: bool) -> void:
 	if enabled:
 		# If manually enabled, start transition
 		transition_timer = 0.0
-		transition_start_basis = camera.global_transform.basis
-		transition_start_position = camera.global_position
+		transition_start_basis = global_transform.basis
+		transition_start_position = global_transform.origin
 	else:
 		transition_timer = 0.0
 	_save_auto_rotate_setting()
@@ -243,14 +247,12 @@ func _adjust_orbit_distance(delta: float) -> void:
 	_sync_camera_to_orbit_distance()
 
 func _sync_camera_to_orbit_distance() -> void:
-	if not camera:
-		return
-	var direction := camera.global_position - orbit_target
+	var direction := global_transform.origin - orbit_target
 	if direction.length() < 0.001:
-		direction = -camera.global_transform.basis.z
+		direction = -global_transform.basis.z
 	if direction.length() < 0.001:
 		direction = Vector3.FORWARD
-	camera.global_position = orbit_target + direction.normalized() * orbit_distance
+	global_transform.origin = orbit_target + direction.normalized() * orbit_distance
 
 func _set_mouse_capture(enabled: bool) -> void:
 	if viewport_container:
@@ -260,3 +262,44 @@ func _set_mouse_capture(enabled: bool) -> void:
 func _on_viewport_container_exiting() -> void:
 	is_right_clicking = false
 	_set_mouse_capture(false)
+
+func align_to_direction(direction: Vector3, immediate: bool = false) -> void:
+	var dir := direction
+	if dir.length() < 0.001:
+		return
+	dir = dir.normalized()
+	align_active = false
+	var target_pos := orbit_target + dir * orbit_distance
+	var look_dir := orbit_target - target_pos
+	if look_dir.length() < 0.001:
+		look_dir = -dir
+	var target_basis := Basis().looking_at(look_dir.normalized(), Vector3.UP)
+	if immediate:
+		global_transform.origin = target_pos
+		global_transform.basis = target_basis
+		return
+	align_active = true
+	align_elapsed = 0.0
+	align_start_position = global_transform.origin
+	align_start_basis = global_transform.basis
+	align_target_position = target_pos
+	align_target_basis = target_basis
+	auto_rotate = false
+	resume_timer = RESUME_DELAY
+	transition_timer = 0.0
+	transition_start_basis = global_transform.basis
+	transition_start_position = global_transform.origin
+
+func _align_step(delta: float) -> void:
+	align_elapsed += delta
+	var t := clamp(align_elapsed / ALIGN_DURATION, 0.0, 1.0)
+	var smooth_t := smoothstep(0.0, 1.0, t)
+	global_transform.origin = align_start_position.lerp(align_target_position, smooth_t)
+	global_transform.basis = align_start_basis.slerp(align_target_basis, smooth_t)
+	if t >= 1.0:
+		align_active = false
+		# keep orbit distance consistent with new view
+		var offset := global_transform.origin - orbit_target
+		if offset.length() > 0.001:
+			orbit_distance = offset.length()
+		resume_timer = RESUME_DELAY

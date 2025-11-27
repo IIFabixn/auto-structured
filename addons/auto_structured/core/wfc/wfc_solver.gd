@@ -65,6 +65,12 @@ var _visited_flags: PackedByteArray
 ## Performance optimization: Scratch array for valid variants (reusable)
 var _scratch_variants: Array[Dictionary] = []
 
+## Interactive solve state ---------------------------------------------------
+var _initialized: bool = false
+var _pending_choice_cell: WfcCell = null
+var _pending_choice_variants: Array[Dictionary] = []
+var _pending_choice_id: int = 0
+
 func _init(wfc_grid: WfcGrid, prewarm_cache: bool = true) -> void:
 	grid = wfc_grid
 	
@@ -81,6 +87,7 @@ func _init(wfc_grid: WfcGrid, prewarm_cache: bool = true) -> void:
 	
 	# Initialize remaining cells counter
 	_remaining_cells = total_cells
+	_reset_interactive_state()
 	
 	# Optionally pre-warm the compatibility cache for better performance on large grids
 	if prewarm_cache and grid.all_tile_variants.size() < 200:  # Only for reasonable variant counts
@@ -147,11 +154,44 @@ func _initialize_variant_weights() -> void:
 		elif not variant.has("weight"):
 			variant["weight"] = 1.0
 
+func _reset_interactive_state() -> void:
+	_initialized = false
+	_pending_choice_cell = null
+	_pending_choice_variants.clear()
+	_pending_choice_id = 0
+
+func _clear_pending_choice() -> void:
+	_pending_choice_cell = null
+	_pending_choice_variants.clear()
+
+func _initialize_interactive_session() -> void:
+	if _initialized:
+		return
+	_requirement_context.clear()
+	_reset_tile_requirements()
+	grid.initialize_heap()
+	_backtrack_stack.clear()
+	_collapses_since_checkpoint = 0
+	_total_backtracks = 0
+	_initialized = true
+
+func _maybe_add_checkpoint() -> void:
+	if not enable_backtracking:
+		return
+	if _collapses_since_checkpoint < backtrack_checkpoint_frequency:
+		return
+	if _backtrack_stack.size() >= max_backtrack_depth and not _backtrack_stack.is_empty():
+		_backtrack_stack.pop_front()
+	var snapshot = _create_snapshot()
+	_backtrack_stack.append(snapshot)
+	_collapses_since_checkpoint = 0
+
 ## Context dictionary for requirement evaluation
 var _requirement_context: Dictionary = {}
 
 func solve() -> bool:
 	"""Solve the WFC puzzle synchronously. Use progress_callback for updates."""
+	_reset_interactive_state()
 	_log(["[WFC Solver] Starting solve..."])
 	_log(["  Grid size: ", grid.size])
 	_log(["  Total cells: ", grid.get_cell_count()])
@@ -220,17 +260,7 @@ func solve() -> bool:
 				return false
 
 		# Save checkpoint before collapsing (if backtracking enabled)
-		if enable_backtracking and _collapses_since_checkpoint >= backtrack_checkpoint_frequency:
-			if _backtrack_stack.size() < max_backtrack_depth:
-				var snapshot = _create_snapshot()
-				_backtrack_stack.append(snapshot)
-				_collapses_since_checkpoint = 0
-			else:
-				# Stack full - remove oldest checkpoint
-				_backtrack_stack.pop_front()
-				var snapshot = _create_snapshot()
-				_backtrack_stack.append(snapshot)
-				_collapses_since_checkpoint = 0
+		_maybe_add_checkpoint()
 
 		if not cell.collapse():
 			if enable_backtracking and not _backtrack_stack.is_empty():
@@ -346,6 +376,134 @@ func propagate(start_cell: WfcCell) -> bool:
 	
 	return true
 
+func _collapse_cell_with_variant(cell: WfcCell, variant_override: Dictionary = {}) -> Dictionary:
+	"""Collapse a cell (optionally forcing a variant) and propagate constraints."""
+	if cell == null:
+		return {"status": "error", "message": "Cannot collapse a null cell"}
+	_maybe_add_checkpoint()
+	var collapsed := true
+	if variant_override.is_empty():
+		collapsed = cell.collapse()
+	else:
+		cell.possible_tile_variants.clear()
+		cell.possible_tile_variants.append(variant_override)
+		cell._entropy_valid = false
+	if not collapsed:
+		if enable_backtracking and not _backtrack_stack.is_empty() and _attempt_backtrack():
+			_clear_pending_choice()
+			return {"status": "backtracked"}
+		return {"status": "error", "message": "WFC: Failed to collapse cell at %s" % str(cell.position)}
+	_update_requirement_context_after_collapse(cell)
+	if not propagate(cell):
+		if enable_backtracking and not _backtrack_stack.is_empty() and _attempt_backtrack():
+			_clear_pending_choice()
+			return {"status": "backtracked"}
+		return {"status": "error", "message": "WFC: Propagation failed at %s" % str(cell.position)}
+	_remaining_cells -= 1
+	_collapses_since_checkpoint += 1
+	return {"status": "ok"}
+
+func _handle_pre_collapse_contradiction(cell: WfcCell, context: String) -> Dictionary:
+	var message := "WFC: %s caused contradiction at %s" % [context, str(cell.position)]
+	if enable_backtracking and not _backtrack_stack.is_empty():
+		if _attempt_backtrack():
+			_clear_pending_choice()
+			return {"status": "backtracked"}
+		return {"status": "error", "message": message + " and backtracking exhausted"}
+	return {"status": "error", "message": message}
+
+func start_interactive(reset_grid: bool = true) -> void:
+	"""Prepare the solver for interactive (step-based) solving."""
+	if reset_grid:
+		reset()
+	else:
+		_clear_pending_choice()
+		_initialized = false
+	_initialize_interactive_session()
+
+func advance_until_choice() -> Dictionary:
+	"""Advance the solve until a decision is required or the grid completes."""
+	_initialize_interactive_session()
+	if _pending_choice_cell:
+		return _build_pending_choice_payload()
+	if _remaining_cells <= 0:
+		return {"status": "complete"}
+	var iterations := 0
+	while _remaining_cells > 0:
+		if iterations >= max_iterations:
+			return {"status": "error", "message": "WFC: Max iterations reached while stepping"}
+		iterations += 1
+		var cell := grid.get_lowest_entropy_cell()
+		if cell == null:
+			return {"status": "complete"}
+		_apply_requirements_to_cell(cell)
+		if cell.has_contradiction():
+			var contradiction_result := _handle_pre_collapse_contradiction(cell, "Requirements")
+			if contradiction_result.get("status") == "backtracked":
+				continue
+			return contradiction_result
+		var variant_count := cell.possible_tile_variants.size()
+		if variant_count == 0:
+			var empty_result := _handle_pre_collapse_contradiction(cell, "Cell preparation")
+			if empty_result.get("status") == "backtracked":
+				continue
+			return empty_result
+		if variant_count == 1:
+			var collapse_result := _collapse_cell_with_variant(cell)
+			if collapse_result.get("status") == "ok":
+				if _remaining_cells <= 0:
+					return {"status": "complete"}
+				continue
+			if collapse_result.get("status") == "backtracked":
+				continue
+			return collapse_result
+		# Multiple variants remain -> user decision required
+		_pending_choice_cell = cell
+		_pending_choice_variants = cell.possible_tile_variants.duplicate(true)
+		_pending_choice_id += 1
+		return _build_pending_choice_payload()
+	return {"status": "complete"}
+
+func commit_choice(decision_id: int, variant_index: int) -> Dictionary:
+	"""Commit the user's variant choice for the pending cell."""
+	_initialize_interactive_session()
+	if _pending_choice_cell == null:
+		return {"status": "error", "message": "No pending decision to commit"}
+	if decision_id != _pending_choice_id:
+		return {"status": "error", "message": "Decision mismatch"}
+	if variant_index < 0 or variant_index >= _pending_choice_variants.size():
+		return {"status": "error", "message": "Invalid variant index"}
+	var cell := _pending_choice_cell
+	var variant := _pending_choice_variants[variant_index]
+	_clear_pending_choice()
+	var result := _collapse_cell_with_variant(cell, variant)
+	if result.get("status") == "ok" and _remaining_cells <= 0:
+		return {"status": "complete"}
+	return result
+
+func get_pending_variants() -> Array[Dictionary]:
+	var response: Array[Dictionary] = []
+	for variant in _pending_choice_variants:
+		if variant == null:
+			continue
+		response.append({
+			"tile": variant.get("tile"),
+			"rotation_degrees": variant.get("rotation_degrees", 0),
+			"weight": variant.get("weight", 1.0)
+		})
+	return response
+
+func _build_pending_choice_payload() -> Dictionary:
+	return {
+		"status": "choice",
+		"decision_id": _pending_choice_id,
+		"cell_position": _pending_choice_cell.position if _pending_choice_cell else Vector3i.ZERO,
+		"variants": get_pending_variants()
+	}
+
+func get_remaining_cells() -> int:
+	return _remaining_cells
+
 func get_valid_variants_for_neighbor(source_cell: WfcCell, neighbor_cell: WfcCell, direction: Vector3i) -> Array[Dictionary]:
 	"""
 	Get all valid tile+rotation variants for a neighbor cell based on source cell constraints.
@@ -452,10 +610,12 @@ func are_variants_compatible(source_tile: Tile, source_rotation: int, neighbor_t
 func reset() -> void:
 	"""Reset the grid to initial state. Cache is preserved."""
 	grid.reset()
+	_remaining_cells = grid.size.x * grid.size.y * grid.size.z
 	_backtrack_stack.clear()
 	_total_backtracks = 0
 	_collapses_since_checkpoint = 0
 	# Note: Keep cache - it's valid across resets with same tiles
+	_reset_interactive_state()
 
 func set_tile_weight(tile: Tile, rotation: int, weight: float) -> void:
 	"""Set the weight/frequency for a specific tile+rotation variant.

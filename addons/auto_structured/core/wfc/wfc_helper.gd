@@ -63,26 +63,60 @@ static func calculate_socket_alignment_rotation(connecting_socket: Socket, main_
 ##
 ## Returns:
 ##   The position offset as Vector3
-static func calculate_adjacent_tile_position(main_tile_size: Vector3, compatible_tile_size: Vector3, direction: Vector3i, cell_size: Vector3 = Vector3.ONE) -> Vector3:
-	"""Calculate world-space offset for placing a neighbor tile edge-to-edge."""
-	var main_extent = Vector3(
-		(main_tile_size.x * cell_size.x) * 0.5,
-		(main_tile_size.y * cell_size.y) * 0.5,
-		(main_tile_size.z * cell_size.z) * 0.5
-	)
-	var neighbor_extent = Vector3(
-		(compatible_tile_size.x * cell_size.x) * 0.5,
-		(compatible_tile_size.y * cell_size.y) * 0.5,
-		(compatible_tile_size.z * cell_size.z) * 0.5
+static func calculate_adjacent_tile_position(
+	main_tile_size: Vector3,
+	compatible_tile_size: Vector3,
+	direction: Vector3i,
+	cell_size: Vector3 = Vector3.ONE,
+	rotation_degrees: float = 0.0
+) -> Vector3:
+	"""Calculate world-space offset for placing a neighbor tile edge-to-edge.
+
+	Considers the compatible tile's rotation so that meshes remain flush even when
+	their pivot sits at the local origin (0,0,0).
+	"""
+	var main_min := Vector3.ZERO
+	var main_max := Vector3(
+		main_tile_size.x * cell_size.x,
+		main_tile_size.y * cell_size.y,
+		main_tile_size.z * cell_size.z
 	)
 
-	var offset = Vector3.ZERO
-	if direction.x != 0:
-		offset.x = direction.x * (main_extent.x + neighbor_extent.x)
-	if direction.y != 0:
-		offset.y = direction.y * (main_extent.y + neighbor_extent.y)
-	if direction.z != 0:
-		offset.z = direction.z * (main_extent.z + neighbor_extent.z)
+	var neighbor_bounds := get_rotated_bounds_in_cells(Vector3i(compatible_tile_size), rotation_degrees)
+	var neighbor_min_cells: Vector3 = neighbor_bounds["min"]
+	var neighbor_max_cells: Vector3 = neighbor_bounds["max"]
+	var neighbor_min := Vector3(
+		neighbor_min_cells.x * cell_size.x,
+		neighbor_min_cells.y * cell_size.y,
+		neighbor_min_cells.z * cell_size.z
+	)
+	var neighbor_max := Vector3(
+		neighbor_max_cells.x * cell_size.x,
+		neighbor_max_cells.y * cell_size.y,
+		neighbor_max_cells.z * cell_size.z
+	)
+
+	var offset := Vector3.ZERO
+	if direction.x > 0:
+		offset.x = main_max.x - neighbor_min.x
+	elif direction.x < 0:
+		offset.x = main_min.x - neighbor_max.x
+	else:
+		offset.x = main_min.x - neighbor_min.x
+
+	if direction.y > 0:
+		offset.y = main_max.y - neighbor_min.y
+	elif direction.y < 0:
+		offset.y = main_min.y - neighbor_max.y
+	else:
+		offset.y = main_min.y - neighbor_min.y
+
+	if direction.z > 0:
+		offset.z = main_max.z - neighbor_min.z
+	elif direction.z < 0:
+		offset.z = main_min.z - neighbor_max.z
+	else:
+		offset.z = main_min.z - neighbor_min.z
 
 	return offset
 
