@@ -21,8 +21,8 @@ var orbit_distance: float = 10.0 # Distance from orbit target
 var is_right_clicking: bool = false
 
 # Auto-rotation
-var auto_rotate: bool = true
-var auto_rotate_manually_disabled: bool = false # Track if user manually disabled auto-rotate
+var auto_rotate: bool = false
+var auto_rotate_manually_disabled: bool = true # Track if user manually disabled auto-rotate
 var resume_timer: float = 0.0
 var transition_timer: float = 0.0 # tracks transition progress
 var transition_start_basis: Basis # Camera orientation at start of transition
@@ -37,9 +37,10 @@ var align_target_position: Vector3 = Vector3.ZERO
 var align_target_basis: Basis = Basis.IDENTITY
 
 # References
-@export var viewport_container: Control
+@export var viewport_container: SubViewportContainer
 
 func _ready() -> void:
+	set_process(true)
 	transition_start_basis = global_transform.basis
 	transition_start_position = global_transform.origin
 	_load_auto_rotate_setting()
@@ -48,7 +49,7 @@ func _ready() -> void:
 		viewport_container.tree_exiting.connect(_on_viewport_container_exiting, CONNECT_ONE_SHOT)
 
 ## Call this from the parent's _process function
-func process(delta: float) -> void:
+func _process(delta: float) -> void:
 	if align_active:
 		_align_step(delta)
 		return
@@ -150,6 +151,7 @@ func process(delta: float) -> void:
 
 ## Process input events from the viewport
 func handle_input(event: InputEvent) -> void:
+	print("Received input event: %s" % event)
 	if event is InputEventMouseButton:
 		_handle_mouse_button(event)
 	elif event is InputEventMouseMotion:

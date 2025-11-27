@@ -12,8 +12,6 @@
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_qo023"]
 
-[sub_resource type="World3D" id="World3D_s3do3"]
-
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_s3do3"]
 
 [sub_resource type="Sky" id="Sky_qo023"]
@@ -24,6 +22,9 @@ background_mode = 2
 sky = SubResource("Sky_qo023")
 tonemap_mode = 2
 glow_enabled = true
+
+[sub_resource type="World3D" id="World3D_s3do3"]
+environment = SubResource("Environment_rgf8d")
 
 [node name="PreviewPanel" type="Control"]
 layout_mode = 3
@@ -42,6 +43,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 
 [node name="MarginContainer" type="MarginContainer" parent="Panel"]
 layout_mode = 1
@@ -50,6 +52,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer"]
 layout_mode = 2
@@ -116,6 +119,7 @@ size_flags_vertical = 3
 [node name="PanelContainer" type="PanelContainer" parent="Panel/MarginContainer/VBoxContainer/SplitContainer"]
 layout_mode = 2
 size_flags_vertical = 3
+mouse_filter = 2
 
 [node name="SubViewportContainer" type="SubViewportContainer" parent="Panel/MarginContainer/VBoxContainer/SplitContainer/PanelContainer"]
 unique_name_in_owner = true
@@ -125,7 +129,6 @@ stretch = true
 
 [node name="PreviewViewport" type="SubViewport" parent="Panel/MarginContainer/VBoxContainer/SplitContainer/PanelContainer/SubViewportContainer"]
 unique_name_in_owner = true
-own_world_3d = true
 world_3d = SubResource("World3D_s3do3")
 handle_input_locally = false
 size = Vector2i(1152, 577)
@@ -162,6 +165,9 @@ environment = SubResource("Environment_rgf8d")
 
 [node name="MarginContainer" type="MarginContainer" parent="Panel/MarginContainer/VBoxContainer/SplitContainer/PanelContainer"]
 layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 8
+mouse_filter = 2
 theme_override_constants/margin_left = 4
 theme_override_constants/margin_top = 4
 theme_override_constants/margin_right = 4

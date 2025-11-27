@@ -82,7 +82,6 @@ func _ready() -> void:
 		wfc_setup_dialog.setup_confirmed.connect(_on_wfc_setup_confirmed)
 	if viewport_container and not viewport_container.gui_input.is_connected(_on_viewport_gui_input):
 		viewport_container.gui_input.connect(_on_viewport_gui_input)
-	
 	_set_instruction(DEFAULT_INSTRUCTION)
 	_set_step_options_visible(false)
 	_update_buttons_state()
