@@ -18,10 +18,12 @@ func run_all_tests() -> void:
 	test_solver_compatibility_with_sockets()
 	test_solver_propagation()
 	test_solver_simple_solve()
+	test_solver_prefers_real_tiles_over_fallback()
 	test_solver_weights()
 	test_solver_backtracking()
 	test_solver_progress_callback()
 	test_solver_cache_stats()
+	test_solver_internal_fallback_tile()
 	
 	print_summary()
 
@@ -157,6 +159,19 @@ func test_solver_simple_solve() -> void:
 	# Check no contradictions
 	assert_false(grid.has_contradiction(), "Grid should have no contradictions after solve", test_name)
 
+func test_solver_prefers_real_tiles_over_fallback() -> void:
+	var test_name = "Solver prefers real tiles"
+	var tile = create_universal_tile("RealTile")
+	var tiles: Array[Tile] = [tile]
+	var grid = WfcGrid.new(Vector3i(1, 1, 1), tiles)
+	var solver = WfcSolver.new(grid, false)
+	solver.set_logging_enabled(false)
+	var result = solver.solve()
+	assert_true(result, "Solver should solve with real tiles", test_name)
+	var cell = grid.get_cell(Vector3i.ZERO)
+	assert_not_null(cell, "Cell should exist", test_name)
+	assert_equal(cell.get_tile(), tile, "Real tile should be placed instead of fallback", test_name)
+
 func test_solver_weights() -> void:
 	var test_name = "Solver weights"
 	
@@ -257,6 +272,21 @@ func test_solver_cache_stats() -> void:
 	
 	assert_true(stats["cache_size"] > 0, "Cache size should be positive", test_name)
 	assert_true(stats["variants"] > 0, "Variants count should be positive", test_name)
+
+func test_solver_internal_fallback_tile() -> void:
+	var test_name = "Solver internal fallback tile"
+	var tiles: Array[Tile] = []
+	var grid = WfcGrid.new(Vector3i(1, 1, 1), tiles)
+	var fallback = grid.get_fallback_tile()
+	assert_not_null(fallback, "Grid should expose internal fallback tile", test_name)
+	var solver = WfcSolver.new(grid, false)
+	solver.set_logging_enabled(false)
+	var result = solver.solve()
+	assert_true(result, "Solver should solve even with only fallback tile", test_name)
+	var cell = grid.get_cell(Vector3i.ZERO)
+	assert_not_null(cell, "Grid should have a cell at origin", test_name)
+	assert_true(cell.is_collapsed(), "Fallback solve should collapse the cell", test_name)
+	assert_equal(cell.get_tile(), fallback, "Collapsed cell should use fallback tile", test_name)
 
 # Helper functions to create test tiles
 func create_simple_tile(tile_name: String) -> Tile:

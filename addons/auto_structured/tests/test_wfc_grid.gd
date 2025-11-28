@@ -19,6 +19,7 @@ func run_all_tests() -> void:
 	test_grid_neighbor_access()
 	test_grid_flat_array_indexing()
 	test_grid_variant_generation()
+	test_grid_internal_fallback_tile()
 	test_grid_heap_operations()
 	test_grid_reset()
 	test_grid_from_library()
@@ -171,6 +172,24 @@ func test_grid_variant_generation() -> void:
 		assert_true(variant.has("rotation_degrees"), "Variant should have rotation_degrees key", test_name)
 		assert_true(variant["tile"] is Tile, "Variant tile should be Tile instance", test_name)
 		assert_true(variant["rotation_degrees"] is int, "Variant rotation should be int", test_name)
+
+func test_grid_internal_fallback_tile() -> void:
+	var test_name = "Grid internal fallback tile"
+	var tiles: Array[Tile] = []
+	var grid = WfcGrid.new(Vector3i(2, 2, 2), tiles)
+	var fallback = grid.get_fallback_tile()
+	assert_not_null(fallback, "Grid should create an internal fallback tile", test_name)
+	assert_false(grid.all_tiles.has(fallback), "Fallback tile should not appear in public tile list", test_name)
+	var variant_found := false
+	var fallback_flagged := false
+	for variant in grid.all_tile_variants:
+		if variant.get("tile") == fallback:
+			variant_found = true
+			if variant.get("is_internal_fallback", false):
+				fallback_flagged = true
+			break
+	assert_true(variant_found, "Variants should include fallback tile", test_name)
+	assert_true(fallback_flagged, "Fallback variant should be tagged", test_name)
 
 func test_grid_heap_operations() -> void:
 	var test_name = "Grid heap operations"

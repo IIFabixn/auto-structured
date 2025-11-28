@@ -28,18 +28,25 @@ func get_entropy() -> float:
 	if _entropy_valid:
 		return _cached_entropy
 	
-	var count = possible_tile_variants.size()
+	var variants_for_entropy: Array[Dictionary] = []
+	for variant in possible_tile_variants:
+		if not _is_fallback_variant(variant):
+			variants_for_entropy.append(variant)
+	if variants_for_entropy.is_empty():
+		variants_for_entropy = possible_tile_variants
+
+	var count = variants_for_entropy.size()
 	if count == 0:
 		return 0.0
 	
 	# Calculate total weight
 	var total_weight := 0.0
-	for variant in possible_tile_variants:
+	for variant in variants_for_entropy:
 		total_weight += variant.get("weight", 1.0)
 	
 	# Calculate Shannon entropy
 	var entropy := 0.0
-	for variant in possible_tile_variants:
+	for variant in variants_for_entropy:
 		var weight = variant.get("weight", 1.0)
 		var probability = weight / total_weight
 		if probability > 0.0:
@@ -60,16 +67,30 @@ func collapse() -> bool:
 	if is_collapsed():
 		return true
 
+	var primary_variants: Array[Dictionary] = []
+	var fallback_variants: Array[Dictionary] = []
+	for variant in possible_tile_variants:
+		if _is_fallback_variant(variant):
+			fallback_variants.append(variant)
+		else:
+			primary_variants.append(variant)
+
+	var selection_pool: Array[Dictionary] = primary_variants
+	if selection_pool.is_empty():
+		selection_pool = fallback_variants
+	if selection_pool.is_empty():
+		return false
+
 	# Weighted random selection based on tile weights
 	var total_weight := 0.0
-	for variant in possible_tile_variants:
+	for variant in selection_pool:
 		total_weight += variant.get("weight", 1.0)
 	
 	var random_value = randf() * total_weight
 	var cumulative_weight := 0.0
 	var selected_variant: Dictionary
 	
-	for variant in possible_tile_variants:
+	for variant in selection_pool:
 		cumulative_weight += variant.get("weight", 1.0)
 		if cumulative_weight >= random_value:
 			selected_variant = variant
@@ -143,3 +164,6 @@ func reset(all_tile_variants: Array[Dictionary]) -> void:
 	"""Reset cell to uncollapsed state with all possibilities."""
 	possible_tile_variants = all_tile_variants.duplicate()
 	_entropy_valid = false
+
+func _is_fallback_variant(variant: Dictionary) -> bool:
+	return variant.get("is_internal_fallback", false)

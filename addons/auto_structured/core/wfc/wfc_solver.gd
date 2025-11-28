@@ -9,6 +9,7 @@ const Socket = preload("res://addons/auto_structured/core/socket.gd")
 
 var grid: WfcGrid
 var max_iterations: int = 10000
+var _fallback_tile: Tile = null  ## Cached reference to grid's internal fallback tile
 
 ## Logging control: disable to run silently
 var logging_enabled: bool = true
@@ -73,6 +74,7 @@ var _pending_choice_id: int = 0
 
 func _init(wfc_grid: WfcGrid, prewarm_cache: bool = true) -> void:
 	grid = wfc_grid
+	_fallback_tile = grid.get_fallback_tile()
 	
 	# Auto-configure based on grid size
 	var total_cells = grid.size.x * grid.size.y * grid.size.z
@@ -159,6 +161,9 @@ func _reset_interactive_state() -> void:
 	_pending_choice_cell = null
 	_pending_choice_variants.clear()
 	_pending_choice_id = 0
+
+func _is_fallback_tile(tile: Tile) -> bool:
+	return tile != null and _fallback_tile != null and tile == _fallback_tile
 
 func _clear_pending_choice() -> void:
 	_pending_choice_cell = null
@@ -568,6 +573,11 @@ func are_variants_compatible(source_tile: Tile, source_rotation: int, neighbor_t
 	var src_id = _get_variant_id(source_tile, source_rotation)
 	var neigh_id = _get_variant_id(neighbor_tile, neighbor_rotation)
 	var dir_index = WfcHelper.get_direction_index(direction)
+
+	if _is_fallback_tile(source_tile) or _is_fallback_tile(neighbor_tile):
+		if src_id != -1 and neigh_id != -1 and dir_index != -1:
+			_compatibility_cache[src_id][neigh_id][dir_index] = true
+		return true
 	
 	# Use pre-computed rotation bases (convert world direction into tile's local space)
 	var source_rotation_basis: Basis = _rotation_basis_cache[source_rotation]

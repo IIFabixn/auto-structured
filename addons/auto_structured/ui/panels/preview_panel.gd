@@ -466,10 +466,7 @@ func _instantiate_tile(tile: Tile) -> Node3D:
 		mesh_instance.mesh = tile.mesh
 		root = mesh_instance
 	else:
-		var placeholder := MeshInstance3D.new()
-		var box := BoxMesh.new()
-		box.size = Vector3(max(0.1, tile.size.x), max(0.1, tile.size.y), max(0.1, tile.size.z))
-		placeholder.mesh = box
+		var placeholder := Node3D.new()
 		root = placeholder
 	return _ensure_node3d(root)
 

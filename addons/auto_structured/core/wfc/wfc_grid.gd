@@ -10,6 +10,7 @@ var _cells: Array[WfcCell] = []
 var size: Vector3i
 var all_tiles: Array[Tile] = []
 var all_tile_variants: Array[Dictionary] = []  # All possible tile+rotation combinations
+var fallback_tile: Tile = null  ## Internal "air" tile the solver can fall back to when needed
 
 ## Performance optimization: Priority queue (min-heap) for entropy selection
 var _entropy_heap: Array = []  # Array of { "entropy": float, "seq": int, "cell": WfcCell }
@@ -31,10 +32,14 @@ static func from_library(grid_size: Vector3i, library: ModuleLibrary) -> WfcGrid
 
 func _init(grid_size: Vector3i, tiles: Array[Tile]) -> void:
 	size = grid_size
-	all_tiles = tiles
+	all_tiles = tiles.duplicate()
+	var solver_tiles: Array[Tile] = all_tiles.duplicate()
+	fallback_tile = _create_internal_fallback_tile()
+	if fallback_tile:
+		solver_tiles.append(fallback_tile)
 	
 	# Generate all possible tile+rotation combinations
-	all_tile_variants = generate_all_variants(tiles)
+	all_tile_variants = generate_all_variants(solver_tiles)
 	
 	# Pre-allocate flat array for all cells
 	var total_cells = size.x * size.y * size.z
@@ -57,14 +62,36 @@ func generate_all_variants(tiles: Array[Tile]) -> Array[Dictionary]:
 	"""Generate all possible tile+rotation combinations."""
 	var variants: Array[Dictionary] = []
 	for tile in tiles:
+		if tile == null:
+			continue
+		var is_fallback := fallback_tile != null and tile == fallback_tile
 		var rotations = tile.get_unique_rotations()
 		for rotation in rotations:
 			variants.append({
 				"tile": tile,
-				"rotation_degrees": rotation
+				"rotation_degrees": rotation,
+				"is_internal_fallback": is_fallback
 			})
 	
 	return variants
+
+
+func get_fallback_tile() -> Tile:
+	return fallback_tile
+
+
+func _create_internal_fallback_tile() -> Tile:
+	"""Create a minimal tile that represents empty space for contradiction recovery."""
+	var tile := Tile.new()
+	tile.name = "Internal Air Tile"
+	tile.size = Vector3i.ONE
+	tile.weight = 0.01
+	tile.tags = ["__auto_structured_internal__"]
+	tile.rotation_symmetry = Tile.RotationSymmetry.QUARTER
+	tile.requirements = []
+	tile.ensure_all_sockets()
+	tile.set_meta("auto_structured_internal_fallback", true)
+	return tile
 
 
 func get_cell(pos: Vector3i) -> WfcCell:

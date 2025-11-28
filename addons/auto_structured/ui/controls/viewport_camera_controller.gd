@@ -151,7 +151,6 @@ func _process(delta: float) -> void:
 
 ## Process input events from the viewport
 func handle_input(event: InputEvent) -> void:
-	print("Received input event: %s" % event)
 	if event is InputEventMouseButton:
 		_handle_mouse_button(event)
 	elif event is InputEventMouseMotion:
