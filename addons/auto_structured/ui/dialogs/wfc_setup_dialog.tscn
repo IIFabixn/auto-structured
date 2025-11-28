@@ -7,7 +7,8 @@ oversampling_override = 1.0
 title = "Configure Preview Session"
 size = Vector2i(420, 428)
 min_size = Vector2i(420, 0)
-ok_button_text = "Start"
+ok_button_text = "Apply"
+cancel_button_text = "Cancel"
 script = ExtResource("1_0j6n1")
 
 [node name="VBox" type="VBoxContainer" parent="."]
@@ -17,6 +18,36 @@ offset_top = 8.0
 offset_right = 412.0
 offset_bottom = 379.0
 theme_override_constants/separation = 8
+
+[node name="PresetLabel" type="Label" parent="VBox"]
+layout_mode = 2
+text = "Solver Preset"
+
+[node name="PresetRow" type="HBoxContainer" parent="VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="PresetOption" type="OptionButton" parent="VBox/PresetRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+select_mode = 0
+
+[node name="StrategyLabel" type="Label" parent="VBox"]
+layout_mode = 2
+text = "Solve Strategy"
+
+[node name="StrategyRow" type="HBoxContainer" parent="VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="StrategyOption" type="OptionButton" parent="VBox/StrategyRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+select_mode = 0
 
 [node name="GridSizeLabel" type="Label" parent="VBox"]
 layout_mode = 2
@@ -116,6 +147,119 @@ max_value = 64.0
 step = 0.1
 value = 2.0
 select_all_on_focus = true
+
+[node name="AdvancedLabel" type="Label" parent="VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Advanced Solver Settings"
+visible = false
+
+[node name="AdvancedGrid" type="GridContainer" parent="VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/h_separation = 12
+columns = 2
+visible = false
+
+[node name="YieldLabel" type="Label" parent="VBox/AdvancedGrid"]
+layout_mode = 2
+text = "Yield Interval (ms)"
+
+[node name="YieldSpin" type="SpinBox" parent="VBox/AdvancedGrid"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+min_value = 0.0
+max_value = 1000.0
+step = 1.0
+value = 16.0
+select_all_on_focus = true
+
+[node name="PropagationLabel" type="Label" parent="VBox/AdvancedGrid"]
+layout_mode = 2
+text = "Propagation Batch"
+
+[node name="PropagationSpin" type="SpinBox" parent="VBox/AdvancedGrid"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+min_value = 1.0
+max_value = 500.0
+step = 1.0
+value = 50.0
+select_all_on_focus = true
+
+[node name="MaxIterationsLabel" type="Label" parent="VBox/AdvancedGrid"]
+layout_mode = 2
+text = "Max Iterations"
+
+[node name="MaxIterationsSpin" type="SpinBox" parent="VBox/AdvancedGrid"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+min_value = 1.0
+max_value = 1000000.0
+step = 100.0
+value = 10000.0
+select_all_on_focus = true
+
+[node name="ProgressLabel" type="Label" parent="VBox/AdvancedGrid"]
+layout_mode = 2
+text = "Progress Interval (ms)"
+
+[node name="ProgressSpin" type="SpinBox" parent="VBox/AdvancedGrid"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+min_value = 0.0
+max_value = 60000.0
+step = 100.0
+value = 2000.0
+select_all_on_focus = true
+
+[node name="BacktrackDepthLabel" type="Label" parent="VBox/AdvancedGrid"]
+layout_mode = 2
+text = "Max Backtrack Depth"
+
+[node name="BacktrackDepthSpin" type="SpinBox" parent="VBox/AdvancedGrid"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+min_value = 0.0
+max_value = 500.0
+step = 1.0
+value = 10.0
+select_all_on_focus = true
+
+[node name="CheckpointLabel" type="Label" parent="VBox/AdvancedGrid"]
+layout_mode = 2
+text = "Checkpoint Frequency"
+
+[node name="CheckpointSpin" type="SpinBox" parent="VBox/AdvancedGrid"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+min_value = 1.0
+max_value = 100.0
+step = 1.0
+value = 5.0
+select_all_on_focus = true
+
+[node name="PrewarmLabel" type="Label" parent="VBox/AdvancedGrid"]
+layout_mode = 2
+text = "Prewarm Cache"
+
+[node name="PrewarmCheck" type="CheckButton" parent="VBox/AdvancedGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="BacktrackingLabel" type="Label" parent="VBox/AdvancedGrid"]
+layout_mode = 2
+text = "Enable Backtracking"
+
+[node name="BacktrackingCheck" type="CheckButton" parent="VBox/AdvancedGrid"]
+unique_name_in_owner = true
+layout_mode = 2
 
 [node name="HintLabel" type="Label" parent="VBox"]
 custom_minimum_size = Vector2(400, 0)

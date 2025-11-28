@@ -8,6 +8,7 @@ const SelectionManager = preload("res://addons/auto_structured/core/events/selec
 const WfcHelper = preload("res://addons/auto_structured/core/wfc/wfc_helper.gd")
 const WfcGrid = preload("res://addons/auto_structured/core/wfc/wfc_grid.gd")
 const WfcSolver = preload("res://addons/auto_structured/core/wfc/wfc_solver.gd")
+const WfcSolverConfig = preload("res://addons/auto_structured/core/wfc/wfc_solver_config.gd")
 const ViewportCameraController = preload("res://addons/auto_structured/ui/controls/viewport_camera_controller.gd")
 const AutoStructuredUndoRedo = preload("res://addons/auto_structured/core/undo_redo_manager.gd")
 
@@ -57,10 +58,7 @@ var socket_cycle_socket: Socket = null
 var wfc_grid: WfcGrid
 var wfc_solver: WfcSolver
 var wfc_cell_size: Vector3 = Vector3.ONE
-var wfc_last_config: Dictionary = {
-	"grid_size": Vector3i(5, 3, 5),
-	"cell_size": Vector3(2, 2, 2)
-}
+var wfc_last_config: Dictionary = {}
 var wfc_session_active := false
 var wfc_waiting_for_choice: Dictionary = {}
 var wfc_cell_nodes: Dictionary = {}
@@ -82,7 +80,9 @@ func _ready() -> void:
 	if wfc_setup_dialog:
 		if not wfc_setup_dialog.setup_confirmed.is_connected(_on_wfc_setup_confirmed):
 			wfc_setup_dialog.setup_confirmed.connect(_on_wfc_setup_confirmed)
-		wfc_last_config = wfc_setup_dialog.get_last_config().duplicate(true)
+		wfc_last_config = _hydrate_wfc_config(wfc_setup_dialog.get_last_config())
+	else:
+		_ensure_wfc_config_initialized()
 	if viewport_container and not viewport_container.gui_input.is_connected(_on_viewport_gui_input):
 		viewport_container.gui_input.connect(_on_viewport_gui_input)
 	_set_instruction(DEFAULT_INSTRUCTION)
@@ -114,13 +114,14 @@ func setup_selection_manager(manager: SelectionManager) -> void:
 func setup_library(library: ModuleLibrary) -> void:
 	if current_library == library:
 		return
+	_ensure_wfc_config_initialized()
 	current_library = library
 	_reset_wfc_session()
 	if current_library:
 		var cell := current_library.cell_world_size
 		if wfc_setup_dialog:
 			wfc_setup_dialog.apply_library_defaults(Vector3i.ZERO, cell)
-			wfc_last_config = wfc_setup_dialog.get_last_config().duplicate(true)
+			wfc_last_config = _hydrate_wfc_config(wfc_setup_dialog.get_last_config())
 		elif cell != Vector3.ZERO:
 			wfc_last_config["cell_size"] = cell
 		_update_grid_spacing(_get_configured_cell_size())
@@ -232,29 +233,123 @@ func _stop_socket_cycle() -> void:
 	_clear_children(socket_preview_root)
 	socket_cycle_socket = null
 
+func _ensure_wfc_config_initialized() -> void:
+	if not wfc_last_config.is_empty():
+		return
+	if wfc_setup_dialog:
+		wfc_last_config = _hydrate_wfc_config(wfc_setup_dialog.get_last_config())
+	else:
+		wfc_last_config = _build_default_wfc_config()
+
+func _build_default_wfc_config() -> Dictionary:
+	var solver_config := _create_default_solver_config()
+	return {
+		"grid_size": Vector3i(5, 3, 5),
+		"cell_size": Vector3(2, 2, 2),
+		"solver_config": solver_config,
+		"solver_settings": _serialize_solver_config(solver_config, "medium")
+	}
+
+func _create_default_solver_config() -> WfcSolverConfig:
+	var config := WfcSolverConfig.medium_grid()
+	config.solve_strategy_id = "entropy"
+	return config
+
+func _hydrate_wfc_config(source: Dictionary) -> Dictionary:
+	var hydrated := source.duplicate(true)
+	var solver_settings: Dictionary = hydrated.get("solver_settings", {})
+	var preset_id: String = solver_settings.get("preset_id", "custom")
+	var solver_config: WfcSolverConfig
+	if hydrated.has("solver_config") and hydrated["solver_config"] is WfcSolverConfig:
+		solver_config = _clone_solver_config(hydrated["solver_config"])
+	elif not solver_settings.is_empty():
+		solver_config = _deserialize_solver_settings(solver_settings)
+	else:
+		solver_config = _create_default_solver_config()
+		preset_id = "medium"
+	hydrated["solver_config"] = solver_config
+	if solver_settings.is_empty():
+		hydrated["solver_settings"] = _serialize_solver_config(solver_config, preset_id)
+	else:
+		hydrated["solver_settings"] = solver_settings.duplicate(true)
+	return hydrated
+
+func _copy_wfc_config(source: Dictionary) -> Dictionary:
+	return _hydrate_wfc_config(source)
+
+func _extract_solver_config(config: Dictionary) -> WfcSolverConfig:
+	if config.has("solver_config") and config["solver_config"] is WfcSolverConfig:
+		return _clone_solver_config(config["solver_config"])
+	return _deserialize_solver_settings(config.get("solver_settings", {}))
+
+func _deserialize_solver_settings(data: Dictionary) -> WfcSolverConfig:
+	var config := _create_default_solver_config()
+	if data.is_empty():
+		return config
+	config.yield_interval_ms = data.get("yield_interval_ms", config.yield_interval_ms)
+	config.propagation_batch_size = data.get("propagation_batch_size", config.propagation_batch_size)
+	config.prewarm_cache = data.get("prewarm_cache", config.prewarm_cache)
+	config.max_iterations = data.get("max_iterations", config.max_iterations)
+	config.progress_report_interval_ms = data.get("progress_report_interval_ms", config.progress_report_interval_ms)
+	config.enable_backtracking = data.get("enable_backtracking", config.enable_backtracking)
+	config.max_backtrack_depth = data.get("max_backtrack_depth", config.max_backtrack_depth)
+	config.backtrack_checkpoint_frequency = data.get("backtrack_checkpoint_frequency", config.backtrack_checkpoint_frequency)
+	config.solve_strategy_id = data.get("solve_strategy_id", config.solve_strategy_id)
+	return config
+
+func _serialize_solver_config(config: WfcSolverConfig, preset_id: String) -> Dictionary:
+	return {
+		"preset_id": preset_id,
+		"yield_interval_ms": config.yield_interval_ms,
+		"propagation_batch_size": config.propagation_batch_size,
+		"prewarm_cache": config.prewarm_cache,
+		"max_iterations": config.max_iterations,
+		"progress_report_interval_ms": config.progress_report_interval_ms,
+		"enable_backtracking": config.enable_backtracking,
+		"max_backtrack_depth": config.max_backtrack_depth,
+		"backtrack_checkpoint_frequency": config.backtrack_checkpoint_frequency,
+		"solve_strategy_id": config.solve_strategy_id
+	}
+
+func _clone_solver_config(source: WfcSolverConfig) -> WfcSolverConfig:
+	var clone := WfcSolverConfig.new()
+	if source == null:
+		return clone
+	clone.yield_interval_ms = source.yield_interval_ms
+	clone.propagation_batch_size = source.propagation_batch_size
+	clone.prewarm_cache = source.prewarm_cache
+	clone.max_iterations = source.max_iterations
+	clone.progress_report_interval_ms = source.progress_report_interval_ms
+	clone.enable_backtracking = source.enable_backtracking
+	clone.max_backtrack_depth = source.max_backtrack_depth
+	clone.backtrack_checkpoint_frequency = source.backtrack_checkpoint_frequency
+	clone.solve_strategy_id = source.solve_strategy_id
+	return clone
+
 func _on_new_button_pressed() -> void:
 	if current_library == null:
 		_set_instruction("Load a module library before starting WFC.")
 		return
+	_ensure_wfc_config_initialized()
 	var grid_size: Vector3i = wfc_last_config.get("grid_size", Vector3i(5, 3, 5))
 	var cell_size: Vector3 = wfc_last_config.get("cell_size", _get_cell_size_from_library())
-	var config := {
-		"grid_size": grid_size,
-		"cell_size": cell_size
-	}
-	wfc_last_config = config.duplicate(true)
+	var config: Dictionary = _copy_wfc_config(wfc_last_config)
+	config["grid_size"] = grid_size
+	config["cell_size"] = cell_size
+	wfc_last_config = _copy_wfc_config(config)
 	_start_wfc_session(config)
 
 func _on_edit_button_pressed() -> void:
 	if current_library == null:
 		_set_instruction("Load a module library before editing WFC settings.")
 		return
+	_ensure_wfc_config_initialized()
 	var grid_size: Vector3i = wfc_last_config.get("grid_size", Vector3i(5, 3, 5))
 	var cell_size: Vector3 = wfc_last_config.get("cell_size", _get_cell_size_from_library())
 	wfc_setup_dialog.open_with_defaults(grid_size, cell_size)
 
 func _on_wfc_setup_confirmed(config: Dictionary) -> void:
-	wfc_last_config = config.duplicate(true)
+	wfc_last_config = _copy_wfc_config(config)
 	_reset_wfc_session()
 	var cell_size: Vector3 = wfc_last_config.get("cell_size", _get_cell_size_from_library())
 	_update_grid_spacing(cell_size)
@@ -268,6 +363,9 @@ func _start_wfc_session(config: Dictionary) -> void:
 	wfc_cell_size = cell_size
 	wfc_grid = WfcGrid.new(grid_size, current_library.tiles)
 	wfc_solver = WfcSolver.new(wfc_grid)
+	var solver_config: WfcSolverConfig = _extract_solver_config(config)
+	if solver_config:
+		solver_config.apply_to_solver(wfc_solver)
 	wfc_solver.start_interactive(true)
 	wfc_session_active = true
 	preview_mode = PreviewMode.WFC
@@ -297,13 +395,13 @@ func _ensure_wfc_session_ready() -> bool:
 	if current_library == null:
 		_set_instruction("Load a module library before running WFC.")
 		return false
+	_ensure_wfc_config_initialized()
 	var grid_size: Vector3i = wfc_last_config.get("grid_size", Vector3i(5, 3, 5))
 	var cell_size: Vector3 = wfc_last_config.get("cell_size", _get_cell_size_from_library())
-	var config := {
-		"grid_size": grid_size,
-		"cell_size": cell_size
-	}
-	wfc_last_config = config.duplicate(true)
+	var config: Dictionary = _copy_wfc_config(wfc_last_config)
+	config["grid_size"] = grid_size
+	config["cell_size"] = cell_size
+	wfc_last_config = _copy_wfc_config(config)
 	_start_wfc_session(config)
 	return wfc_session_active and wfc_solver != null
 
