@@ -14,6 +14,7 @@ const MaxCountRequirement = preload("res://addons/auto_structured/core/requireme
 const AdjacentRequirement = preload("res://addons/auto_structured/core/requirements/adjacent_requirement.gd")
 const TagRequirement = preload("res://addons/auto_structured/core/requirements/tag_requirement.gd")
 const BoundaryRequirement = preload("res://addons/auto_structured/core/requirements/boundary_requirement.gd")
+const RegionBoundaryRequirement = preload("res://addons/auto_structured/core/requirements/region_boundary_requirement.gd")
 
 var test_results: Array[Dictionary] = []
 var tests_passed: int = 0
@@ -49,6 +50,7 @@ func run_all_tests() -> void:
 	test_requirement_validator_adjacent_no_tags()
 	test_requirement_validator_tag_no_tags()
 	test_requirement_validator_boundary_no_axes()
+	test_requirement_validator_region_boundary_invalid()
 	
 	# ValidationManager tests
 	test_validation_manager_validate_tile()
@@ -420,6 +422,19 @@ func test_requirement_validator_boundary_no_axes() -> void:
 			break
 	
 	assert_true(has_error, "Should detect no axes checked", test_name)
+
+func test_requirement_validator_region_boundary_invalid() -> void:
+	var test_name = "RequirementValidator detects invalid region boundary requirement"
+	var req = RegionBoundaryRequirement.new()
+	req.min_edge_neighbors = 0
+	var validator = RequirementValidator.new()
+	var results = validator.validate(req)
+	var has_error = false
+	for result in results:
+		if result.is_error() and result.message.contains("Edge neighbor"):
+			has_error = true
+			break
+	assert_true(has_error, "Should detect invalid edge neighbor count", test_name)
 
 ## ============================================================================
 ## VALIDATION MANAGER TESTS

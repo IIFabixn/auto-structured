@@ -31,7 +31,7 @@ func reset() -> void:
 	"""Reset the counter (called at the start of generation)."""
 	_current_count = 0
 
-func get_config_control() -> Control:
+func get_config_control(_tile: Tile = null) -> Control:
 	var hbox = HBoxContainer.new()
 	
 	var label = Label.new()

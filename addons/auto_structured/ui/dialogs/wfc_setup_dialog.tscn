@@ -5,10 +5,10 @@
 [node name="WfcSetupDialog" type="ConfirmationDialog"]
 oversampling_override = 1.0
 title = "Configure Preview Session"
-size = Vector2i(420, 428)
+position = Vector2i(0, 36)
+size = Vector2i(420, 693)
 min_size = Vector2i(420, 0)
 ok_button_text = "Apply"
-cancel_button_text = "Cancel"
 script = ExtResource("1_0j6n1")
 
 [node name="VBox" type="VBoxContainer" parent="."]
@@ -16,7 +16,7 @@ unique_name_in_owner = true
 offset_left = 8.0
 offset_top = 8.0
 offset_right = 412.0
-offset_bottom = 379.0
+offset_bottom = 644.0
 theme_override_constants/separation = 8
 
 [node name="PresetLabel" type="Label" parent="VBox"]
@@ -32,7 +32,18 @@ theme_override_constants/separation = 12
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-select_mode = 0
+selected = 4
+item_count = 5
+popup/item_0/text = "Small"
+popup/item_0/id = 0
+popup/item_1/text = "Medium"
+popup/item_1/id = 1
+popup/item_2/text = "Large"
+popup/item_2/id = 2
+popup/item_3/text = "Very Large"
+popup/item_3/id = 3
+popup/item_4/text = "Custom"
+popup/item_4/id = 4
 
 [node name="StrategyLabel" type="Label" parent="VBox"]
 layout_mode = 2
@@ -47,7 +58,14 @@ theme_override_constants/separation = 12
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-select_mode = 0
+selected = 1
+item_count = 3
+popup/item_0/text = "Entropy"
+popup/item_0/id = 0
+popup/item_1/text = "Center-Out"
+popup/item_1/id = 1
+popup/item_2/text = "Frontier"
+popup/item_2/id = 2
 
 [node name="GridSizeLabel" type="Label" parent="VBox"]
 layout_mode = 2
@@ -68,7 +86,7 @@ custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
 min_value = 1.0
 max_value = 256.0
-value = 5.0
+value = 24.0
 select_all_on_focus = true
 
 [node name="GridYLabel" type="Label" parent="VBox/GridSizeRow"]
@@ -81,7 +99,7 @@ custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
 min_value = 1.0
 max_value = 64.0
-value = 3.0
+value = 1.0
 select_all_on_focus = true
 
 [node name="GridZLabel" type="Label" parent="VBox/GridSizeRow"]
@@ -94,7 +112,7 @@ custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
 min_value = 1.0
 max_value = 256.0
-value = 5.0
+value = 24.0
 select_all_on_focus = true
 
 [node name="CellSizeLabel" type="Label" parent="VBox"]
@@ -152,14 +170,12 @@ select_all_on_focus = true
 unique_name_in_owner = true
 layout_mode = 2
 text = "Advanced Solver Settings"
-visible = false
 
 [node name="AdvancedGrid" type="GridContainer" parent="VBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/h_separation = 12
 columns = 2
-visible = false
 
 [node name="YieldLabel" type="Label" parent="VBox/AdvancedGrid"]
 layout_mode = 2
@@ -169,10 +185,8 @@ text = "Yield Interval (ms)"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
-min_value = 0.0
 max_value = 1000.0
-step = 1.0
-value = 16.0
+value = 8.0
 select_all_on_focus = true
 
 [node name="PropagationLabel" type="Label" parent="VBox/AdvancedGrid"]
@@ -185,8 +199,7 @@ custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
 min_value = 1.0
 max_value = 500.0
-step = 1.0
-value = 50.0
+value = 25.0
 select_all_on_focus = true
 
 [node name="MaxIterationsLabel" type="Label" parent="VBox/AdvancedGrid"]
@@ -200,7 +213,7 @@ layout_mode = 2
 min_value = 1.0
 max_value = 1000000.0
 step = 100.0
-value = 10000.0
+value = 500001.0
 select_all_on_focus = true
 
 [node name="ProgressLabel" type="Label" parent="VBox/AdvancedGrid"]
@@ -211,10 +224,9 @@ text = "Progress Interval (ms)"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
-min_value = 0.0
 max_value = 60000.0
 step = 100.0
-value = 2000.0
+value = 1000.0
 select_all_on_focus = true
 
 [node name="BacktrackDepthLabel" type="Label" parent="VBox/AdvancedGrid"]
@@ -225,9 +237,7 @@ text = "Max Backtrack Depth"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
-min_value = 0.0
 max_value = 500.0
-step = 1.0
 value = 10.0
 select_all_on_focus = true
 
@@ -240,8 +250,6 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
 min_value = 1.0
-max_value = 100.0
-step = 1.0
 value = 5.0
 select_all_on_focus = true
 
@@ -252,6 +260,7 @@ text = "Prewarm Cache"
 [node name="PrewarmCheck" type="CheckButton" parent="VBox/AdvancedGrid"]
 unique_name_in_owner = true
 layout_mode = 2
+button_pressed = true
 
 [node name="BacktrackingLabel" type="Label" parent="VBox/AdvancedGrid"]
 layout_mode = 2
@@ -260,6 +269,21 @@ text = "Enable Backtracking"
 [node name="BacktrackingCheck" type="CheckButton" parent="VBox/AdvancedGrid"]
 unique_name_in_owner = true
 layout_mode = 2
+button_pressed = true
+
+[node name="RegionBoundaryRow" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="RegionBoundaryLabel" type="Label" parent="VBox/RegionBoundaryRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Enforce Region Boundaries"
+
+[node name="RegionBoundaryCheck" type="CheckButton" parent="VBox/RegionBoundaryRow"]
+unique_name_in_owner = true
+layout_mode = 2
+button_pressed = true
 
 [node name="HintLabel" type="Label" parent="VBox"]
 custom_minimum_size = Vector2(400, 0)

@@ -3,6 +3,7 @@ class_name RequirementItem
 extends VBoxContainer
 
 const Requirement = preload("res://addons/auto_structured/core/requirements/requirement.gd")
+const Tile = preload("res://addons/auto_structured/core/tile.gd")
 
 signal requirement_deleted(requirement: Requirement)
 signal requirement_modified(requirement: Requirement)
@@ -12,6 +13,7 @@ signal requirement_modified(requirement: Requirement)
 @onready var config_container : VBoxContainer = %ConfigContainer
 
 var _requirement: Requirement
+var _tile: Tile
 @export var requirement: Requirement:
 	get:
 		return _requirement
@@ -19,6 +21,14 @@ var _requirement: Requirement
 		_requirement = value
 		if is_node_ready():
 			_update_ui()
+
+@export var tile: Tile:
+	get:
+		return _tile
+	set(value):
+		_tile = value
+		if is_node_ready():
+			_build_config_ui()
 
 func _ready() -> void:
 	if delete_button:
@@ -46,7 +56,7 @@ func _build_config_ui() -> void:
 		child.queue_free()
 	
 	# Get the custom config control from the requirement
-	var config_control = _requirement.get_config_control()
+	var config_control = _requirement.get_config_control(_tile)
 	if config_control:
 		config_container.add_child(config_control)
 		

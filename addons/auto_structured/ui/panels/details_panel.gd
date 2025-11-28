@@ -161,6 +161,7 @@ func _setup_rotation_symmetry_options() -> void:
 	if not rotation_symmetry_options.item_selected.is_connected(_on_rotation_symmetry_changed):
 		rotation_symmetry_options.item_selected.connect(_on_rotation_symmetry_changed)
 
+
 func setup_undo_redo(undo_redo: AutoStructuredUndoRedo) -> void:
 	"""
 	Initialize the undo/redo system for this panel.
@@ -285,6 +286,7 @@ func _update_ui() -> void:
 	# Update rotation symmetry
 	if rotation_symmetry_options:
 		rotation_symmetry_options.select(_tile.rotation_symmetry)
+
 	
 	# Update tags display
 	_update_tags_display()
@@ -352,6 +354,7 @@ func _update_requirements_display() -> void:
 		var item = RequirementItemScene.instantiate()
 		if item is RequirementItem:
 			requirements_container.add_child(item)
+			item.tile = _tile
 			item.requirement = req
 			item.requirement_modified.connect(_on_requirement_modified)
 			item.requirement_deleted.connect(_on_requirement_deleted)
@@ -450,6 +453,7 @@ func _on_rotation_symmetry_changed(index: int) -> void:
 	var selected_id = rotation_symmetry_options.get_item_id(index)
 	_tile.rotation_symmetry = selected_id
 	tile_modified.emit(_tile)
+
 
 func _on_x_size_changed(value: float) -> void:
 	"""Handle X size spinbox change."""

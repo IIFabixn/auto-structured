@@ -299,6 +299,7 @@ func _deserialize_solver_settings(data: Dictionary) -> WfcSolverConfig:
 	config.max_backtrack_depth = data.get("max_backtrack_depth", config.max_backtrack_depth)
 	config.backtrack_checkpoint_frequency = data.get("backtrack_checkpoint_frequency", config.backtrack_checkpoint_frequency)
 	config.solve_strategy_id = data.get("solve_strategy_id", config.solve_strategy_id)
+	config.enforce_region_boundaries = data.get("enforce_region_boundaries", config.enforce_region_boundaries)
 	return config
 
 func _serialize_solver_config(config: WfcSolverConfig, preset_id: String) -> Dictionary:
@@ -312,7 +313,8 @@ func _serialize_solver_config(config: WfcSolverConfig, preset_id: String) -> Dic
 		"enable_backtracking": config.enable_backtracking,
 		"max_backtrack_depth": config.max_backtrack_depth,
 		"backtrack_checkpoint_frequency": config.backtrack_checkpoint_frequency,
-		"solve_strategy_id": config.solve_strategy_id
+		"solve_strategy_id": config.solve_strategy_id,
+		"enforce_region_boundaries": config.enforce_region_boundaries
 	}
 
 func _clone_solver_config(source: WfcSolverConfig) -> WfcSolverConfig:
@@ -328,6 +330,7 @@ func _clone_solver_config(source: WfcSolverConfig) -> WfcSolverConfig:
 	clone.max_backtrack_depth = source.max_backtrack_depth
 	clone.backtrack_checkpoint_frequency = source.backtrack_checkpoint_frequency
 	clone.solve_strategy_id = source.solve_strategy_id
+	clone.enforce_region_boundaries = source.enforce_region_boundaries
 	return clone
 
 func _on_new_button_pressed() -> void:

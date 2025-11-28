@@ -126,7 +126,7 @@ func get_description() -> String:
 			return "Needs exactly %d %s tiles with: %s" % [required_count, dir_str, tag_str]
 	return super.get_description()
 
-func get_config_control() -> Control:
+func get_config_control(_tile: Tile = null) -> Control:
 	var vbox = VBoxContainer.new()
 	
 	# Mode selector

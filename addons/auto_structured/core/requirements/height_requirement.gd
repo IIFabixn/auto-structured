@@ -59,7 +59,7 @@ func get_description() -> String:
 			return "Y between %d and %d" % [min_height, max_height]
 	return super.get_description()
 
-func get_config_control() -> Control:
+func get_config_control(_tile: Tile = null) -> Control:
 	var vbox = VBoxContainer.new()
 	
 	# Mode selector

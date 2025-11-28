@@ -33,6 +33,7 @@ var backtrack_checkpoint_frequency: int = 5
 
 @export_enum("entropy", "center_out", "frontier")
 var solve_strategy_id: String = "entropy"
+var enforce_region_boundaries: bool = false
 
 
 ## Preset for small grids (< 10K cells)
@@ -109,3 +110,5 @@ func apply_to_solver(solver: WfcSolver) -> void:
 	solver.backtrack_checkpoint_frequency = backtrack_checkpoint_frequency
 	if solver.has_method("set_solve_strategy"):
 		solver.set_solve_strategy(create_strategy_instance(), self)
+	if solver.has_method("set_region_boundary_enforcement"):
+		solver.set_region_boundary_enforcement(enforce_region_boundaries)

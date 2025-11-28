@@ -68,10 +68,11 @@ func get_failure_reason() -> String:
 func get_description() -> String:
 	return "No description available"
 
-func get_config_control() -> Control:
+func get_config_control(tile: Tile = null) -> Control:
 	"""
 	Return a Control node for configuring this requirement's parameters in the UI.
 	Override in subclasses to provide custom configuration UI.
+	The optional tile reference lets requirements expose tile-scoped helpers.
 	"""
 	var label = Label.new()
 	label.text = "No configuration available for " + display_name

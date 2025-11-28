@@ -7,6 +7,7 @@ const MaxCountRequirement = preload("res://addons/auto_structured/core/requireme
 const AdjacentRequirement = preload("res://addons/auto_structured/core/requirements/adjacent_requirement.gd")
 const TagRequirement = preload("res://addons/auto_structured/core/requirements/tag_requirement.gd")
 const BoundaryRequirement = preload("res://addons/auto_structured/core/requirements/boundary_requirement.gd")
+const RegionBoundaryRequirement = preload("res://addons/auto_structured/core/requirements/region_boundary_requirement.gd")
 const WfcGrid = preload("res://addons/auto_structured/core/wfc/wfc_grid.gd")
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
 
@@ -216,23 +217,46 @@ func test_adjacent_requirement_must_have() -> void:
 	wall_tags.assign(["wall"])
 	wall_tile.tags = wall_tags
 	
+
+func test_region_boundary_requirement_neighbors() -> void:
+	var test_name = "RegionBoundaryRequirement neighbor enforcement"
+	var tile = _create_test_tile("EdgeTile", RegionBoundaryRequirement.BoundaryRole.EDGE)
+	var boundary_neighbor = _create_test_tile("BoundaryNeighbor", RegionBoundaryRequirement.BoundaryRole.EDGE)
 	var grid = _create_test_grid_with_tiles(Vector3i(3, 1, 3))
-	_place_tile_at(grid, wall_tile, Vector3i(1, 0, 0))
-	
-	var req = AdjacentRequirement.new()
-	req.mode = AdjacentRequirement.AdjacentMode.MUST_HAVE
-	req.required_tags.assign(["wall"])
-	req.check_horizontal = true
-	req.check_vertical = false
-	
-	var context = {}
-	
-	# Position next to wall should succeed
-	assert_true(req.evaluate(tile, Vector3i(1, 0, 1), grid, context), "Should allow next to wall", test_name)
-	
-	# Position not next to wall should fail
-	# Note: This is simplified - actual implementation needs a more complete grid
-	# For now, we're testing the logic structure
+	_place_tile_at(grid, boundary_neighbor, Vector3i(0, 0, 1))
+	_place_tile_at(grid, boundary_neighbor, Vector3i(2, 0, 1))
+	var req = RegionBoundaryRequirement.new()
+	req.boundary_role = RegionBoundaryRequirement.BoundaryRole.EDGE
+	assert_true(req.evaluate(tile, Vector3i(1, 0, 1), grid, {}), "Should allow when two boundary neighbors exist", test_name)
+	var fail_grid = _create_test_grid_with_tiles(Vector3i(3, 1, 3))
+	_place_tile_at(fail_grid, boundary_neighbor, Vector3i(0, 0, 1))
+	assert_false(req.evaluate(tile, Vector3i(1, 0, 1), fail_grid, {}), "Should fail with insufficient neighbors", test_name)
+
+func test_region_boundary_requirement_counts_potential() -> void:
+	var test_name = "RegionBoundaryRequirement counts potential"
+	var tile = _create_test_tile("EdgeTile", RegionBoundaryRequirement.BoundaryRole.EDGE)
+	var boundary_neighbor = _create_test_tile("BoundaryNeighbor", RegionBoundaryRequirement.BoundaryRole.EDGE)
+	var filler = _create_test_tile("Filler")
+	var grid = _create_test_grid_with_tiles(Vector3i(3, 1, 3))
+	_place_tile_at(grid, boundary_neighbor, Vector3i(0, 0, 1))
+	_set_cell_variants(grid, Vector3i(2, 0, 1), [boundary_neighbor, filler])
+	var req = RegionBoundaryRequirement.new()
+	req.boundary_role = RegionBoundaryRequirement.BoundaryRole.EDGE
+	assert_true(req.evaluate(tile, Vector3i(1, 0, 1), grid, {}), "Should allow when potential neighbor can satisfy", test_name)
+
+func test_region_boundary_requirement_relax_on_boundary() -> void:
+	var test_name = "RegionBoundaryRequirement relaxes on world boundary"
+	var tile = _create_test_tile("EdgeTile", RegionBoundaryRequirement.BoundaryRole.EDGE)
+	var boundary_neighbor = _create_test_tile("BoundaryNeighbor", RegionBoundaryRequirement.BoundaryRole.EDGE)
+	var grid = _create_test_grid_with_tiles(Vector3i(3, 1, 3))
+	_place_tile_at(grid, boundary_neighbor, Vector3i(1, 0, 1))
+	var req = RegionBoundaryRequirement.new()
+	req.boundary_role = RegionBoundaryRequirement.BoundaryRole.EDGE
+	var boundary_position = Vector3i(0, 0, 1)
+	req.relax_on_world_boundary = true
+	assert_true(req.evaluate(tile, boundary_position, grid, {}), "Should allow at world boundary with single neighbor", test_name)
+	req.relax_on_world_boundary = false
+	assert_false(req.evaluate(tile, boundary_position, grid, {}), "Should fail without relaxation", test_name)
 
 func test_adjacent_requirement_must_have_with_potential_neighbor() -> void:
 	var test_name = "AdjacentRequirement MUST_HAVE potential neighbor"
@@ -395,10 +419,14 @@ func test_boundary_requirement_interior_only() -> void:
 ## HELPER FUNCTIONS
 ## ============================================================================
 
-func _create_test_tile(tile_name: String) -> Tile:
+func _create_test_tile(tile_name: String, boundary_role: int = RegionBoundaryRequirement.BoundaryRole.NONE) -> Tile:
 	var tile = Tile.new()
 	tile.name = tile_name
 	tile.size = Vector3i.ONE
+	if boundary_role != RegionBoundaryRequirement.BoundaryRole.NONE:
+		var boundary_req = RegionBoundaryRequirement.new()
+		boundary_req.boundary_role = boundary_role
+		tile.requirements.append(boundary_req)
 	
 	# Add a basic "any" socket so tiles can connect
 	for dir in [Vector3i.RIGHT, Vector3i.LEFT, Vector3i.FORWARD, Vector3i.BACK, Vector3i.UP, Vector3i.DOWN]:

@@ -44,6 +44,7 @@ const STRATEGY_LABELS := {
 @onready var checkpoint_spin: SpinBox = %CheckpointSpin
 @onready var prewarm_check: CheckButton = %PrewarmCheck
 @onready var backtracking_check: CheckButton = %BacktrackingCheck
+@onready var region_boundary_check: CheckButton = %RegionBoundaryCheck
 
 var _last_config: Dictionary = {
 	"grid_size": Vector3i(5, 3, 5),
@@ -228,29 +229,34 @@ func _setup_custom_control_signals() -> void:
 		prewarm_check.toggled.connect(_on_custom_prewarm_toggled)
 	if backtracking_check and not backtracking_check.toggled.is_connected(_on_custom_backtracking_toggled):
 		backtracking_check.toggled.connect(_on_custom_backtracking_toggled)
+	if region_boundary_check and not region_boundary_check.toggled.is_connected(_on_custom_region_boundary_toggled):
+		region_boundary_check.toggled.connect(_on_custom_region_boundary_toggled)
 
 func _sync_custom_solver_controls() -> void:
 	var show_custom := _current_preset_id == "custom"
 	_set_custom_section_visible(show_custom)
-	if not show_custom or _current_solver_config == null:
+	if _current_solver_config == null:
 		return
 	_syncing_custom_controls = true
-	if yield_spin:
-		yield_spin.value = _current_solver_config.yield_interval_ms
-	if propagation_spin:
-		propagation_spin.value = _current_solver_config.propagation_batch_size
-	if max_iterations_spin:
-		max_iterations_spin.value = _current_solver_config.max_iterations
-	if progress_spin:
-		progress_spin.value = _current_solver_config.progress_report_interval_ms
-	if backtrack_depth_spin:
-		backtrack_depth_spin.value = _current_solver_config.max_backtrack_depth
-	if checkpoint_spin:
-		checkpoint_spin.value = _current_solver_config.backtrack_checkpoint_frequency
-	if prewarm_check:
-		prewarm_check.button_pressed = _current_solver_config.prewarm_cache
-	if backtracking_check:
-		backtracking_check.button_pressed = _current_solver_config.enable_backtracking
+	if region_boundary_check:
+		region_boundary_check.button_pressed = _current_solver_config.enforce_region_boundaries
+	if show_custom:
+		if yield_spin:
+			yield_spin.value = _current_solver_config.yield_interval_ms
+		if propagation_spin:
+			propagation_spin.value = _current_solver_config.propagation_batch_size
+		if max_iterations_spin:
+			max_iterations_spin.value = _current_solver_config.max_iterations
+		if progress_spin:
+			progress_spin.value = _current_solver_config.progress_report_interval_ms
+		if backtrack_depth_spin:
+			backtrack_depth_spin.value = _current_solver_config.max_backtrack_depth
+		if checkpoint_spin:
+			checkpoint_spin.value = _current_solver_config.backtrack_checkpoint_frequency
+		if prewarm_check:
+			prewarm_check.button_pressed = _current_solver_config.prewarm_cache
+		if backtracking_check:
+			backtracking_check.button_pressed = _current_solver_config.enable_backtracking
 	_syncing_custom_controls = false
 
 func _set_custom_section_visible(visible: bool) -> void:
@@ -320,6 +326,12 @@ func _on_custom_backtracking_toggled(pressed: bool) -> void:
 		return
 	_ensure_custom_mode_selection()
 	_current_solver_config.enable_backtracking = pressed
+	_update_solver_settings_cache()
+
+func _on_custom_region_boundary_toggled(pressed: bool) -> void:
+	if _syncing_custom_controls or _current_solver_config == null:
+		return
+	_current_solver_config.enforce_region_boundaries = pressed
 	_update_solver_settings_cache()
 
 func _update_solver_settings_cache() -> void:
@@ -394,7 +406,8 @@ func _serialize_solver_config(config: WfcSolverConfig, preset_id: String) -> Dic
 		"enable_backtracking": config.enable_backtracking,
 		"max_backtrack_depth": config.max_backtrack_depth,
 		"backtrack_checkpoint_frequency": config.backtrack_checkpoint_frequency,
-		"solve_strategy_id": config.solve_strategy_id
+		"solve_strategy_id": config.solve_strategy_id,
+		"enforce_region_boundaries": config.enforce_region_boundaries
 	}
 
 func _sanitize_solver_settings(data: Dictionary) -> Dictionary:
@@ -419,6 +432,7 @@ func _deserialize_solver_config(data: Dictionary) -> WfcSolverConfig:
 	config.max_backtrack_depth = data.get("max_backtrack_depth", config.max_backtrack_depth)
 	config.backtrack_checkpoint_frequency = data.get("backtrack_checkpoint_frequency", config.backtrack_checkpoint_frequency)
 	config.solve_strategy_id = data.get("solve_strategy_id", config.solve_strategy_id)
+	config.enforce_region_boundaries = data.get("enforce_region_boundaries", config.enforce_region_boundaries)
 	return config
 
 func _clone_solver_config(source: WfcSolverConfig) -> WfcSolverConfig:
@@ -434,6 +448,7 @@ func _clone_solver_config(source: WfcSolverConfig) -> WfcSolverConfig:
 	clone.max_backtrack_depth = source.max_backtrack_depth
 	clone.backtrack_checkpoint_frequency = source.backtrack_checkpoint_frequency
 	clone.solve_strategy_id = source.solve_strategy_id
+	clone.enforce_region_boundaries = source.enforce_region_boundaries
 	return clone
 
 func _sanitize_config(data: Dictionary) -> Dictionary:

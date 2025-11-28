@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" uid="uid://cmyung7rwf4s0" path="res://addons/auto_structured/assets/preview.svg" id="7_h81gu"]
 
 [node name="DetailsPanel" type="Control"]
+visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -73,9 +74,10 @@ stretch_mode = 5
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-current_tab = 0
+current_tab = 1
 
 [node name="Generel" type="ScrollContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer"]
+visible = false
 layout_mode = 2
 metadata/_tab_index = 0
 
@@ -174,7 +176,6 @@ popup/item_4/text = "Custom"
 popup/item_4/id = 4
 
 [node name="Requirements" type="ScrollContainer" parent="Panel/MarginContainer/ScrollContainer/VBoxContainer/VSplitContainer/DetailsTabContainer"]
-visible = false
 layout_mode = 2
 metadata/_tab_index = 1
 
@@ -353,3 +354,4 @@ size_flags_horizontal = 8
 size_flags_vertical = 0
 texture_normal = ExtResource("2_qj0jw")
 stretch_mode = 3
+

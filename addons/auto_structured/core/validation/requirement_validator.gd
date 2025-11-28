@@ -10,6 +10,7 @@ const MaxCountRequirement = preload("res://addons/auto_structured/core/requireme
 const AdjacentRequirement = preload("res://addons/auto_structured/core/requirements/adjacent_requirement.gd")
 const TagRequirement = preload("res://addons/auto_structured/core/requirements/tag_requirement.gd")
 const BoundaryRequirement = preload("res://addons/auto_structured/core/requirements/boundary_requirement.gd")
+const RegionBoundaryRequirement = preload("res://addons/auto_structured/core/requirements/region_boundary_requirement.gd")
 
 func validate(target: Variant) -> Array[ValidationResult]:
 	var results: Array[ValidationResult] = []
@@ -31,6 +32,8 @@ func validate(target: Variant) -> Array[ValidationResult]:
 		_validate_tag_requirement(requirement, results)
 	elif requirement is BoundaryRequirement:
 		_validate_boundary_requirement(requirement, results)
+	elif requirement is RegionBoundaryRequirement:
+		_validate_region_boundary_requirement(requirement, results)
 	
 	return results
 
@@ -127,3 +130,11 @@ func _validate_boundary_requirement(req: BoundaryRequirement, results: Array[Val
 			
 			if axis_count < 2:
 				results.append(create_warning("CORNER_ONLY mode with less than 2 axes checked - may not work as expected", {"axes_checked": axis_count}, req))
+
+func _validate_region_boundary_requirement(req: RegionBoundaryRequirement, results: Array[ValidationResult]) -> void:
+	if req.min_edge_neighbors < 1:
+		results.append(create_error("Edge neighbor requirement must be at least 1", {"min_edge_neighbors": req.min_edge_neighbors}, req))
+	if req.min_corner_neighbors < 1:
+		results.append(create_error("Corner neighbor requirement must be at least 1", {"min_corner_neighbors": req.min_corner_neighbors}, req))
+	if req.allow_open_ends and req.enforce_closed_loops:
+		results.append(create_info("Open ends are allowed even though closed loops are enforced", {}, req))

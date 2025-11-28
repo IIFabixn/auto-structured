@@ -8,6 +8,7 @@ const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
 const WfcSolveStrategy = preload("res://addons/auto_structured/core/wfc/strategies/wfc_solve_strategy_base.gd")
 const WfcEntropyStrategy = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_entropy.gd")
+const RegionBoundaryRequirement = preload("res://addons/auto_structured/core/requirements/region_boundary_requirement.gd")
 
 var grid: WfcGrid
 var max_iterations: int = 10000
@@ -72,6 +73,8 @@ var _visited_flags: PackedByteArray
 
 ## Performance optimization: Scratch array for valid variants (reusable)
 var _scratch_variants: Array[Dictionary] = []
+var enforce_region_boundaries: bool = false
+var _region_boundary_requirement: RegionBoundaryRequirement = null
 
 ## Interactive solve state ---------------------------------------------------
 var _initialized: bool = false
@@ -186,6 +189,13 @@ func _initialize_interactive_session() -> void:
 	_collapses_since_checkpoint = 0
 	_total_backtracks = 0
 	_initialized = true
+
+func set_region_boundary_enforcement(enabled: bool, requirement: RegionBoundaryRequirement = null) -> void:
+	enforce_region_boundaries = enabled
+	if enforce_region_boundaries:
+		_region_boundary_requirement = requirement if requirement != null else RegionBoundaryRequirement.new()
+	else:
+		_region_boundary_requirement = null
 
 func _maybe_add_checkpoint() -> void:
 	if not enable_backtracking:
@@ -727,24 +737,27 @@ func _apply_requirements_to_cell(cell: WfcCell) -> void:
 			valid_variants.append(variant)
 			continue
 		
-		# If tile has no requirements, it's always valid
-		if tile.requirements.is_empty():
-			valid_variants.append(variant)
-			continue
-		
-		# Check all requirements
 		var all_satisfied = true
-		for req in tile.requirements:
-			if not req.enabled:
-				continue
-			
-			if not req.evaluate(tile, cell.position, grid, _requirement_context):
+		if not tile.requirements.is_empty():
+			for req in tile.requirements:
+				if not req.enabled:
+					continue
+				if not req.evaluate(tile, cell.position, grid, _requirement_context):
+					all_satisfied = false
+					if logging_enabled:
+						_log(["  Requirement '", req.display_name, "' failed for tile '", tile.name, "' at ", cell.position])
+						_log(["    Reason: ", req.get_failure_reason()])
+					break
+		var boundary_role := RegionBoundaryRequirement.get_tile_boundary_role(tile)
+		if all_satisfied and enforce_region_boundaries and boundary_role != RegionBoundaryRequirement.BoundaryRole.NONE:
+			if _region_boundary_requirement == null:
+				_region_boundary_requirement = RegionBoundaryRequirement.new()
+			_region_boundary_requirement.boundary_role = boundary_role
+			if not _region_boundary_requirement.evaluate(tile, cell.position, grid, _requirement_context):
 				all_satisfied = false
 				if logging_enabled:
-					_log(["  Requirement '", req.display_name, "' failed for tile '", tile.name, "' at ", cell.position])
-					_log(["    Reason: ", req.get_failure_reason()])
-				break
-		
+					_log(["  Region boundary requirement failed for tile '", tile.name, "' at ", cell.position])
+					_log(["    Reason: ", _region_boundary_requirement.get_failure_reason()])
 		if all_satisfied:
 			valid_variants.append(variant)
 	

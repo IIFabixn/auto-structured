@@ -12,6 +12,7 @@ const MaxCountRequirement = preload("res://addons/auto_structured/core/requireme
 const AdjacentRequirement = preload("res://addons/auto_structured/core/requirements/adjacent_requirement.gd")
 const TagRequirement = preload("res://addons/auto_structured/core/requirements/tag_requirement.gd")
 const BoundaryRequirement = preload("res://addons/auto_structured/core/requirements/boundary_requirement.gd")
+const RegionBoundaryRequirement = preload("res://addons/auto_structured/core/requirements/region_boundary_requirement.gd")
 
 ## Import a library from a file
 static func import_library(file_path: String) -> ModuleLibrary:
@@ -185,6 +186,8 @@ static func _dict_to_requirement(data: Dictionary) -> Requirement:
 			req = TagRequirement.new()
 		"BoundaryRequirement":
 			req = BoundaryRequirement.new()
+		"RegionBoundaryRequirement":
+			req = RegionBoundaryRequirement.new()
 	
 	if req:
 		req.enabled = data.get("enabled", true)
