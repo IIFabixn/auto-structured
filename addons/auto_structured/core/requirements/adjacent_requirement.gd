@@ -11,6 +11,12 @@ enum AdjacentMode {
 	EXACT_COUNT      ## Exactly N adjacent tiles must match
 }
 
+enum NeighborMatchState {
+	NONE,
+	POTENTIAL,
+	CONFIRMED
+}
+
 @export var mode: AdjacentMode = AdjacentMode.MUST_HAVE
 @export var required_tags: Array[String] = []  ## Tags that adjacent tiles must have/not have
 @export var required_count: int = 1  ## For EXACT_COUNT mode
@@ -24,47 +30,71 @@ func evaluate(tile: Tile, position: Vector3i, grid, context: Dictionary) -> bool
 	if required_tags.is_empty():
 		return true
 	
-	var matching_neighbors = 0
-	var directions = []
-	
-	if check_horizontal:
-		directions.append(Vector3i(1, 0, 0))
-		directions.append(Vector3i(-1, 0, 0))
-		directions.append(Vector3i(0, 0, 1))
-		directions.append(Vector3i(0, 0, -1))
-	
-	if check_vertical:
-		directions.append(Vector3i(0, 1, 0))
-		directions.append(Vector3i(0, -1, 0))
-	
-	for dir in directions:
-		var neighbor_pos = position + dir
-		if not grid.is_valid_position(neighbor_pos):
-			continue
-		
-		var neighbor_cell = grid.get_cell(neighbor_pos)
-		if not neighbor_cell or not neighbor_cell.is_collapsed():
-			continue
-		
-		var neighbor_tile = neighbor_cell.get_tile()
-		if not neighbor_tile:
-			continue
-		
-		# Check if neighbor has any of the required tags
-		for tag in required_tags:
-			if tag in neighbor_tile.tags:
-				matching_neighbors += 1
-				break
-	
+	var match_counts: Dictionary = _count_neighbor_matches(position, grid)
 	match mode:
 		AdjacentMode.MUST_HAVE:
-			return matching_neighbors > 0
+			return (match_counts["confirmed"] + match_counts["potential"]) > 0
 		AdjacentMode.MUST_NOT_HAVE:
-			return matching_neighbors == 0
+			return match_counts["confirmed"] == 0
 		AdjacentMode.EXACT_COUNT:
-			return matching_neighbors == required_count
+			if match_counts["confirmed"] > required_count:
+				return false
+			var max_possible: int = match_counts["confirmed"] + match_counts["potential"]
+			if max_possible < required_count:
+				return false
+			return true
 	
 	return true
+
+func _count_neighbor_matches(position: Vector3i, grid) -> Dictionary:
+	var directions := _get_directions()
+	var result: Dictionary = {
+		"confirmed": 0,
+		"potential": 0
+	}
+	for dir in directions:
+		var neighbor_pos: Vector3i = position + dir
+		if not grid.is_valid_position(neighbor_pos):
+			continue
+		var neighbor_cell = grid.get_cell(neighbor_pos)
+		if neighbor_cell == null:
+			continue
+		var state := _get_neighbor_match_state(neighbor_cell)
+		if state == NeighborMatchState.CONFIRMED:
+			result["confirmed"] += 1
+		elif state == NeighborMatchState.POTENTIAL:
+			result["potential"] += 1
+	return result
+
+func _get_directions() -> Array:
+	var dirs: Array[Vector3i] = []
+	if check_horizontal:
+		dirs.append(Vector3i(1, 0, 0))
+		dirs.append(Vector3i(-1, 0, 0))
+		dirs.append(Vector3i(0, 0, 1))
+		dirs.append(Vector3i(0, 0, -1))
+	if check_vertical:
+		dirs.append(Vector3i(0, 1, 0))
+		dirs.append(Vector3i(0, -1, 0))
+	return dirs
+
+func _get_neighbor_match_state(neighbor_cell) -> int:
+	if neighbor_cell.is_collapsed():
+		var tile: Tile = neighbor_cell.get_tile()
+		return NeighborMatchState.CONFIRMED if _tile_matches_required_tags(tile) else NeighborMatchState.NONE
+	for variant in neighbor_cell.possible_tile_variants:
+		var tile: Tile = variant.get("tile")
+		if _tile_matches_required_tags(tile):
+			return NeighborMatchState.POTENTIAL
+	return NeighborMatchState.NONE
+
+func _tile_matches_required_tags(tile: Tile) -> bool:
+	if tile == null:
+		return false
+	for tag in required_tags:
+		if tag in tile.tags:
+			return true
+	return false
 
 func get_failure_reason() -> String:
 	var tag_str = ", ".join(required_tags)

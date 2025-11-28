@@ -234,6 +234,22 @@ func test_adjacent_requirement_must_have() -> void:
 	# Note: This is simplified - actual implementation needs a more complete grid
 	# For now, we're testing the logic structure
 
+func test_adjacent_requirement_must_have_with_potential_neighbor() -> void:
+	var test_name = "AdjacentRequirement MUST_HAVE potential neighbor"
+	var tile = _create_test_tile("ConstraintTile")
+	var wall_tile = _create_test_tile("WallTile")
+	var floor_tile = _create_test_tile("FloorTile")
+	var wall_tags: Array[String] = []
+	wall_tags.assign(["wall"])
+	wall_tile.tags = wall_tags
+	var grid = _create_test_grid_with_tiles(Vector3i(3, 1, 3))
+	_set_cell_variants(grid, Vector3i(1, 0, 0), [wall_tile, floor_tile])
+	var req = AdjacentRequirement.new()
+	req.mode = AdjacentRequirement.AdjacentMode.MUST_HAVE
+	req.required_tags.assign(["wall"])
+	var context = {}
+	assert_true(req.evaluate(tile, Vector3i(1, 0, 1), grid, context), "Should allow when neighbor can still satisfy", test_name)
+
 func test_adjacent_requirement_must_not_have() -> void:
 	var test_name = "AdjacentRequirement MUST_NOT_HAVE mode"
 	var tile = _create_test_tile("FloorTile")
@@ -246,6 +262,36 @@ func test_adjacent_requirement_must_not_have() -> void:
 	
 	# This test is simplified - in practice would need actual adjacent tiles
 	assert_true(req.evaluate(tile, Vector3i(0, 0, 0), grid, context), "Should work with basic setup", test_name)
+
+func test_adjacent_requirement_exact_count_feasibility() -> void:
+	var test_name = "AdjacentRequirement EXACT_COUNT feasibility"
+	var tile = _create_test_tile("DoorTile")
+	var wall_tile = _create_test_tile("WallTile")
+	var alt_tile = _create_test_tile("AltTile")
+	var wall_tags: Array[String] = []
+	wall_tags.assign(["wall"])
+	wall_tile.tags = wall_tags
+	var req = AdjacentRequirement.new()
+	req.mode = AdjacentRequirement.AdjacentMode.EXACT_COUNT
+	req.required_tags.assign(["wall"])
+	req.required_count = 2
+	var context = {}
+	# Enough potential matches
+	var grid_possible = _create_test_grid_with_tiles(Vector3i(3, 1, 3))
+	_set_cell_variants(grid_possible, Vector3i(1, 0, 0), [wall_tile, alt_tile])
+	_set_cell_variants(grid_possible, Vector3i(1, 0, 2), [wall_tile])
+	assert_true(req.evaluate(tile, Vector3i(1, 0, 1), grid_possible, context), "Should allow when exact count achievable", test_name)
+	# Not enough potential matches
+	var grid_impossible = _create_test_grid_with_tiles(Vector3i(3, 1, 3))
+	_set_cell_variants(grid_impossible, Vector3i(1, 0, 0), [alt_tile])
+	_set_cell_variants(grid_impossible, Vector3i(1, 0, 2), [alt_tile])
+	assert_false(req.evaluate(tile, Vector3i(1, 0, 1), grid_impossible, context), "Should deny when exact count impossible", test_name)
+	# Too many confirmed matches
+	var grid_excess = _create_test_grid_with_tiles(Vector3i(3, 1, 3))
+	_place_tile_at(grid_excess, wall_tile, Vector3i(1, 0, 0))
+	_place_tile_at(grid_excess, wall_tile, Vector3i(1, 0, 2))
+	_place_tile_at(grid_excess, wall_tile, Vector3i(0, 0, 1))
+	assert_false(req.evaluate(tile, Vector3i(1, 0, 1), grid_excess, context), "Should deny when exact count already exceeded", test_name)
 
 ## ============================================================================
 ## TAG REQUIREMENT TESTS
@@ -373,6 +419,20 @@ func _create_test_grid_with_tiles(grid_size: Vector3i) -> WfcGrid:
 	var tiles: Array[Tile] = []
 	var grid = WfcGrid.new(grid_size, tiles)
 	return grid
+
+func _set_cell_variants(grid: WfcGrid, pos: Vector3i, tiles: Array[Tile]) -> void:
+	var cell = grid.get_cell(pos)
+	if cell == null:
+		return
+	cell.possible_tile_variants.clear()
+	for variant_tile in tiles:
+		if variant_tile == null:
+			continue
+		cell.possible_tile_variants.append({
+			"tile": variant_tile,
+			"rotation_degrees": 0,
+			"weight": 1.0
+		})
 
 func _place_tile_at(grid: WfcGrid, tile: Tile, pos: Vector3i) -> void:
 	"""Helper to place a tile at a specific position (for adjacency tests)."""
