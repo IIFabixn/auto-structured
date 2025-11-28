@@ -14,7 +14,10 @@ var _last_config: Dictionary = {
 	"grid_size": Vector3i(5, 3, 5),
 	"cell_size": Vector3(2, 2, 2)
 }
+
 const _EDITOR_SETTINGS_KEY := "auto_structured/wfc_setup/config"
+const _EDITOR_SETTINGS_KEY_GRID_SIZE := "auto_structured/wfc_setup/config/grid_size"
+const _EDITOR_SETTINGS_KEY_CELL_SIZE := "auto_structured/wfc_setup/config/cell_size"
 
 func _ready() -> void:
 	ok_button_text = "Apply"
@@ -59,16 +62,43 @@ func _on_confirmed() -> void:
 func get_last_config() -> Dictionary:
 	return _last_config.duplicate(true)
 
+func apply_library_defaults(grid_size: Vector3i = Vector3i.ZERO, cell_size: Vector3 = Vector3.ZERO) -> void:
+	"""Seed config with library-provided values when no editor overrides exist."""
+	if grid_size != Vector3i.ZERO and not _has_editor_setting(_EDITOR_SETTINGS_KEY_GRID_SIZE):
+		_last_config["grid_size"] = grid_size
+	if cell_size != Vector3.ZERO and not _has_editor_setting(_EDITOR_SETTINGS_KEY_CELL_SIZE):
+		_last_config["cell_size"] = cell_size
+
 func _load_last_config_from_editor() -> void:
 	var editor_settings := _get_editor_settings()
 	if editor_settings == null:
 		return
+	var default_grid: Vector3i = _last_config["grid_size"]
+	var default_cell: Vector3 = _last_config["cell_size"]
+	var grid_loaded := false
+	var cell_loaded := false
+	var grid_value := default_grid
+	var cell_value := default_cell
+	if editor_settings.has_setting(_EDITOR_SETTINGS_KEY_GRID_SIZE):
+		var stored_grid = editor_settings.get_setting(_EDITOR_SETTINGS_KEY_GRID_SIZE)
+		grid_value = _to_vector3i(stored_grid, default_grid)
+		grid_loaded = true
+	if editor_settings.has_setting(_EDITOR_SETTINGS_KEY_CELL_SIZE):
+		var stored_cell = editor_settings.get_setting(_EDITOR_SETTINGS_KEY_CELL_SIZE)
+		cell_value = _to_vector3(stored_cell, default_cell)
+		cell_loaded = true
+	if grid_loaded or cell_loaded:
+		_last_config = {
+			"grid_size": grid_value,
+			"cell_size": cell_value
+		}
+		return
 	if not editor_settings.has_setting(_EDITOR_SETTINGS_KEY):
 		return
-	var stored = editor_settings.get_setting(_EDITOR_SETTINGS_KEY)
-	if typeof(stored) != TYPE_DICTIONARY:
+	var legacy = editor_settings.get_setting(_EDITOR_SETTINGS_KEY)
+	if typeof(legacy) != TYPE_DICTIONARY:
 		return
-	var parsed := _sanitize_config(stored)
+	var parsed := _sanitize_config(legacy)
 	if parsed.is_empty():
 		return
 	_last_config = parsed
@@ -77,7 +107,8 @@ func _save_last_config_to_editor() -> void:
 	var editor_settings := _get_editor_settings()
 	if editor_settings == null:
 		return
-	editor_settings.set_setting(_EDITOR_SETTINGS_KEY, _last_config.duplicate(true))
+	editor_settings.set_setting(_EDITOR_SETTINGS_KEY_GRID_SIZE, _last_config.get("grid_size", Vector3i(5, 3, 5)))
+	editor_settings.set_setting(_EDITOR_SETTINGS_KEY_CELL_SIZE, _last_config.get("cell_size", Vector3(2, 2, 2)))
 
 func _sanitize_config(data: Dictionary) -> Dictionary:
 	var default_grid := Vector3i(5, 3, 5)
@@ -114,3 +145,9 @@ func _get_editor_settings() -> EditorSettings:
 	if editor_interface == null:
 		return null
 	return editor_interface.get_editor_settings()
+
+func _has_editor_setting(key: String) -> bool:
+	var editor_settings := _get_editor_settings()
+	if editor_settings == null:
+		return false
+	return editor_settings.has_setting(key)

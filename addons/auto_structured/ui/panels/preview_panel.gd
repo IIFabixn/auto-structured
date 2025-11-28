@@ -64,6 +64,7 @@ var wfc_last_config: Dictionary = {
 var wfc_session_active := false
 var wfc_waiting_for_choice: Dictionary = {}
 var wfc_cell_nodes: Dictionary = {}
+var wfc_decision_highlight: MeshInstance3D
 
 func _ready() -> void:
 	set_process(true)
@@ -78,8 +79,10 @@ func _ready() -> void:
 		step_button.pressed.connect(_on_step_button_pressed)
 	if solve_button:
 		solve_button.pressed.connect(_on_solve_button_pressed)
-	if wfc_setup_dialog and not wfc_setup_dialog.setup_confirmed.is_connected(_on_wfc_setup_confirmed):
-		wfc_setup_dialog.setup_confirmed.connect(_on_wfc_setup_confirmed)
+	if wfc_setup_dialog:
+		if not wfc_setup_dialog.setup_confirmed.is_connected(_on_wfc_setup_confirmed):
+			wfc_setup_dialog.setup_confirmed.connect(_on_wfc_setup_confirmed)
+		wfc_last_config = wfc_setup_dialog.get_last_config().duplicate(true)
 	if viewport_container and not viewport_container.gui_input.is_connected(_on_viewport_gui_input):
 		viewport_container.gui_input.connect(_on_viewport_gui_input)
 	_set_instruction(DEFAULT_INSTRUCTION)
@@ -115,9 +118,12 @@ func setup_library(library: ModuleLibrary) -> void:
 	_reset_wfc_session()
 	if current_library:
 		var cell := current_library.cell_world_size
-		if cell != Vector3.ZERO:
+		if wfc_setup_dialog:
+			wfc_setup_dialog.apply_library_defaults(Vector3i.ZERO, cell)
+			wfc_last_config = wfc_setup_dialog.get_last_config().duplicate(true)
+		elif cell != Vector3.ZERO:
 			wfc_last_config["cell_size"] = cell
-		_update_grid_spacing(cell)
+		_update_grid_spacing(_get_configured_cell_size())
 	_update_buttons_state()
 
 func handle_socket_preview_request(tile: Tile, socket: Socket) -> void:
@@ -167,7 +173,7 @@ func _show_socket_preview(tile: Tile, socket: Socket) -> void:
 	socket_cycle_entries.clear()
 	socket_cycle_entries.append({"type": "base"})
 	var matches := WfcHelper.find_compatible_tiles(socket, current_library.tiles, tile)
-	var cell := _get_cell_size_from_library()
+	var cell := _get_configured_cell_size()
 	for data in matches:
 		var compat_tile: Tile = data.get("tile")
 		if compat_tile == null:
@@ -278,6 +284,7 @@ func _reset_wfc_session(clear_visuals: bool = true) -> void:
 	wfc_solver = null
 	wfc_grid = null
 	wfc_waiting_for_choice.clear()
+	_clear_decision_highlight(clear_visuals)
 	if clear_visuals:
 		wfc_cell_nodes.clear()
 		_clear_children(wfc_root)
@@ -355,6 +362,7 @@ func _handle_solver_result(result: Dictionary) -> void:
 		_finish_session(false, result.get("message", "Solver error."))
 	elif status == "choice":
 		wfc_waiting_for_choice = result.duplicate(true)
+		_show_decision_highlight(result.get("cell_position", Vector3i.ZERO))
 		_show_step_options(result)
 		_set_instruction("Select a tile for cell %s" % str(result.get("cell_position", Vector3i.ZERO)))
 		step_button.disabled = true
@@ -388,6 +396,7 @@ func _set_step_options_visible(visible: bool) -> void:
 		step_options_scroll.visible = visible
 	if not visible:
 		wfc_waiting_for_choice.clear()
+		_clear_decision_highlight()
 
 func _on_step_option_pressed(index: int) -> void:
 	if wfc_solver == null or wfc_waiting_for_choice.is_empty():
@@ -565,6 +574,42 @@ func _clear_children(node: Node) -> void:
 	for child in node.get_children():
 		child.queue_free()
 
+func _show_decision_highlight(cell_position: Vector3i) -> void:
+	if wfc_root == null:
+		return
+	var cell_size := _get_active_wfc_cell_size()
+	if wfc_decision_highlight == null or not is_instance_valid(wfc_decision_highlight):
+		wfc_decision_highlight = MeshInstance3D.new()
+		var mesh := BoxMesh.new()
+		mesh.size = cell_size
+		wfc_decision_highlight.mesh = mesh
+		var material := StandardMaterial3D.new()
+		material.albedo_color = Color(0.9, 0.6, 0.05, 0.35)
+		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		material.cull_mode = BaseMaterial3D.CULL_DISABLED
+		wfc_decision_highlight.material_override = material
+		wfc_decision_highlight.visible = false
+		wfc_root.add_child(wfc_decision_highlight)
+		wfc_decision_highlight.owner = null
+	var box_mesh: BoxMesh = wfc_decision_highlight.mesh
+	if box_mesh:
+		box_mesh.size = cell_size
+	wfc_decision_highlight.position = WfcHelper.grid_to_world(cell_position, cell_size) + cell_size * 0.5
+	wfc_decision_highlight.visible = true
+
+func _clear_decision_highlight(free_node: bool = false) -> void:
+	if wfc_decision_highlight == null:
+		return
+	if not is_instance_valid(wfc_decision_highlight):
+		wfc_decision_highlight = null
+		return
+	if free_node:
+		wfc_decision_highlight.queue_free()
+		wfc_decision_highlight = null
+	else:
+		wfc_decision_highlight.visible = false
+
 func _set_instruction(text: String) -> void:
 	if instructions_label:
 		instructions_label.text = text
@@ -587,6 +632,12 @@ func _get_cell_size_from_library() -> Vector3:
 func _get_active_wfc_cell_size() -> Vector3:
 	if wfc_cell_size != Vector3.ZERO:
 		return wfc_cell_size
+	return _get_configured_cell_size()
+
+func _get_configured_cell_size() -> Vector3:
+	var configured: Vector3 = wfc_last_config.get("cell_size", Vector3.ZERO)
+	if configured != Vector3.ZERO:
+		return configured
 	return _get_cell_size_from_library()
 
 func _update_grid_spacing(cell_size: Vector3) -> void:
