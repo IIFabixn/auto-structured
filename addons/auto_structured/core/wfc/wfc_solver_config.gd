@@ -1,5 +1,8 @@
 @tool
 class_name WfcSolverConfig extends RefCounted
+const WfcEntropyStrategy = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_entropy.gd")
+const WfcCenterOutStrategy = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_center_out.gd")
+const WfcFrontierStrategy = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_frontier.gd")
 ## Configuration settings for WFC solver performance tuning.
 ##
 ## Use this to adjust performance vs. smoothness trade-offs for different grid sizes.
@@ -27,6 +30,9 @@ var max_backtrack_depth: int = 10
 
 ## Save checkpoint every N collapses.
 var backtrack_checkpoint_frequency: int = 5
+
+@export_enum("entropy", "center_out", "frontier")
+var solve_strategy_id: String = "entropy"
 
 
 ## Preset for small grids (< 10K cells)
@@ -81,6 +87,16 @@ static func custom(yield_ms: int, batch_size: int, prewarm: bool = true) -> WfcS
 	config.prewarm_cache = prewarm
 	return config
 
+func create_strategy_instance() -> WfcSolveStrategy:
+	"""Instantiate the selected solve strategy."""
+	match solve_strategy_id:
+		"center_out":
+			return WfcCenterOutStrategy.new()
+		"frontier":
+			return WfcFrontierStrategy.new()
+		_:
+			return WfcEntropyStrategy.new()
+
 
 func apply_to_solver(solver: WfcSolver) -> void:
 	"""Apply this configuration to a solver instance."""
@@ -91,3 +107,5 @@ func apply_to_solver(solver: WfcSolver) -> void:
 	solver.enable_backtracking = enable_backtracking
 	solver.max_backtrack_depth = max_backtrack_depth
 	solver.backtrack_checkpoint_frequency = backtrack_checkpoint_frequency
+	if solver.has_method("set_solve_strategy"):
+		solver.set_solve_strategy(create_strategy_instance(), self)

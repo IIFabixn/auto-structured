@@ -6,10 +6,14 @@ const WfcCell = preload("res://addons/auto_structured/core/wfc/wfc_cell.gd")
 const WfcHelper = preload("res://addons/auto_structured/core/wfc/wfc_helper.gd")
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 const Socket = preload("res://addons/auto_structured/core/socket.gd")
+const WfcSolveStrategy = preload("res://addons/auto_structured/core/wfc/strategies/wfc_solve_strategy_base.gd")
+const WfcEntropyStrategy = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_entropy.gd")
 
 var grid: WfcGrid
 var max_iterations: int = 10000
 var _fallback_tile: Tile = null  ## Cached reference to grid's internal fallback tile
+var _active_strategy: WfcSolveStrategy = null
+var _strategy_config = null
 
 ## Logging control: disable to run silently
 var logging_enabled: bool = true
@@ -20,6 +24,9 @@ var progress_callback: Callable = Callable()
 
 ## Progress reporting: How often to call progress_callback (in iterations), 0 = disabled
 var progress_report_frequency: int = 100
+var progress_report_interval_ms: int = 2000
+var yield_interval_ms: int = 16
+var propagation_batch_size: int = 50
 
 ## Performance tracking: Remaining uncollapsed cells
 var _remaining_cells: int = 0
@@ -206,6 +213,7 @@ func solve() -> bool:
 	# Initialize requirement context (used for tracking tile counts, etc.)
 	_requirement_context.clear()
 	_reset_tile_requirements()
+	_strategy_reset()
 	
 	# CRITICAL: Initialize entropy heap for O(log N) cell selection
 	_log(["  Initializing entropy heap..."])
@@ -243,8 +251,8 @@ func solve() -> bool:
 			}
 			progress_callback.call(progress_data)
 
-		# Observe: Pick cell with lowest entropy
-		var cell = grid.get_lowest_entropy_cell()
+		# Observe: Pick next cell based on active strategy
+		var cell = _pick_next_cell()
 		if not cell:
 			_log(["[WFC Solver] No more cells to collapse (fully collapsed)"])
 			break
@@ -303,6 +311,7 @@ func solve() -> bool:
 		iterations += 1
 		_remaining_cells -= 1  # We collapsed one more cell
 		_collapses_since_checkpoint += 1
+		_notify_strategy_cell_collapsed(cell)
 
 	var elapsed_seconds = (Time.get_ticks_msec() - start_time) / 1000.0
 	_log(["[WFC Solver] Solve completed successfully!"])
@@ -406,6 +415,7 @@ func _collapse_cell_with_variant(cell: WfcCell, variant_override: Dictionary = {
 		return {"status": "error", "message": "WFC: Propagation failed at %s" % str(cell.position)}
 	_remaining_cells -= 1
 	_collapses_since_checkpoint += 1
+	_notify_strategy_cell_collapsed(cell)
 	return {"status": "ok"}
 
 func _handle_pre_collapse_contradiction(cell: WfcCell, context: String) -> Dictionary:
@@ -438,7 +448,7 @@ func advance_until_choice() -> Dictionary:
 		if iterations >= max_iterations:
 			return {"status": "error", "message": "WFC: Max iterations reached while stepping"}
 		iterations += 1
-		var cell := grid.get_lowest_entropy_cell()
+		var cell: WfcCell = _pick_next_cell()
 		if cell == null:
 			return {"status": "complete"}
 		_apply_requirements_to_cell(cell)
@@ -447,7 +457,7 @@ func advance_until_choice() -> Dictionary:
 			if contradiction_result.get("status") == "backtracked":
 				continue
 			return contradiction_result
-		var variant_count := cell.possible_tile_variants.size()
+		var variant_count: int = cell.possible_tile_variants.size()
 		if variant_count == 0:
 			var empty_result := _handle_pre_collapse_contradiction(cell, "Cell preparation")
 			if empty_result.get("status") == "backtracked":
@@ -626,6 +636,7 @@ func reset() -> void:
 	_collapses_since_checkpoint = 0
 	# Note: Keep cache - it's valid across resets with same tiles
 	_reset_interactive_state()
+	_strategy_reset()
 
 func set_tile_weight(tile: Tile, rotation: int, weight: float) -> void:
 	"""Set the weight/frequency for a specific tile+rotation variant.
@@ -656,6 +667,41 @@ func get_cache_stats() -> Dictionary:
 func set_logging_enabled(enabled: bool) -> void:
 	"""Enable or disable logging output."""
 	logging_enabled = enabled
+
+func set_solve_strategy(strategy: WfcSolveStrategy, config = null) -> void:
+	"""Assign a solve strategy instance (falling back to entropy if null)."""
+	_strategy_config = config
+	if strategy == null:
+		strategy = WfcEntropyStrategy.new()
+	_active_strategy = strategy
+	if _active_strategy and grid:
+		_active_strategy.configure(self, config)
+
+func get_solve_strategy() -> WfcSolveStrategy:
+	return _active_strategy
+
+func _ensure_strategy_ready() -> void:
+	if _active_strategy == null:
+		set_solve_strategy(WfcEntropyStrategy.new(), _strategy_config)
+
+func _strategy_reset() -> void:
+	_ensure_strategy_ready()
+	if _active_strategy:
+		_active_strategy.on_reset(self)
+
+func _pick_next_cell() -> WfcCell:
+	_ensure_strategy_ready()
+	if _active_strategy:
+		var cell = _active_strategy.pick_next_cell(self)
+		if cell:
+			return cell
+	if grid:
+		return grid.get_lowest_entropy_cell()
+	return null
+
+func _notify_strategy_cell_collapsed(cell: WfcCell) -> void:
+	if _active_strategy and cell:
+		_active_strategy.on_cell_collapsed(cell)
 
 func _reset_tile_requirements() -> void:
 	"""Reset any stateful requirements (like MaxCountRequirement counters)."""
