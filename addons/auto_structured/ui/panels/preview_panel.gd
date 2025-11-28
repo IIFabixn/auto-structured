@@ -124,7 +124,11 @@ func setup_library(library: ModuleLibrary) -> void:
 			wfc_last_config = _hydrate_wfc_config(wfc_setup_dialog.get_last_config())
 		elif cell != Vector3.ZERO:
 			wfc_last_config["cell_size"] = cell
-		_update_grid_spacing(_get_configured_cell_size())
+		var configured_cell := _get_configured_cell_size()
+		_update_grid_spacing(configured_cell)
+		var configured_grid: Vector3i = wfc_last_config.get("grid_size", Vector3i.ZERO)
+		_update_grid_bounds(configured_grid, configured_cell)
+		_update_wfc_root_offset(configured_grid, configured_cell)
 	_update_buttons_state()
 
 func handle_socket_preview_request(tile: Tile, socket: Socket) -> void:
@@ -352,7 +356,10 @@ func _on_wfc_setup_confirmed(config: Dictionary) -> void:
 	wfc_last_config = _copy_wfc_config(config)
 	_reset_wfc_session()
 	var cell_size: Vector3 = wfc_last_config.get("cell_size", _get_cell_size_from_library())
+	var grid_size: Vector3i = wfc_last_config.get("grid_size", Vector3i.ZERO)
 	_update_grid_spacing(cell_size)
+	_update_grid_bounds(grid_size, cell_size)
+	_update_wfc_root_offset(grid_size, cell_size)
 	_set_instruction("Preview settings applied. Press Step or Solve to begin.")
 	_update_buttons_state()
 
@@ -374,6 +381,8 @@ func _start_wfc_session(config: Dictionary) -> void:
 	_clear_children(socket_preview_root)
 	_sync_wfc_visuals()
 	_update_grid_spacing(cell_size)
+	_update_grid_bounds(grid_size, cell_size)
+	_update_wfc_root_offset(grid_size, cell_size)
 	_focus_camera_on_grid(grid_size, cell_size)
 	_update_buttons_state()
 
@@ -743,6 +752,27 @@ func _update_grid_spacing(cell_size: Vector3) -> void:
 		return
 	var avg := max(0.1, (cell_size.x + cell_size.z) * 0.5)
 	grid_node.grid_spacing = avg
+
+func _update_grid_bounds(grid_size: Vector3i, cell_size: Vector3) -> void:
+	if grid_node == null:
+		return
+	var size := Vector3(
+		max(0.0, float(max(grid_size.x, 0)) * abs(cell_size.x)),
+		max(0.0, float(max(grid_size.y, 0)) * abs(cell_size.y)),
+		max(0.0, float(max(grid_size.z, 0)) * abs(cell_size.z))
+	)
+	grid_node.set_world_bounds(size)
+
+func _update_wfc_root_offset(grid_size: Vector3i, cell_size: Vector3) -> void:
+	if wfc_root == null:
+		return
+	var extent := Vector3(
+		max(0.0, float(max(grid_size.x, 0)) * abs(cell_size.x)),
+		0.0,
+		max(0.0, float(max(grid_size.z, 0)) * abs(cell_size.z))
+	)
+	wfc_root.position.x = -extent.x * 0.5
+	wfc_root.position.z = -extent.z * 0.5
 
 func _cell_key(pos: Vector3i) -> String:
 	return "%d_%d_%d" % [pos.x, pos.y, pos.z]
