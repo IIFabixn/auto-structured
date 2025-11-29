@@ -25,6 +25,7 @@ entries = [{
 
 [sub_resource type="Resource" id="Resource_hyqrr"]
 script = ExtResource("5_ym6o8")
+required_tags = Array[String](["wall", "corner"])
 required_count = 2
 display_name = "Adjacent Requirement"
 
@@ -76,7 +77,6 @@ scene = ExtResource("6_k1ovt")
 tags = Array[String](["wall"])
 boundary_role = 1
 requirements = Array[ExtResource("3_lwb3q")]([SubResource("Resource_hyqrr")])
-rotation_symmetry = 1
 sockets = Array[ExtResource("5_rqldo")]([SubResource("Resource_rqldo"), SubResource("Resource_4ec60"), SubResource("Resource_6ltd1"), SubResource("Resource_a2x8y"), SubResource("Resource_murai"), SubResource("Resource_3vl5h")])
 
 [sub_resource type="Resource" id="Resource_r8igf"]
@@ -133,7 +133,6 @@ scene = ExtResource("7_rqldo")
 tags = Array[String](["door"])
 boundary_role = 1
 requirements = Array[ExtResource("3_lwb3q")]([SubResource("Resource_r8igf")])
-rotation_symmetry = 1
 sockets = Array[ExtResource("5_rqldo")]([SubResource("Resource_bj0sj"), SubResource("Resource_wks3l"), SubResource("Resource_s6wr4"), SubResource("Resource_3t8ws"), SubResource("Resource_sic6b"), SubResource("Resource_kew22")])
 
 [sub_resource type="Resource" id="Resource_iupn8"]
@@ -180,9 +179,6 @@ script = ExtResource("2_53rky")
 name = "floor"
 scene = ExtResource("4_k1ovt")
 tags = Array[String](["floor"])
-weight = 0.5
-boundary_role = 3
-rotation_symmetry = 1
 sockets = Array[ExtResource("5_rqldo")]([SubResource("Resource_iupn8"), SubResource("Resource_pi2wf"), SubResource("Resource_3j4ih"), SubResource("Resource_3lwuf"), SubResource("Resource_3r4si"), SubResource("Resource_ym6o8")])
 
 [sub_resource type="Resource" id="Resource_6r8ic"]
@@ -239,7 +235,6 @@ scene = ExtResource("8_iupn8")
 tags = Array[String](["corner", "wall"])
 boundary_role = 2
 requirements = Array[ExtResource("3_lwb3q")]([SubResource("Resource_6r8ic")])
-rotation_symmetry = 1
 sockets = Array[ExtResource("5_rqldo")]([SubResource("Resource_hkoat"), SubResource("Resource_8x41a"), SubResource("Resource_phhm4"), SubResource("Resource_qipsd"), SubResource("Resource_iyrpm"), SubResource("Resource_mysar")])
 
 [sub_resource type="Resource" id="Resource_og0v4"]

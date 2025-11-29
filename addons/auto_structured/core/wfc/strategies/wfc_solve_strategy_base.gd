@@ -1,9 +1,17 @@
 @tool
 class_name WfcSolveStrategy extends RefCounted
-## Base class for selecting the next cell to collapse during WFC solving.
+## Base class for WFC solve strategies.
 ##
-## Custom strategies can override the hooks below to bias how the solver
-## progresses across the grid while still relying on the main WFC pipeline.
+## Strategies control two aspects of WFC solving:
+## 1. Grid preparation - modify the grid before solving (remove candidates, pre-collapse cells)
+## 2. Cell selection - pick which cell to collapse next during solving
+##
+## The key method is prepare_grid() which receives the fully populated grid
+## and can modify it before WFC begins. This allows strategies to:
+## - Generate room layouts and mark zones
+## - Remove invalid tile candidates from cells
+## - Pre-collapse certain cells to specific tiles
+## - Apply any structural constraints
 
 func get_id() -> String:
 	"""Unique identifier used by configs/inspector dropdowns."""
@@ -15,6 +23,41 @@ func get_display_name() -> String:
 
 func configure(_solver, _config) -> void:
 	"""Called once the solver has a grid and optional config available."""
+	pass
+
+
+func get_solver_overrides() -> Dictionary:
+	"""Return solver configuration overrides for this strategy.
+	
+	Strategies can override solver settings by returning a dictionary
+	with keys matching solver properties. For example:
+	
+	return {
+		"enforce_region_boundaries": false,  # Disable boundary requirement checks
+		"max_boundary_regions": 0,           # Disable region counting
+	}
+	
+	Returns:
+		Dictionary of solver property names to values
+	"""
+	return {}
+
+
+func prepare_grid(_grid, _solver) -> void:
+	"""Called before solving begins. Override to modify the grid.
+	
+	This is the main hook for strategies to set up structural constraints.
+	The grid is fully populated with all tile variants at this point.
+	
+	Examples:
+	- Generate a room layout and restrict cells to appropriate tile types
+	- Remove boundary tiles from interior cells
+	- Pre-collapse corner cells to corner tiles
+	
+	Args:
+		grid: The WfcGrid with all cells populated
+		solver: The WfcSolver instance (for access to config, etc.)
+	"""
 	pass
 
 func on_reset(_solver) -> void:
@@ -32,12 +75,5 @@ func pick_next_cell(solver) -> Variant:
 	return solver.grid.get_lowest_entropy_cell()
 
 func adjust_weights_for_cell(_cell, _solver) -> void:
-	"""Called before collapsing a cell. Override to modify variant weights.
-	
-	Strategies can use this to bias tile selection based on context.
-	For example, the Growing strategy boosts boundary tile weights
-	when collapsing frontier cells.
-	
-	Changes are made directly to cell.possible_tile_variants weights.
-	"""
+	"""Called before collapsing a cell. Override to modify variant weights."""
 	pass

@@ -160,6 +160,38 @@ func get_variant() -> Dictionary:
 		return possible_tile_variants[0]
 	return {}
 
+func restrict_to_boundary_tiles() -> bool:
+	"""Remove all non-boundary tile variants. Returns true if changed."""
+	if is_collapsed():
+		return false
+	var original_count = possible_tile_variants.size()
+	var filtered: Array[Dictionary] = []
+	for variant in possible_tile_variants:
+		var tile: Tile = variant.get("tile")
+		if tile and tile.boundary_role != Tile.BoundaryRole.NONE:
+			filtered.append(variant)
+	if filtered.is_empty():
+		return false  # Don't remove everything - keep at least some options
+	possible_tile_variants = filtered
+	_entropy_valid = false
+	return possible_tile_variants.size() < original_count
+
+func restrict_to_non_boundary_tiles() -> bool:
+	"""Remove all boundary tile variants. Returns true if changed."""
+	if is_collapsed():
+		return false
+	var original_count = possible_tile_variants.size()
+	var filtered: Array[Dictionary] = []
+	for variant in possible_tile_variants:
+		var tile: Tile = variant.get("tile")
+		if tile and tile.boundary_role == Tile.BoundaryRole.NONE:
+			filtered.append(variant)
+	if filtered.is_empty():
+		return false  # Don't remove everything
+	possible_tile_variants = filtered
+	_entropy_valid = false
+	return possible_tile_variants.size() < original_count
+
 func reset(all_tile_variants: Array[Dictionary]) -> void:
 	"""Reset cell to uncollapsed state with all possibilities."""
 	possible_tile_variants = all_tile_variants.duplicate()

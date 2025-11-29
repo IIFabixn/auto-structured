@@ -264,6 +264,9 @@ func solve() -> bool:
 	_reset_tile_requirements()
 	_strategy_reset()
 	
+	# Let strategy prepare/modify the grid before solving
+	_strategy_prepare_grid()
+	
 	# Reset region tracker for fresh solve
 	if _region_tracker:
 		_region_tracker.reset()
@@ -775,6 +778,52 @@ func _notify_strategy_before_collapse(cell: WfcCell) -> void:
 	"""Let the strategy adjust variant weights before collapse."""
 	if _active_strategy and cell:
 		_active_strategy.adjust_weights_for_cell(cell, self)
+
+func _strategy_prepare_grid() -> void:
+	"""Let the strategy modify the grid before solving begins.
+	
+	This is the main hook for strategies to set up structural constraints,
+	generate room layouts, remove invalid candidates, etc.
+	"""
+	if _active_strategy and grid:
+		# Apply strategy's solver overrides first
+		_apply_strategy_overrides()
+		
+		_log(["  Strategy preparing grid..."])
+		_active_strategy.prepare_grid(grid, self)
+		# Update remaining cells count after strategy may have collapsed some
+		_remaining_cells = 0
+		for x in range(grid.size.x):
+			for y in range(grid.size.y):
+				for z in range(grid.size.z):
+					var cell = grid.get_cell(Vector3i(x, y, z))
+					if cell and not cell.is_collapsed():
+						_remaining_cells += 1
+		_log(["  Cells remaining after preparation: ", _remaining_cells])
+
+
+func _apply_strategy_overrides() -> void:
+	"""Apply solver configuration overrides from the active strategy."""
+	if not _active_strategy:
+		return
+	
+	var overrides = _active_strategy.get_solver_overrides()
+	if overrides.is_empty():
+		return
+	
+	_log(["  Applying strategy overrides: ", overrides])
+	
+	for key in overrides:
+		var value = overrides[key]
+		match key:
+			"enforce_region_boundaries":
+				_region_config.enabled = value
+			"require_closed_regions":
+				_region_config.require_closed_regions = value
+			"max_boundary_regions":
+				_region_config.max_regions = value
+			_:
+				push_warning("Unknown strategy override: %s" % key)
 
 func _reset_tile_requirements() -> void:
 	"""Reset any stateful requirements (like MaxCountRequirement counters)."""
