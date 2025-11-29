@@ -23,6 +23,16 @@ const PreviewMode := {
 }
 const DEFAULT_INSTRUCTION := "Select a tile to preview."
 const DEFAULT_VIEW_DIRECTION := Vector3(0.45, 0.35, -1.0)
+const DEFAULT_BLUEPRINT_CONFIG := {
+    "min_room_size": 4,
+    "max_room_size": 8,
+    "max_rooms": 6,
+    "margin": 1,
+    "floor_height": 1,
+    "num_floors": 1,
+    "add_roof": false,
+    "doors_per_room": 1,
+}
 
 @onready var new_button: TextureButton = %NewButton
 @onready var edit_button: TextureButton = %EditButton
@@ -310,6 +320,7 @@ func _deserialize_solver_settings(data: Dictionary) -> WfcSolverConfig:
     config.max_backtrack_depth = data.get("max_backtrack_depth", config.max_backtrack_depth)
     config.backtrack_checkpoint_frequency = data.get("backtrack_checkpoint_frequency", config.backtrack_checkpoint_frequency)
     config.solve_strategy_id = data.get("solve_strategy_id", config.solve_strategy_id)
+    config.blueprint_config = _sanitize_blueprint_config(data.get("blueprint_config", config.blueprint_config))
     # Restore region settings from unified config or legacy field
     if data.has("region_config"):
         config.region_config = WfcRegionConfig.from_dict(data["region_config"])
@@ -330,6 +341,7 @@ func _serialize_solver_config(config: WfcSolverConfig, preset_id: String) -> Dic
         "max_backtrack_depth": config.max_backtrack_depth,
         "backtrack_checkpoint_frequency": config.backtrack_checkpoint_frequency,
         "solve_strategy_id": config.solve_strategy_id,
+        "blueprint_config": _sanitize_blueprint_config(config.blueprint_config),
         # Region settings (using unified config)
         "region_config": config.region_config.to_dict() if config.region_config else {}
     }
@@ -347,10 +359,35 @@ func _clone_solver_config(source: WfcSolverConfig) -> WfcSolverConfig:
     clone.max_backtrack_depth = source.max_backtrack_depth
     clone.backtrack_checkpoint_frequency = source.backtrack_checkpoint_frequency
     clone.solve_strategy_id = source.solve_strategy_id
+    clone.blueprint_config = _sanitize_blueprint_config(source.blueprint_config)
     # Clone region config properly
     if source.region_config:
         clone.region_config = source.region_config.duplicate_config()
     return clone
+
+func _sanitize_blueprint_config(data: Dictionary) -> Dictionary:
+    var result := DEFAULT_BLUEPRINT_CONFIG.duplicate(true)
+    if data == null:
+        return result
+    if data.has("min_room_size"):
+        result["min_room_size"] = max(1, int(data["min_room_size"]))
+    if data.has("max_room_size"):
+        result["max_room_size"] = max(result["min_room_size"], int(data["max_room_size"]))
+    else:
+        result["max_room_size"] = max(result["min_room_size"], result["max_room_size"])
+    if data.has("max_rooms"):
+        result["max_rooms"] = max(1, int(data["max_rooms"]))
+    if data.has("margin"):
+        result["margin"] = max(0, int(data["margin"]))
+    if data.has("floor_height"):
+        result["floor_height"] = max(1, int(data["floor_height"]))
+    if data.has("num_floors"):
+        result["num_floors"] = max(1, int(data["num_floors"]))
+    if data.has("doors_per_room"):
+        result["doors_per_room"] = int(data["doors_per_room"])
+    if data.has("add_roof"):
+        result["add_roof"] = bool(data["add_roof"])
+    return result
 
 func _on_new_button_pressed() -> void:
     if current_library == null:

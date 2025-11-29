@@ -67,6 +67,127 @@ popup/item_1/id = 1
 popup/item_2/text = "Frontier"
 popup/item_2/id = 2
 
+[node name="StrategyDetails" type="VBoxContainer" parent="VBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="BlueprintSection" type="VBoxContainer" parent="VBox/StrategyDetails"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="BlueprintLabel" type="Label" parent="VBox/StrategyDetails/BlueprintSection"]
+layout_mode = 2
+text = "Blueprint Settings"
+
+[node name="BlueprintGrid" type="GridContainer" parent="VBox/StrategyDetails/BlueprintSection"]
+unique_name_in_owner = true
+layout_mode = 2
+columns = 2
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 6
+
+[node name="BlueprintMinRoomLabel" type="Label" parent="VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
+layout_mode = 2
+text = "Min Room Size"
+
+[node name="BlueprintMinRoomSpin" type="SpinBox" parent="VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.0
+max_value = 64.0
+step = 1.0
+value = 4.0
+custom_minimum_size = Vector2(120, 0)
+
+[node name="BlueprintMaxRoomLabel" type="Label" parent="VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
+layout_mode = 2
+text = "Max Room Size"
+
+[node name="BlueprintMaxRoomSpin" type="SpinBox" parent="VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.0
+max_value = 64.0
+step = 1.0
+value = 8.0
+custom_minimum_size = Vector2(120, 0)
+
+[node name="BlueprintMaxRoomsLabel" type="Label" parent="VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
+layout_mode = 2
+text = "Max Rooms"
+
+[node name="BlueprintMaxRoomsSpin" type="SpinBox" parent="VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.0
+max_value = 32.0
+step = 1.0
+value = 6.0
+custom_minimum_size = Vector2(120, 0)
+
+[node name="BlueprintMarginLabel" type="Label" parent="VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
+layout_mode = 2
+text = "Margin"
+
+[node name="BlueprintMarginSpin" type="SpinBox" parent="VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 0.0
+max_value = 16.0
+step = 1.0
+value = 1.0
+custom_minimum_size = Vector2(120, 0)
+
+[node name="BlueprintFloorHeightLabel" type="Label" parent="VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
+layout_mode = 2
+text = "Floor Height"
+
+[node name="BlueprintFloorHeightSpin" type="SpinBox" parent="VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.0
+max_value = 8.0
+step = 1.0
+value = 1.0
+custom_minimum_size = Vector2(120, 0)
+
+[node name="BlueprintFloorsLabel" type="Label" parent="VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
+layout_mode = 2
+text = "Floors"
+
+[node name="BlueprintFloorsSpin" type="SpinBox" parent="VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.0
+max_value = 8.0
+step = 1.0
+value = 1.0
+custom_minimum_size = Vector2(120, 0)
+
+[node name="BlueprintDoorsLabel" type="Label" parent="VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
+layout_mode = 2
+text = "Doors / Room"
+
+[node name="BlueprintDoorsSpin" type="SpinBox" parent="VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = -1.0
+max_value = 8.0
+step = 1.0
+value = 1.0
+custom_minimum_size = Vector2(120, 0)
+
+[node name="BlueprintRoofLabel" type="Label" parent="VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
+layout_mode = 2
+text = "Add Roof"
+
+[node name="BlueprintRoofCheck" type="CheckButton" parent="VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+
 [node name="GridSizeLabel" type="Label" parent="VBox"]
 layout_mode = 2
 text = "Grid Size (cells)"

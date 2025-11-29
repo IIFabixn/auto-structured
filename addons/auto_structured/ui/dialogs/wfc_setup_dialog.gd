@@ -38,9 +38,29 @@ const STRATEGY_LABELS := {
 	"guided_entropy": "Guided Entropy",
 	"blueprint": "Blueprint"
 }
+const DEFAULT_BLUEPRINT_CONFIG := {
+	"min_room_size": 4,
+	"max_room_size": 8,
+	"max_rooms": 6,
+	"margin": 1,
+	"floor_height": 1,
+	"num_floors": 1,
+	"add_roof": false,
+	"doors_per_room": 1,
+}
 
 @onready var preset_option: OptionButton = %PresetOption
 @onready var strategy_option: OptionButton = %StrategyOption
+@onready var strategy_details: VBoxContainer = %StrategyDetails
+@onready var blueprint_section: VBoxContainer = %BlueprintSection
+@onready var blueprint_min_spin: SpinBox = %BlueprintMinRoomSpin
+@onready var blueprint_max_spin: SpinBox = %BlueprintMaxRoomSpin
+@onready var blueprint_max_rooms_spin: SpinBox = %BlueprintMaxRoomsSpin
+@onready var blueprint_margin_spin: SpinBox = %BlueprintMarginSpin
+@onready var blueprint_floor_height_spin: SpinBox = %BlueprintFloorHeightSpin
+@onready var blueprint_floors_spin: SpinBox = %BlueprintFloorsSpin
+@onready var blueprint_doors_spin: SpinBox = %BlueprintDoorsSpin
+@onready var blueprint_roof_check: CheckButton = %BlueprintRoofCheck
 @onready var grid_x_spin: SpinBox = %GridXSpin
 @onready var grid_y_spin: SpinBox = %GridYSpin
 @onready var grid_z_spin: SpinBox = %GridZSpin
@@ -84,6 +104,7 @@ func _ready() -> void:
 	_populate_preset_option()
 	_populate_strategy_option()
 	_setup_custom_control_signals()
+	_setup_blueprint_control_signals()
 	_sync_controls_from_config()
 
 func open_with_defaults(grid_size: Vector3i = Vector3i(5, 3, 5), cell_size: Vector3 = Vector3(2, 2, 2)) -> void:
@@ -172,11 +193,13 @@ func _sync_controls_from_config() -> void:
 	cell_z_spin.value = cell_size.z
 	_sync_options_ui()
 	_sync_custom_solver_controls()
+	_update_strategy_specific_sections()
 
 func _sync_options_ui() -> void:
 	_sync_preset_selection()
 	_sync_strategy_selection()
 	_sync_custom_solver_controls()
+	_update_strategy_specific_sections()
 
 func _sync_preset_selection() -> void:
 	if preset_option == null:
@@ -195,6 +218,7 @@ func _sync_strategy_selection() -> void:
 	if index == -1:
 		index = 0
 	strategy_option.select(index)
+	_update_strategy_specific_sections()
 
 func _on_preset_option_selected(index: int) -> void:
 	if index < 0 or index >= PRESET_ORDER.size():
@@ -226,6 +250,7 @@ func _on_strategy_option_selected(index: int) -> void:
 	_current_solver_config.solve_strategy_id = strategy_id
 	_update_solver_settings_cache()
 	_sync_custom_solver_controls()
+	_update_strategy_specific_sections()
 
 func _setup_custom_control_signals() -> void:
 	if yield_spin and not yield_spin.value_changed.is_connected(_on_custom_yield_changed):
@@ -250,6 +275,24 @@ func _setup_custom_control_signals() -> void:
 		max_regions_spin.value_changed.connect(_on_custom_max_regions_changed)
 	if require_closed_regions_check and not require_closed_regions_check.toggled.is_connected(_on_custom_require_closed_regions_toggled):
 		require_closed_regions_check.toggled.connect(_on_custom_require_closed_regions_toggled)
+
+func _setup_blueprint_control_signals() -> void:
+	if blueprint_min_spin and not blueprint_min_spin.value_changed.is_connected(_on_blueprint_min_size_changed):
+		blueprint_min_spin.value_changed.connect(_on_blueprint_min_size_changed)
+	if blueprint_max_spin and not blueprint_max_spin.value_changed.is_connected(_on_blueprint_max_size_changed):
+		blueprint_max_spin.value_changed.connect(_on_blueprint_max_size_changed)
+	if blueprint_max_rooms_spin and not blueprint_max_rooms_spin.value_changed.is_connected(_on_blueprint_max_rooms_changed):
+		blueprint_max_rooms_spin.value_changed.connect(_on_blueprint_max_rooms_changed)
+	if blueprint_margin_spin and not blueprint_margin_spin.value_changed.is_connected(_on_blueprint_margin_changed):
+		blueprint_margin_spin.value_changed.connect(_on_blueprint_margin_changed)
+	if blueprint_floor_height_spin and not blueprint_floor_height_spin.value_changed.is_connected(_on_blueprint_floor_height_changed):
+		blueprint_floor_height_spin.value_changed.connect(_on_blueprint_floor_height_changed)
+	if blueprint_floors_spin and not blueprint_floors_spin.value_changed.is_connected(_on_blueprint_floors_changed):
+		blueprint_floors_spin.value_changed.connect(_on_blueprint_floors_changed)
+	if blueprint_doors_spin and not blueprint_doors_spin.value_changed.is_connected(_on_blueprint_doors_changed):
+		blueprint_doors_spin.value_changed.connect(_on_blueprint_doors_changed)
+	if blueprint_roof_check and not blueprint_roof_check.toggled.is_connected(_on_blueprint_roof_toggled):
+		blueprint_roof_check.toggled.connect(_on_blueprint_roof_toggled)
 
 func _sync_custom_solver_controls() -> void:
 	var show_custom := _current_preset_id == "custom"
@@ -283,12 +326,81 @@ func _sync_custom_solver_controls() -> void:
 		if backtracking_check:
 			backtracking_check.button_pressed = _current_solver_config.enable_backtracking
 	_syncing_custom_controls = false
+	if _current_solver_config.solve_strategy_id == "blueprint":
+		_sync_blueprint_controls()
 
 func _set_custom_section_visible(visible: bool) -> void:
 	if advanced_label:
 		advanced_label.visible = visible
 	if advanced_grid:
 		advanced_grid.visible = visible
+
+func _update_strategy_specific_sections() -> void:
+	if strategy_details == null:
+		return
+	var show_blueprint := _current_solver_config != null and _current_solver_config.solve_strategy_id == "blueprint"
+	strategy_details.visible = show_blueprint
+	if blueprint_section:
+		blueprint_section.visible = show_blueprint
+	if show_blueprint:
+		_sync_blueprint_controls()
+
+func _sync_blueprint_controls() -> void:
+	if _current_solver_config == null:
+		return
+	_syncing_custom_controls = true
+	var cfg := _sanitize_blueprint_config(_current_solver_config.blueprint_config)
+	_current_solver_config.blueprint_config = cfg
+	if blueprint_min_spin:
+		blueprint_min_spin.value = cfg["min_room_size"]
+	if blueprint_max_spin:
+		blueprint_max_spin.value = cfg["max_room_size"]
+	if blueprint_max_rooms_spin:
+		blueprint_max_rooms_spin.value = cfg["max_rooms"]
+	if blueprint_margin_spin:
+		blueprint_margin_spin.value = cfg["margin"]
+	if blueprint_floor_height_spin:
+		blueprint_floor_height_spin.value = cfg["floor_height"]
+	if blueprint_floors_spin:
+		blueprint_floors_spin.value = cfg["num_floors"]
+	if blueprint_doors_spin:
+		blueprint_doors_spin.value = cfg["doors_per_room"]
+	if blueprint_roof_check:
+		blueprint_roof_check.button_pressed = cfg["add_roof"]
+	_syncing_custom_controls = false
+
+func _update_blueprint_config(key: String, value) -> void:
+	if _syncing_custom_controls or _current_solver_config == null:
+		return
+	var cfg := _current_solver_config.blueprint_config.duplicate(true) if _current_solver_config.blueprint_config else DEFAULT_BLUEPRINT_CONFIG.duplicate(true)
+	cfg[key] = value
+	_current_solver_config.blueprint_config = _sanitize_blueprint_config(cfg)
+	_update_solver_settings_cache()
+	_sync_blueprint_controls()
+
+func _on_blueprint_min_size_changed(value: float) -> void:
+	_update_blueprint_config("min_room_size", int(value))
+
+func _on_blueprint_max_size_changed(value: float) -> void:
+	_update_blueprint_config("max_room_size", int(value))
+
+func _on_blueprint_max_rooms_changed(value: float) -> void:
+	_update_blueprint_config("max_rooms", int(value))
+
+func _on_blueprint_margin_changed(value: float) -> void:
+	_update_blueprint_config("margin", int(value))
+
+func _on_blueprint_floor_height_changed(value: float) -> void:
+	_update_blueprint_config("floor_height", int(value))
+
+func _on_blueprint_floors_changed(value: float) -> void:
+	_update_blueprint_config("num_floors", int(value))
+
+func _on_blueprint_doors_changed(value: float) -> void:
+	_update_blueprint_config("doors_per_room", int(value))
+
+func _on_blueprint_roof_toggled(pressed: bool) -> void:
+	_update_blueprint_config("add_roof", pressed)
 
 func _ensure_custom_mode_selection() -> void:
 	if _current_preset_id != "custom":
@@ -447,6 +559,7 @@ func _serialize_solver_config(config: WfcSolverConfig, preset_id: String) -> Dic
 		"max_backtrack_depth": config.max_backtrack_depth,
 		"backtrack_checkpoint_frequency": config.backtrack_checkpoint_frequency,
 		"solve_strategy_id": config.solve_strategy_id,
+		"blueprint_config": _sanitize_blueprint_config(config.blueprint_config),
 		# Region settings (using unified config)
 		"region_config": config.region_config.to_dict() if config.region_config else {}
 	}
@@ -458,6 +571,7 @@ func _sanitize_solver_settings(data: Dictionary) -> Dictionary:
 	for key in config.keys():
 		if data.has(key):
 			config[key] = data[key]
+	config["blueprint_config"] = _sanitize_blueprint_config(data.get("blueprint_config", config.get("blueprint_config", {})))
 	return config
 
 func _deserialize_solver_config(data: Dictionary) -> WfcSolverConfig:
@@ -473,6 +587,7 @@ func _deserialize_solver_config(data: Dictionary) -> WfcSolverConfig:
 	config.max_backtrack_depth = data.get("max_backtrack_depth", config.max_backtrack_depth)
 	config.backtrack_checkpoint_frequency = data.get("backtrack_checkpoint_frequency", config.backtrack_checkpoint_frequency)
 	config.solve_strategy_id = data.get("solve_strategy_id", config.solve_strategy_id)
+	config.blueprint_config = _sanitize_blueprint_config(data.get("blueprint_config", config.blueprint_config))
 	# Restore region settings from unified config or legacy fields
 	if data.has("region_config"):
 		config.region_config = WfcRegionConfig.from_dict(data["region_config"])
@@ -496,6 +611,7 @@ func _clone_solver_config(source: WfcSolverConfig) -> WfcSolverConfig:
 	clone.max_backtrack_depth = source.max_backtrack_depth
 	clone.backtrack_checkpoint_frequency = source.backtrack_checkpoint_frequency
 	clone.solve_strategy_id = source.solve_strategy_id
+	clone.blueprint_config = _sanitize_blueprint_config(source.blueprint_config)
 	# Clone region config
 	if source.region_config:
 		clone.region_config = source.region_config.duplicate_config()
@@ -512,6 +628,28 @@ func _sanitize_config(data: Dictionary) -> Dictionary:
 		"cell_size": cell_size,
 		"solver_settings": solver_settings
 	}
+
+func _sanitize_blueprint_config(data: Dictionary) -> Dictionary:
+	var result := DEFAULT_BLUEPRINT_CONFIG.duplicate(true)
+	if data == null:
+		return result
+	if data.has("min_room_size"):
+		result["min_room_size"] = max(1, int(data["min_room_size"]))
+	if data.has("max_room_size"):
+		result["max_room_size"] = max(result["min_room_size"], int(data["max_room_size"]))
+	if data.has("max_rooms"):
+		result["max_rooms"] = max(1, int(data["max_rooms"]))
+	if data.has("margin"):
+		result["margin"] = max(0, int(data["margin"]))
+	if data.has("floor_height"):
+		result["floor_height"] = max(1, int(data["floor_height"]))
+	if data.has("num_floors"):
+		result["num_floors"] = max(1, int(data["num_floors"]))
+	if data.has("doors_per_room"):
+		result["doors_per_room"] = int(data["doors_per_room"])
+	if data.has("add_roof"):
+		result["add_roof"] = bool(data["add_roof"])
+	return result
 
 func _to_vector3i(value, fallback: Vector3i) -> Vector3i:
 	if value is Vector3i:

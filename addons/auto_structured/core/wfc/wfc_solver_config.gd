@@ -42,11 +42,14 @@ var solve_strategy_id: String = "entropy"
 
 ## Blueprint configuration (used when solve_strategy_id = "blueprint")
 var blueprint_config: Dictionary = {
-	"min_room_size": 3,
-	"max_room_size": 7,
-	"max_rooms": 4,
-	"margin": 2,
-	"doors_per_room": -1,  # -1 = one door total, 0 = none, 1+ = per room
+	"min_room_size": 4,
+	"max_room_size": 8,
+	"max_rooms": 6,
+	"margin": 1,
+	"floor_height": 1,
+	"num_floors": 1,
+	"add_roof": false,
+	"doors_per_room": 1,  # -1 = one door total, 0 = none, 1+ = per room
 }
 
 ## Region configuration (consolidated from scattered settings)
