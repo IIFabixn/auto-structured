@@ -5,6 +5,8 @@ const WfcCenterOutStrategy = preload("res://addons/auto_structured/core/wfc/stra
 const WfcFrontierStrategy = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_frontier.gd")
 const WfcGrowingStrategy = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_growing.gd")
 const WfcBlueprintStrategy = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_blueprint.gd")
+const WfcLayoutFirstStrategy = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_layout_first.gd")
+const WfcGuidedEntropyStrategy = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_guided_entropy.gd")
 const BuildingBlueprint = preload("res://addons/auto_structured/core/blueprints/building_blueprint.gd")
 const WfcRegionConfig = preload("res://addons/auto_structured/core/wfc/wfc_region_config.gd")
 ## Configuration settings for WFC solver performance tuning.
@@ -35,7 +37,7 @@ var max_backtrack_depth: int = 10
 ## Save checkpoint every N collapses.
 var backtrack_checkpoint_frequency: int = 5
 
-@export_enum("entropy", "center_out", "frontier", "growing", "blueprint")
+@export_enum("entropy", "center_out", "frontier", "growing", "layout_first", "guided_entropy", "blueprint")
 var solve_strategy_id: String = "entropy"
 
 ## Blueprint configuration (used when solve_strategy_id = "blueprint")
@@ -125,6 +127,10 @@ func create_strategy_instance() -> WfcSolveStrategy:
 			return WfcFrontierStrategy.new()
 		"growing":
 			return WfcGrowingStrategy.new()
+		"layout_first":
+			return WfcLayoutFirstStrategy.new()
+		"guided_entropy":
+			return WfcGuidedEntropyStrategy.new()
 		"blueprint":
 			var strategy = WfcBlueprintStrategy.new()
 			var blueprint = BuildingBlueprint.new()

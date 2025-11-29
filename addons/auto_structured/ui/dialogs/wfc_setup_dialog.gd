@@ -20,12 +20,22 @@ const PRESET_BUILDERS := {
 	"large": Callable(WfcSolverConfig, "large_grid"),
 	"very_large": Callable(WfcSolverConfig, "very_large_grid")
 }
-const STRATEGY_ORDER := ["entropy", "center_out", "frontier", "growing", "blueprint"]
+const STRATEGY_ORDER := [
+	"entropy",
+	"center_out",
+	"frontier",
+	"growing",
+	"layout_first",
+	"guided_entropy",
+	"blueprint"
+]
 const STRATEGY_LABELS := {
 	"entropy": "Entropy",
 	"center_out": "Center-Out",
 	"frontier": "Frontier",
 	"growing": "Growing",
+	"layout_first": "Layout-First (Zones)",
+	"guided_entropy": "Guided Entropy",
 	"blueprint": "Blueprint"
 }
 
