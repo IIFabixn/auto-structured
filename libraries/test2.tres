@@ -7,10 +7,10 @@
 [ext_resource type="PackedScene" uid="uid://brrawbb8qli2o" path="res://sample/modules/floor.tscn" id="4_k1ovt"]
 [ext_resource type="Script" uid="uid://bddgr0flhmhcl" path="res://addons/auto_structured/core/socket.gd" id="5_rqldo"]
 [ext_resource type="Script" uid="uid://sha1t632toxj" path="res://addons/auto_structured/core/requirements/adjacent_requirement.gd" id="5_ym6o8"]
-[ext_resource type="Script" uid="uid://da2vqacplckui" path="res://addons/auto_structured/core/requirements/region_boundary_requirement.gd" id="6_bbx3i"]
 [ext_resource type="PackedScene" uid="uid://dvmtflhjehotm" path="res://sample/modules/wall.tscn" id="6_k1ovt"]
 [ext_resource type="PackedScene" uid="uid://cvdf8f47a4oa1" path="res://sample/modules/door.tscn" id="7_rqldo"]
 [ext_resource type="PackedScene" uid="uid://khrtlct1n2sc" path="res://sample/modules/wall_corner.tscn" id="8_iupn8"]
+[ext_resource type="Script" uid="uid://cc6sr563b5w7g" path="res://addons/auto_structured/core/requirements/max_count_requirement.gd" id="8_ym6o8"]
 [ext_resource type="PackedScene" uid="uid://bcu6huierhjuq" path="res://sample/modules/wall_coner_inner.tscn" id="11_3lwuf"]
 [ext_resource type="PackedScene" uid="uid://d07yamu6fpvgl" path="res://sample/modules/air.tscn" id="13_ym6o8"]
 
@@ -88,8 +88,12 @@ required_tags = Array[String](["air"])
 display_name = "Adjacent Requirement"
 
 [sub_resource type="Resource" id="Resource_r8igf"]
-script = ExtResource("6_bbx3i")
-display_name = "Region Boundary Requirement"
+script = ExtResource("8_ym6o8")
+use_global_max = false
+use_region_min = true
+use_region_max = true
+region_max_count = 1
+display_name = "Max Count Requirement"
 
 [sub_resource type="Resource" id="Resource_bj0sj"]
 script = ExtResource("5_rqldo")
