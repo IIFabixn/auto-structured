@@ -250,6 +250,7 @@ var _requirement_context: Dictionary = {}
 func solve() -> bool:
 	"""Solve the WFC puzzle synchronously. Use progress_callback for updates."""
 	_reset_interactive_state()
+
 	_log(["[WFC Solver] Starting solve..."])
 	_log(["  Grid size: ", grid.size])
 	_log(["  Total cells: ", grid.get_cell_count()])
@@ -462,6 +463,8 @@ func _collapse_cell_with_variant(cell: WfcCell, variant_override: Dictionary = {
 	_maybe_add_checkpoint()
 	var collapsed := true
 	if variant_override.is_empty():
+		# Let strategy adjust weights before collapse
+		_notify_strategy_before_collapse(cell)
 		collapsed = cell.collapse()
 	else:
 		cell.possible_tile_variants.clear()
@@ -767,6 +770,11 @@ func _pick_next_cell() -> WfcCell:
 func _notify_strategy_cell_collapsed(cell: WfcCell) -> void:
 	if _active_strategy and cell:
 		_active_strategy.on_cell_collapsed(cell)
+
+func _notify_strategy_before_collapse(cell: WfcCell) -> void:
+	"""Let the strategy adjust variant weights before collapse."""
+	if _active_strategy and cell:
+		_active_strategy.adjust_weights_for_cell(cell, self)
 
 func _reset_tile_requirements() -> void:
 	"""Reset any stateful requirements (like MaxCountRequirement counters)."""

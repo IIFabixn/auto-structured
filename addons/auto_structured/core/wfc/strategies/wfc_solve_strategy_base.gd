@@ -30,3 +30,14 @@ func pick_next_cell(solver) -> Variant:
 	if solver == null:
 		return null
 	return solver.grid.get_lowest_entropy_cell()
+
+func adjust_weights_for_cell(_cell, _solver) -> void:
+	"""Called before collapsing a cell. Override to modify variant weights.
+	
+	Strategies can use this to bias tile selection based on context.
+	For example, the Growing strategy boosts boundary tile weights
+	when collapsing frontier cells.
+	
+	Changes are made directly to cell.possible_tile_variants weights.
+	"""
+	pass

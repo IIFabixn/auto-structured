@@ -3,6 +3,7 @@ class_name WfcSolverConfig extends RefCounted
 const WfcEntropyStrategy = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_entropy.gd")
 const WfcCenterOutStrategy = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_center_out.gd")
 const WfcFrontierStrategy = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_frontier.gd")
+const WfcGrowingStrategy = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_growing.gd")
 const WfcRegionConfig = preload("res://addons/auto_structured/core/wfc/wfc_region_config.gd")
 ## Configuration settings for WFC solver performance tuning.
 ##
@@ -32,7 +33,7 @@ var max_backtrack_depth: int = 10
 ## Save checkpoint every N collapses.
 var backtrack_checkpoint_frequency: int = 5
 
-@export_enum("entropy", "center_out", "frontier")
+@export_enum("entropy", "center_out", "frontier", "growing")
 var solve_strategy_id: String = "entropy"
 
 ## Region configuration (consolidated from scattered settings)
@@ -111,6 +112,8 @@ func create_strategy_instance() -> WfcSolveStrategy:
 			return WfcCenterOutStrategy.new()
 		"frontier":
 			return WfcFrontierStrategy.new()
+		"growing":
+			return WfcGrowingStrategy.new()
 		_:
 			return WfcEntropyStrategy.new()
 
