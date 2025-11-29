@@ -9,6 +9,7 @@ const WfcHelper = preload("res://addons/auto_structured/core/wfc/wfc_helper.gd")
 const WfcGrid = preload("res://addons/auto_structured/core/wfc/wfc_grid.gd")
 const WfcSolver = preload("res://addons/auto_structured/core/wfc/wfc_solver.gd")
 const WfcSolverConfig = preload("res://addons/auto_structured/core/wfc/wfc_solver_config.gd")
+const WfcRegionConfig = preload("res://addons/auto_structured/core/wfc/wfc_region_config.gd")
 const ViewportCameraController = preload("res://addons/auto_structured/ui/controls/viewport_camera_controller.gd")
 const AutoStructuredUndoRedo = preload("res://addons/auto_structured/core/undo_redo_manager.gd")
 
@@ -299,7 +300,12 @@ func _deserialize_solver_settings(data: Dictionary) -> WfcSolverConfig:
 	config.max_backtrack_depth = data.get("max_backtrack_depth", config.max_backtrack_depth)
 	config.backtrack_checkpoint_frequency = data.get("backtrack_checkpoint_frequency", config.backtrack_checkpoint_frequency)
 	config.solve_strategy_id = data.get("solve_strategy_id", config.solve_strategy_id)
-	config.enforce_region_boundaries = data.get("enforce_region_boundaries", config.enforce_region_boundaries)
+	# Restore region settings from unified config or legacy field
+	if data.has("region_config"):
+		config.region_config = WfcRegionConfig.from_dict(data["region_config"])
+	else:
+		# Legacy field migration
+		config.region_config.enabled = data.get("enforce_region_boundaries", false)
 	return config
 
 func _serialize_solver_config(config: WfcSolverConfig, preset_id: String) -> Dictionary:
@@ -314,7 +320,8 @@ func _serialize_solver_config(config: WfcSolverConfig, preset_id: String) -> Dic
 		"max_backtrack_depth": config.max_backtrack_depth,
 		"backtrack_checkpoint_frequency": config.backtrack_checkpoint_frequency,
 		"solve_strategy_id": config.solve_strategy_id,
-		"enforce_region_boundaries": config.enforce_region_boundaries
+		# Region settings (using unified config)
+		"region_config": config.region_config.to_dict() if config.region_config else {}
 	}
 
 func _clone_solver_config(source: WfcSolverConfig) -> WfcSolverConfig:
@@ -330,7 +337,9 @@ func _clone_solver_config(source: WfcSolverConfig) -> WfcSolverConfig:
 	clone.max_backtrack_depth = source.max_backtrack_depth
 	clone.backtrack_checkpoint_frequency = source.backtrack_checkpoint_frequency
 	clone.solve_strategy_id = source.solve_strategy_id
-	clone.enforce_region_boundaries = source.enforce_region_boundaries
+	# Clone region config properly
+	if source.region_config:
+		clone.region_config = source.region_config.duplicate_config()
 	return clone
 
 func _on_new_button_pressed() -> void:

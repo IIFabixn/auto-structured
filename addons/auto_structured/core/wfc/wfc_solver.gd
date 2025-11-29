@@ -10,6 +10,7 @@ const WfcSolveStrategy = preload("res://addons/auto_structured/core/wfc/strategi
 const WfcEntropyStrategy = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_entropy.gd")
 const RegionBoundaryRequirement = preload("res://addons/auto_structured/core/requirements/region_boundary_requirement.gd")
 const WfcRegionTracker = preload("res://addons/auto_structured/core/wfc/wfc_region_tracker.gd")
+const WfcRegionConfig = preload("res://addons/auto_structured/core/wfc/wfc_region_config.gd")
 
 var grid: WfcGrid
 var max_iterations: int = 10000
@@ -74,15 +75,24 @@ var _visited_flags: PackedByteArray
 
 ## Performance optimization: Scratch array for valid variants (reusable)
 var _scratch_variants: Array[Dictionary] = []
-var enforce_region_boundaries: bool = false
+
+## Region configuration: Unified settings for boundary structure constraints
+var _region_config: WfcRegionConfig = WfcRegionConfig.new()
 var _region_boundary_requirement: RegionBoundaryRequirement = null
-
-## Region control: Enforce structure formation constraints
-@export var max_boundary_regions: int = 1  ## Maximum number of separate boundary structures (0 = unlimited, 1 = single closed structure)
-@export var require_closed_regions: bool = true  ## Boundaries must form closed loops, no openings to world edge
-
-## Region tracking: Efficient tracking of boundary tile regions
 var _region_tracker: WfcRegionTracker = null
+
+## Legacy properties for backward compatibility (use set_region_config instead)
+var enforce_region_boundaries: bool:
+	get: return _region_config.enabled
+	set(value): _region_config.enabled = value
+
+var max_boundary_regions: int:
+	get: return _region_config.max_regions
+	set(value): _region_config.max_regions = value
+
+var require_closed_regions: bool:
+	get: return _region_config.require_closed_regions
+	set(value): _region_config.require_closed_regions = value
 
 ## Interactive solve state ---------------------------------------------------
 var _initialized: bool = false
@@ -208,6 +218,18 @@ func set_region_boundary_enforcement(enabled: bool, requirement: RegionBoundaryR
 	enforce_region_boundaries = enabled
 	if enforce_region_boundaries:
 		_region_boundary_requirement = requirement if requirement != null else RegionBoundaryRequirement.new()
+	else:
+		_region_boundary_requirement = null
+
+func set_region_config(config: WfcRegionConfig) -> void:
+	"""Apply a unified region configuration to this solver."""
+	_region_config = config.duplicate() if config else WfcRegionConfig.new()
+	
+	# Initialize region boundary requirement with config settings
+	if _region_config.enabled:
+		_region_boundary_requirement = RegionBoundaryRequirement.new()
+		_region_boundary_requirement.min_edge_neighbors = _region_config.min_edge_neighbors
+		_region_boundary_requirement.min_corner_neighbors = _region_config.min_corner_neighbors
 	else:
 		_region_boundary_requirement = null
 
@@ -1005,8 +1027,10 @@ func _validate_region_constraints(tile: Tile, position: Vector3i) -> bool:
 		return true  # No tracker means no region constraints
 	
 	# Check max regions constraint using the region tracker
-	if max_boundary_regions > 0:
-		if _region_tracker.would_exceed_max_regions(position, tile, max_boundary_regions):
+	# Only enforce during solve if explicitly enabled (strict mode)
+	# Default is relaxed mode - validate after solve completes
+	if max_boundary_regions > 0 and _region_config.enforce_max_regions_during_solve:
+		if _region_tracker.would_exceed_max_regions(position, tile, max_boundary_regions, grid):
 			if logging_enabled:
 				_log(["  Region constraint: would exceed max_boundary_regions (", max_boundary_regions, ") at ", position])
 			return false

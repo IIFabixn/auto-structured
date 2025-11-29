@@ -12,22 +12,23 @@ class_name WfcRegionTracker extends RefCounted
 ## - Incremental tracking as tiles are placed (no full grid scans)
 ## - Supports backtracking via snapshots
 ## - Tracks world boundary connections for closed region validation
+## - Uses integer keys for O(1) hashing instead of string keys
 
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 
-## Union-Find parent map: position_key -> parent_position_key
+## Union-Find parent map: position_key (int) -> parent_position_key (int)
 var _parent: Dictionary = {}
 
-## Union-Find rank for balanced trees: position_key -> rank
+## Union-Find rank for balanced trees: position_key (int) -> rank (int)
 var _rank: Dictionary = {}
 
-## Set of positions that touch the world boundary (grid edges)
+## Set of position keys that touch the world boundary (grid edges)
 var _world_boundary_connections: Dictionary = {}
 
-## Map of region root -> set of positions in that region
+## Map of region root (int) -> set of position keys (int) in that region
 var _region_members: Dictionary = {}
 
-## Grid reference for bounds checking
+## Grid reference for bounds checking and key calculation
 var _grid_size: Vector3i = Vector3i.ZERO
 
 ## Include vertical neighbors when determining connectivity
@@ -55,21 +56,27 @@ func reset() -> void:
 
 
 ## ============================================================================
-## Core Union-Find Operations
+## Core Union-Find Operations (using integer keys for performance)
 ## ============================================================================
 
-func _pos_key(pos: Vector3i) -> String:
-	"""Convert position to string key for dictionary storage."""
-	return "%d,%d,%d" % [pos.x, pos.y, pos.z]
+func _pos_to_key(pos: Vector3i) -> int:
+	"""Convert position to integer key for dictionary storage.
+	Uses flat array indexing: x + y * width + z * width * height
+	"""
+	return pos.x + pos.y * _grid_size.x + pos.z * _grid_size.x * _grid_size.y
 
 
-func _key_to_pos(key: String) -> Vector3i:
-	"""Convert string key back to position."""
-	var parts = key.split(",")
-	return Vector3i(int(parts[0]), int(parts[1]), int(parts[2]))
+func _key_to_pos(key: int) -> Vector3i:
+	"""Convert integer key back to position."""
+	var xy_size = _grid_size.x * _grid_size.y
+	var z = key / xy_size
+	var remainder = key % xy_size
+	var y = remainder / _grid_size.x
+	var x = remainder % _grid_size.x
+	return Vector3i(x, y, z)
 
 
-func _find(key: String) -> String:
+func _find(key: int) -> int:
 	"""Find the root of a position's region with path compression."""
 	if not _parent.has(key):
 		return key
@@ -81,7 +88,7 @@ func _find(key: String) -> String:
 	return _parent[key]
 
 
-func _union(key_a: String, key_b: String) -> void:
+func _union(key_a: int, key_b: int) -> void:
 	"""Merge two regions using union by rank."""
 	var root_a = _find(key_a)
 	var root_b = _find(key_b)
@@ -95,8 +102,8 @@ func _union(key_a: String, key_b: String) -> void:
 	var rank_b = _rank.get(root_b, 0)
 	
 	# Union by rank: attach smaller tree to larger
-	var new_root: String
-	var old_root: String
+	var new_root: int
+	var old_root: int
 	if rank_a < rank_b:
 		_parent[root_a] = root_b
 		new_root = root_b
@@ -143,7 +150,7 @@ func register_boundary_tile(pos: Vector3i, tile: Tile) -> void:
 	if tile.boundary_role != Tile.BoundaryRole.EDGE and tile.boundary_role != Tile.BoundaryRole.CORNER:
 		return
 	
-	var key = _pos_key(pos)
+	var key = _pos_to_key(pos)
 	
 	# Initialize as its own region if not already tracked
 	if not _parent.has(key):
@@ -161,7 +168,7 @@ func register_boundary_tile(pos: Vector3i, tile: Tile) -> void:
 	# Connect to adjacent boundary tiles
 	var neighbors = _get_neighbor_positions(pos)
 	for neighbor_pos in neighbors:
-		var neighbor_key = _pos_key(neighbor_pos)
+		var neighbor_key = _pos_to_key(neighbor_pos)
 		if _parent.has(neighbor_key):
 			# Neighbor is also a boundary tile - merge regions
 			_union(key, neighbor_key)
@@ -173,7 +180,7 @@ func unregister_boundary_tile(pos: Vector3i) -> void:
 	Note: Full removal from Union-Find is expensive. Instead, we rebuild
 	affected regions. For frequent backtracking, consider using snapshots.
 	"""
-	var key = _pos_key(pos)
+	var key = _pos_to_key(pos)
 	if not _parent.has(key):
 		return
 	
@@ -198,7 +205,7 @@ func unregister_boundary_tile(pos: Vector3i) -> void:
 	# Rebuild regions for remaining members
 	# First, reset their parent pointers
 	for member_pos in members_to_rebuild:
-		var member_key = _pos_key(member_pos)
+		var member_key = _pos_to_key(member_pos)
 		_parent[member_key] = member_key
 		_rank[member_key] = 0
 		_region_members[member_key] = {member_key: true}
@@ -207,10 +214,10 @@ func unregister_boundary_tile(pos: Vector3i) -> void:
 	
 	# Then reconnect them based on adjacency
 	for member_pos in members_to_rebuild:
-		var member_key = _pos_key(member_pos)
+		var member_key = _pos_to_key(member_pos)
 		var neighbors = _get_neighbor_positions(member_pos)
 		for neighbor_pos in neighbors:
-			var neighbor_key = _pos_key(neighbor_pos)
+			var neighbor_key = _pos_to_key(neighbor_pos)
 			if _parent.has(neighbor_key) and neighbor_key != key:
 				_union(member_key, neighbor_key)
 
@@ -281,8 +288,8 @@ func get_region_count() -> int:
 
 func are_in_same_region(pos_a: Vector3i, pos_b: Vector3i) -> bool:
 	"""Check if two positions belong to the same boundary region."""
-	var key_a = _pos_key(pos_a)
-	var key_b = _pos_key(pos_b)
+	var key_a = _pos_to_key(pos_a)
+	var key_b = _pos_to_key(pos_b)
 	
 	if not _parent.has(key_a) or not _parent.has(key_b):
 		return false
@@ -292,20 +299,20 @@ func are_in_same_region(pos_a: Vector3i, pos_b: Vector3i) -> bool:
 
 func is_boundary_position(pos: Vector3i) -> bool:
 	"""Check if a position is tracked as a boundary tile."""
-	return _parent.has(_pos_key(pos))
+	return _parent.has(_pos_to_key(pos))
 
 
-func get_region_id(pos: Vector3i) -> String:
-	"""Get the region identifier for a position (empty if not a boundary)."""
-	var key = _pos_key(pos)
+func get_region_id(pos: Vector3i) -> int:
+	"""Get the region identifier for a position (-1 if not a boundary)."""
+	var key = _pos_to_key(pos)
 	if not _parent.has(key):
-		return ""
+		return -1
 	return _find(key)
 
 
 func region_touches_world_boundary(pos: Vector3i) -> bool:
 	"""Check if the region containing this position touches the world edge."""
-	var key = _pos_key(pos)
+	var key = _pos_to_key(pos)
 	if not _parent.has(key):
 		return false
 	
@@ -317,7 +324,7 @@ func get_all_regions() -> Array[Dictionary]:
 	"""Get information about all regions.
 	
 	Returns array of dictionaries with:
-	- root: String (region identifier)
+	- root: int (region identifier)
 	- positions: Array[Vector3i] (all positions in region)
 	- touches_world_boundary: bool
 	"""
@@ -343,7 +350,7 @@ func get_all_regions() -> Array[Dictionary]:
 ## Constraint Validation
 ## ============================================================================
 
-func would_exceed_max_regions(pos: Vector3i, tile: Tile, max_regions: int) -> bool:
+func would_exceed_max_regions(pos: Vector3i, tile: Tile, max_regions: int, grid = null) -> bool:
 	"""Check if placing a boundary tile here would exceed the max region count.
 	
 	Returns true if:
@@ -351,6 +358,9 @@ func would_exceed_max_regions(pos: Vector3i, tile: Tile, max_regions: int) -> bo
 	- max_regions is 0 (unlimited) -> always returns false
 	
 	Only EDGE and CORNER tiles are considered for region counting.
+	
+	If grid is provided, also checks collapsed cells for boundary tiles that
+	may not be registered yet (handles timing issues during solve).
 	"""
 	if max_regions <= 0:
 		return false  # Unlimited regions
@@ -362,7 +372,7 @@ func would_exceed_max_regions(pos: Vector3i, tile: Tile, max_regions: int) -> bo
 	if tile.boundary_role != Tile.BoundaryRole.EDGE and tile.boundary_role != Tile.BoundaryRole.CORNER:
 		return false
 	
-	var key = _pos_key(pos)
+	var key = _pos_to_key(pos)
 	
 	# If already tracked, no new region would be created
 	if _parent.has(key):
@@ -371,67 +381,42 @@ func would_exceed_max_regions(pos: Vector3i, tile: Tile, max_regions: int) -> bo
 	# Check if this would connect to any existing boundary tile
 	var neighbors = _get_neighbor_positions(pos)
 	for neighbor_pos in neighbors:
-		if _parent.has(_pos_key(neighbor_pos)):
+		var neighbor_key = _pos_to_key(neighbor_pos)
+		
+		# Check registered tiles first
+		if _parent.has(neighbor_key):
 			# Would connect to existing region - no new region created
 			return false
+		
+		# Also check grid for collapsed but unregistered boundary tiles
+		if grid != null and grid.has_method("get_cell"):
+			var neighbor_cell = grid.get_cell(neighbor_pos)
+			if neighbor_cell != null and neighbor_cell.is_collapsed():
+				var neighbor_tile = neighbor_cell.get_tile()
+				if neighbor_tile != null and (neighbor_tile.boundary_role == Tile.BoundaryRole.EDGE or neighbor_tile.boundary_role == Tile.BoundaryRole.CORNER):
+					# Would connect to collapsed boundary tile - no new region created
+					return false
 	
 	# This would create a new isolated region
 	var current_count = get_region_count()
 	return current_count >= max_regions
 
 
-func would_create_unclosed_region(pos: Vector3i, tile: Tile, grid) -> bool:
+func would_create_unclosed_region(_pos: Vector3i, _tile: Tile, _grid) -> bool:
 	"""Check if placing a boundary tile here would create an opening to the world edge.
 	
-	This checks if placing a boundary tile at an edge position would leave
-	adjacent edge cells without boundary coverage, creating a "gap" in the structure.
+	NOTE: This is intentionally conservative and always returns false during placement.
+	Full closure validation is performed post-solve via validate_closed_regions().
+	
+	Pre-emptive closure checking during solve is complex because:
+	1. Adjacent cells may not be collapsed yet
+	2. The final boundary shape isn't known until solve completes
+	3. Overly strict checking causes excessive contradictions
+	
+	For strict closed-region enforcement, use validate_closed_regions() after solving
+	and re-solve if validation fails.
 	"""
-	if tile == null or tile.boundary_role == Tile.BoundaryRole.NONE:
-		return false
-	
-	# Only edge positions can create openings
-	if not _is_on_world_boundary(pos):
-		return false
-	
-	# Check adjacent edge positions - if any are uncovered and would remain so,
-	# this creates an opening
-	var edge_neighbors = _get_edge_neighbors(pos)
-	
-	for edge_pos in edge_neighbors:
-		if not _is_valid_position(edge_pos):
-			continue
-		
-		# If neighbor is also on boundary and has no boundary tile
-		if _is_on_world_boundary(edge_pos):
-			var neighbor_key = _pos_key(edge_pos)
-			if not _parent.has(neighbor_key):
-				# Check if the cell could still potentially get a boundary tile
-				var cell = grid.get_cell(edge_pos) if grid else null
-				if cell and cell.is_collapsed():
-					var neighbor_tile = cell.get_tile()
-					if neighbor_tile == null or neighbor_tile.boundary_role == Tile.BoundaryRole.NONE:
-						# Collapsed to non-boundary - this edge has a gap
-						# But only flag as unclosed if we're creating an isolated boundary section
-						pass  # Allow for now - full closure check is at end of solve
-	
-	return false  # Conservative: allow placement, check closure at end
-
-
-func _get_edge_neighbors(pos: Vector3i) -> Array[Vector3i]:
-	"""Get neighbor positions that are also on the world boundary edge."""
-	var result: Array[Vector3i] = []
-	var neighbors = [
-		pos + Vector3i.RIGHT,
-		pos + Vector3i.LEFT,
-		pos + Vector3i.FORWARD,
-		pos + Vector3i.BACK
-	]
-	
-	for n in neighbors:
-		if _is_valid_position(n) and _is_on_world_boundary(n):
-			result.append(n)
-	
-	return result
+	return false
 
 
 func validate_closed_regions(grid) -> Dictionary:
@@ -460,7 +445,7 @@ func validate_closed_regions(grid) -> Dictionary:
 			var neighbors = _get_neighbor_positions(pos)
 			
 			for neighbor_pos in neighbors:
-				if _parent.has(_pos_key(neighbor_pos)):
+				if _parent.has(_pos_to_key(neighbor_pos)):
 					boundary_neighbor_count += 1
 			
 			# Corner pieces need at least 1 neighbor, edge pieces need 2

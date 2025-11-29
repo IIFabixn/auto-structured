@@ -8,9 +8,9 @@ const Tile = preload("res://addons/auto_structured/core/tile.gd")
 
 @export var enforce_closed_loops: bool = true
 @export var allow_open_ends: bool = false
-@export var min_edge_neighbors: int = 2
+@export var min_edge_neighbors: int = 1
 @export var min_corner_neighbors: int = 1
-@export var relax_on_world_boundary: bool = true
+@export var relax_on_world_boundary: bool = false
 
 func evaluate(tile: Tile, position: Vector3i, grid, context: Dictionary) -> bool:
 	if not enabled:

@@ -3,6 +3,7 @@ class_name WfcSolverConfig extends RefCounted
 const WfcEntropyStrategy = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_entropy.gd")
 const WfcCenterOutStrategy = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_center_out.gd")
 const WfcFrontierStrategy = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_frontier.gd")
+const WfcRegionConfig = preload("res://addons/auto_structured/core/wfc/wfc_region_config.gd")
 ## Configuration settings for WFC solver performance tuning.
 ##
 ## Use this to adjust performance vs. smoothness trade-offs for different grid sizes.
@@ -33,9 +34,22 @@ var backtrack_checkpoint_frequency: int = 5
 
 @export_enum("entropy", "center_out", "frontier")
 var solve_strategy_id: String = "entropy"
-var enforce_region_boundaries: bool = false
-var max_boundary_regions: int = 1  ## Maximum number of separate boundary structures (0 = unlimited)
-var require_closed_regions: bool = true  ## Boundaries must form closed loops
+
+## Region configuration (consolidated from scattered settings)
+var region_config: WfcRegionConfig = WfcRegionConfig.new()
+
+## Legacy properties for backward compatibility (deprecated - use region_config instead)
+var enforce_region_boundaries: bool:
+	get: return region_config.enabled
+	set(value): region_config.enabled = value
+
+var max_boundary_regions: int:
+	get: return region_config.max_regions
+	set(value): region_config.max_regions = value
+
+var require_closed_regions: bool:
+	get: return region_config.require_closed_regions
+	set(value): region_config.require_closed_regions = value
 
 
 ## Preset for small grids (< 10K cells)
@@ -110,9 +124,16 @@ func apply_to_solver(solver: WfcSolver) -> void:
 	solver.enable_backtracking = enable_backtracking
 	solver.max_backtrack_depth = max_backtrack_depth
 	solver.backtrack_checkpoint_frequency = backtrack_checkpoint_frequency
-	solver.max_boundary_regions = max_boundary_regions
-	solver.require_closed_regions = require_closed_regions
+	
+	# Apply region configuration
+	if solver.has_method("set_region_config"):
+		solver.set_region_config(region_config)
+	else:
+		# Fallback for backward compatibility
+		solver.max_boundary_regions = region_config.max_regions
+		solver.require_closed_regions = region_config.require_closed_regions
+		if solver.has_method("set_region_boundary_enforcement"):
+			solver.set_region_boundary_enforcement(region_config.enabled)
+	
 	if solver.has_method("set_solve_strategy"):
 		solver.set_solve_strategy(create_strategy_instance(), self)
-	if solver.has_method("set_region_boundary_enforcement"):
-		solver.set_region_boundary_enforcement(enforce_region_boundaries)

@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="ModuleLibrary" load_steps=63 format=3 uid="uid://hhr1fq3dnn8k"]
+[gd_resource type="Resource" script_class="ModuleLibrary" load_steps=60 format=3 uid="uid://hhr1fq3dnn8k"]
 
 [ext_resource type="Script" uid="uid://06kkr0akplb" path="res://addons/auto_structured/utils/socket_template.gd" id="1_3j4ih"]
 [ext_resource type="Script" uid="uid://n5qundf42kiu" path="res://addons/auto_structured/core/module_library.gd" id="1_k0n0c"]
@@ -10,9 +10,8 @@
 [ext_resource type="PackedScene" uid="uid://dvmtflhjehotm" path="res://sample/modules/wall.tscn" id="6_k1ovt"]
 [ext_resource type="PackedScene" uid="uid://cvdf8f47a4oa1" path="res://sample/modules/door.tscn" id="7_rqldo"]
 [ext_resource type="PackedScene" uid="uid://khrtlct1n2sc" path="res://sample/modules/wall_corner.tscn" id="8_iupn8"]
-[ext_resource type="Script" uid="uid://cc6sr563b5w7g" path="res://addons/auto_structured/core/requirements/max_count_requirement.gd" id="8_ym6o8"]
 [ext_resource type="PackedScene" uid="uid://bcu6huierhjuq" path="res://sample/modules/wall_coner_inner.tscn" id="11_3lwuf"]
-[ext_resource type="PackedScene" uid="uid://d07yamu6fpvgl" path="res://sample/modules/air.tscn" id="13_ym6o8"]
+[ext_resource type="PackedScene" uid="uid://dkbqpf1v23wwk" path="res://sample/modules/outside_floor.tscn" id="13_bbx3i"]
 
 [sub_resource type="Resource" id="Resource_rxijo"]
 script = ExtResource("1_3j4ih")
@@ -24,10 +23,9 @@ entries = [{
 "socket_id": "door_inside"
 }]
 
-[sub_resource type="Resource" id="Resource_flxlj"]
+[sub_resource type="Resource" id="Resource_hyqrr"]
 script = ExtResource("5_ym6o8")
-tag_match_mode = 1
-required_tags = Array[String](["air"])
+required_count = 2
 display_name = "Adjacent Requirement"
 
 [sub_resource type="Resource" id="Resource_rqldo"]
@@ -48,7 +46,7 @@ direction = Vector3i(-1, 0, 0)
 script = ExtResource("5_rqldo")
 socket_id = "wall_outside"
 socket_guid = "9d3f51a0-128b-b911-da77-3b028a299556"
-compatible_sockets = Array[String](["00864b0b-1789-edee-8212-2223c7077341", "01055c00-f2c9-a6a0-70bc-67763c2b7e94", "2ea9b3e2-e36b-7d95-e960-66177362dd9a", "33a67a50-64fa-2c44-8dfc-a7c0af169d38", "3ecadf1d-179d-d941-e279-8e7dd419d89e", "4618ecf7-e466-6d5d-76b8-766f39a60c49", "675b7546-33a5-54e6-6b9a-0ba0de445fe5", "877e8257-6551-fc84-85ba-a64227915418", "8c74c46a-f376-2c5e-3d29-5b5222ef6b95", "8f3fad20-ffda-d0d1-5db3-2ebd906aed37", "9dd93dff-ded2-97da-1dd9-9013de7b5612", "a8667c28-e999-b3dc-076a-f2fe744a67d0", "a9fffeb6-ce68-9df7-db46-f6e6c342f9b0", "c580664a-3706-026a-2be5-ebe28ad6ad32", "ec81dfb1-815b-e90b-780d-041147047306", "ef556a8e-bd7a-0764-ab05-1b80172b689d", "fe7d0de4-c7c8-90f3-e57f-9244befaff23", "floor_side"])
+compatible_sockets = Array[String](["00864b0b-1789-edee-8212-2223c7077341", "01055c00-f2c9-a6a0-70bc-67763c2b7e94", "2ea9b3e2-e36b-7d95-e960-66177362dd9a", "33a67a50-64fa-2c44-8dfc-a7c0af169d38", "3796c417-acb9-4eec-ce4c-31f9d6526056", "3962b67b-b8da-3859-b292-8737c8ed0702", "3ecadf1d-179d-d941-e279-8e7dd419d89e", "4618ecf7-e466-6d5d-76b8-766f39a60c49", "4b56c637-fcac-734c-edc2-4c113ac32bd8", "675b7546-33a5-54e6-6b9a-0ba0de445fe5", "6efe213c-c4d1-e878-03dc-99e01f07fce3", "877e8257-6551-fc84-85ba-a64227915418", "8c74c46a-f376-2c5e-3d29-5b5222ef6b95", "8f3fad20-ffda-d0d1-5db3-2ebd906aed37", "9d3f51a0-128b-b911-da77-3b028a299556", "9dd93dff-ded2-97da-1dd9-9013de7b5612", "a8667c28-e999-b3dc-076a-f2fe744a67d0", "a9fffeb6-ce68-9df7-db46-f6e6c342f9b0", "c580664a-3706-026a-2be5-ebe28ad6ad32", "c78a1c7b-2de2-44de-e71e-47deea9408ef", "ec81dfb1-815b-e90b-780d-041147047306", "ef556a8e-bd7a-0764-ab05-1b80172b689d", "fe7d0de4-c7c8-90f3-e57f-9244befaff23", "floor_side"])
 direction = Vector3i(0, 0, -1)
 
 [sub_resource type="Resource" id="Resource_a2x8y"]
@@ -77,23 +75,15 @@ name = "wall"
 scene = ExtResource("6_k1ovt")
 tags = Array[String](["wall"])
 boundary_role = 1
-requirements = Array[ExtResource("3_lwb3q")]([SubResource("Resource_flxlj")])
+requirements = Array[ExtResource("3_lwb3q")]([SubResource("Resource_hyqrr")])
 rotation_symmetry = 1
 sockets = Array[ExtResource("5_rqldo")]([SubResource("Resource_rqldo"), SubResource("Resource_4ec60"), SubResource("Resource_6ltd1"), SubResource("Resource_a2x8y"), SubResource("Resource_murai"), SubResource("Resource_3vl5h")])
 
-[sub_resource type="Resource" id="Resource_qu0le"]
-script = ExtResource("5_ym6o8")
-tag_match_mode = 1
-required_tags = Array[String](["air"])
-display_name = "Adjacent Requirement"
-
 [sub_resource type="Resource" id="Resource_r8igf"]
-script = ExtResource("8_ym6o8")
-use_global_max = false
-use_region_min = true
-use_region_max = true
-region_max_count = 1
-display_name = "Max Count Requirement"
+script = ExtResource("5_ym6o8")
+required_tags = Array[String](["wall", "corner"])
+required_count = 2
+display_name = "Adjacent Requirement"
 
 [sub_resource type="Resource" id="Resource_bj0sj"]
 script = ExtResource("5_rqldo")
@@ -112,28 +102,28 @@ direction = Vector3i(0, -1, 0)
 script = ExtResource("5_rqldo")
 socket_id = "door_right"
 socket_guid = "df3e326f-4842-0e30-5bb9-4fedcbe11fa1"
-compatible_sockets = Array[String](["07a842ec-6598-30d1-70d1-0e92a99d251f", "109a88c9-aaf2-7ff6-f232-38747765ffd9", "a75921a1-90b9-63fc-2ad1-5f54623cccd8"])
+compatible_sockets = Array[String](["07a842ec-6598-30d1-70d1-0e92a99d251f", "109a88c9-aaf2-7ff6-f232-38747765ffd9", "1acc07f0-59d5-8198-070e-f00e2cf2e3a8", "a75921a1-90b9-63fc-2ad1-5f54623cccd8"])
 direction = Vector3i(1, 0, 0)
 
 [sub_resource type="Resource" id="Resource_3t8ws"]
 script = ExtResource("5_rqldo")
 socket_id = "door_left"
 socket_guid = "a75921a1-90b9-63fc-2ad1-5f54623cccd8"
-compatible_sockets = Array[String](["1acc07f0-59d5-8198-070e-f00e2cf2e3a8", "1ccfeb3d-a9af-f8fc-e6ad-18e5bd1cf615", "5b419eb9-f3ab-4dd2-0f35-762fb8f171cd", "c8528b3a-8c13-0818-f176-7674cce937c2", "df3e326f-4842-0e30-5bb9-4fedcbe11fa1"])
+compatible_sockets = Array[String](["1ccfeb3d-a9af-f8fc-e6ad-18e5bd1cf615", "5b419eb9-f3ab-4dd2-0f35-762fb8f171cd", "c8528b3a-8c13-0818-f176-7674cce937c2", "df3e326f-4842-0e30-5bb9-4fedcbe11fa1"])
 direction = Vector3i(-1, 0, 0)
 
 [sub_resource type="Resource" id="Resource_sic6b"]
 script = ExtResource("5_rqldo")
 socket_id = "door_outside"
 socket_guid = "4025ce58-4466-79c6-6a74-28d57e35b701"
-compatible_sockets = Array[String](["01055c00-f2c9-a6a0-70bc-67763c2b7e94", "2ea9b3e2-e36b-7d95-e960-66177362dd9a", "33a67a50-64fa-2c44-8dfc-a7c0af169d38", "3ecadf1d-179d-d941-e279-8e7dd419d89e", "4618ecf7-e466-6d5d-76b8-766f39a60c49", "675b7546-33a5-54e6-6b9a-0ba0de445fe5", "877e8257-6551-fc84-85ba-a64227915418", "8c74c46a-f376-2c5e-3d29-5b5222ef6b95", "8f3fad20-ffda-d0d1-5db3-2ebd906aed37", "9dd93dff-ded2-97da-1dd9-9013de7b5612", "c580664a-3706-026a-2be5-ebe28ad6ad32", "fe7d0de4-c7c8-90f3-e57f-9244befaff23"])
+compatible_sockets = Array[String](["01055c00-f2c9-a6a0-70bc-67763c2b7e94", "2ea9b3e2-e36b-7d95-e960-66177362dd9a", "33a67a50-64fa-2c44-8dfc-a7c0af169d38", "3796c417-acb9-4eec-ce4c-31f9d6526056", "3962b67b-b8da-3859-b292-8737c8ed0702", "3ecadf1d-179d-d941-e279-8e7dd419d89e", "4618ecf7-e466-6d5d-76b8-766f39a60c49", "675b7546-33a5-54e6-6b9a-0ba0de445fe5", "6efe213c-c4d1-e878-03dc-99e01f07fce3", "877e8257-6551-fc84-85ba-a64227915418", "8c74c46a-f376-2c5e-3d29-5b5222ef6b95", "8f3fad20-ffda-d0d1-5db3-2ebd906aed37", "9dd93dff-ded2-97da-1dd9-9013de7b5612", "c580664a-3706-026a-2be5-ebe28ad6ad32", "c78a1c7b-2de2-44de-e71e-47deea9408ef", "fe7d0de4-c7c8-90f3-e57f-9244befaff23"])
 direction = Vector3i(0, 0, -1)
 
 [sub_resource type="Resource" id="Resource_kew22"]
 script = ExtResource("5_rqldo")
 socket_id = "door_inside"
 socket_guid = "5cdd5b11-3424-3f18-f21e-85047da3b50a"
-compatible_sockets = Array[String](["00864b0b-1789-edee-8212-2223c7077341", "28ab1965-56bc-d8b0-441b-14451b1b9891", "4be860e6-b8a9-db9b-fc04-dc2236c1e81d", "61f39d73-a771-fc5e-a9cb-03dcf4369554", "9490a087-9d2d-0573-a8d0-910c198155f7", "a28a9c28-dc06-6984-0db9-23ea7674100d", "a8667c28-e999-b3dc-076a-f2fe744a67d0", "a9fffeb6-ce68-9df7-db46-f6e6c342f9b0", "b3ad9509-b98b-7bd1-0407-5a46f6c8d907", "be644825-d5a5-39ec-adef-a41225911fb3", "c8528b3a-8c13-0818-f176-7674cce937c2"])
+compatible_sockets = Array[String](["00864b0b-1789-edee-8212-2223c7077341", "28ab1965-56bc-d8b0-441b-14451b1b9891", "4be860e6-b8a9-db9b-fc04-dc2236c1e81d", "61f39d73-a771-fc5e-a9cb-03dcf4369554", "9490a087-9d2d-0573-a8d0-910c198155f7", "a28a9c28-dc06-6984-0db9-23ea7674100d", "a8667c28-e999-b3dc-076a-f2fe744a67d0", "a9fffeb6-ce68-9df7-db46-f6e6c342f9b0", "b3ad9509-b98b-7bd1-0407-5a46f6c8d907", "be644825-d5a5-39ec-adef-a41225911fb3"])
 direction = Vector3i(0, 0, 1)
 
 [sub_resource type="Resource" id="Resource_aoeot"]
@@ -142,7 +132,7 @@ name = "door"
 scene = ExtResource("7_rqldo")
 tags = Array[String](["door"])
 boundary_role = 1
-requirements = Array[ExtResource("3_lwb3q")]([SubResource("Resource_qu0le"), SubResource("Resource_r8igf")])
+requirements = Array[ExtResource("3_lwb3q")]([SubResource("Resource_r8igf")])
 rotation_symmetry = 1
 sockets = Array[ExtResource("5_rqldo")]([SubResource("Resource_bj0sj"), SubResource("Resource_wks3l"), SubResource("Resource_s6wr4"), SubResource("Resource_3t8ws"), SubResource("Resource_sic6b"), SubResource("Resource_kew22")])
 
@@ -195,14 +185,7 @@ boundary_role = 3
 rotation_symmetry = 1
 sockets = Array[ExtResource("5_rqldo")]([SubResource("Resource_iupn8"), SubResource("Resource_pi2wf"), SubResource("Resource_3j4ih"), SubResource("Resource_3lwuf"), SubResource("Resource_3r4si"), SubResource("Resource_ym6o8")])
 
-[sub_resource type="Resource" id="Resource_hyqrr"]
-script = ExtResource("5_ym6o8")
-tag_match_mode = 1
-required_tags = Array[String](["air"])
-required_count = 2
-display_name = "Adjacent Requirement"
-
-[sub_resource type="Resource" id="Resource_jbluy"]
+[sub_resource type="Resource" id="Resource_6r8ic"]
 script = ExtResource("5_ym6o8")
 required_tags = Array[String](["wall", "corner"])
 required_count = 2
@@ -232,14 +215,14 @@ direction = Vector3i(1, 0, 0)
 script = ExtResource("5_rqldo")
 socket_id = "corner_outside"
 socket_guid = "ec81dfb1-815b-e90b-780d-041147047306"
-compatible_sockets = Array[String](["00864b0b-1789-edee-8212-2223c7077341", "01055c00-f2c9-a6a0-70bc-67763c2b7e94", "2ea9b3e2-e36b-7d95-e960-66177362dd9a", "33a67a50-64fa-2c44-8dfc-a7c0af169d38", "3ecadf1d-179d-d941-e279-8e7dd419d89e", "4618ecf7-e466-6d5d-76b8-766f39a60c49", "675b7546-33a5-54e6-6b9a-0ba0de445fe5", "877e8257-6551-fc84-85ba-a64227915418", "8c74c46a-f376-2c5e-3d29-5b5222ef6b95", "8f3fad20-ffda-d0d1-5db3-2ebd906aed37", "9d3f51a0-128b-b911-da77-3b028a299556", "9dd93dff-ded2-97da-1dd9-9013de7b5612", "a8667c28-e999-b3dc-076a-f2fe744a67d0", "a9fffeb6-ce68-9df7-db46-f6e6c342f9b0", "c580664a-3706-026a-2be5-ebe28ad6ad32", "ef556a8e-bd7a-0764-ab05-1b80172b689d", "fe7d0de4-c7c8-90f3-e57f-9244befaff23"])
+compatible_sockets = Array[String](["00864b0b-1789-edee-8212-2223c7077341", "01055c00-f2c9-a6a0-70bc-67763c2b7e94", "2ea9b3e2-e36b-7d95-e960-66177362dd9a", "33a67a50-64fa-2c44-8dfc-a7c0af169d38", "3796c417-acb9-4eec-ce4c-31f9d6526056", "3962b67b-b8da-3859-b292-8737c8ed0702", "3ecadf1d-179d-d941-e279-8e7dd419d89e", "4618ecf7-e466-6d5d-76b8-766f39a60c49", "4b56c637-fcac-734c-edc2-4c113ac32bd8", "675b7546-33a5-54e6-6b9a-0ba0de445fe5", "6efe213c-c4d1-e878-03dc-99e01f07fce3", "877e8257-6551-fc84-85ba-a64227915418", "8c74c46a-f376-2c5e-3d29-5b5222ef6b95", "8f3fad20-ffda-d0d1-5db3-2ebd906aed37", "9d3f51a0-128b-b911-da77-3b028a299556", "9dd93dff-ded2-97da-1dd9-9013de7b5612", "a8667c28-e999-b3dc-076a-f2fe744a67d0", "a9fffeb6-ce68-9df7-db46-f6e6c342f9b0", "c580664a-3706-026a-2be5-ebe28ad6ad32", "c78a1c7b-2de2-44de-e71e-47deea9408ef", "ec81dfb1-815b-e90b-780d-041147047306", "ef556a8e-bd7a-0764-ab05-1b80172b689d", "fe7d0de4-c7c8-90f3-e57f-9244befaff23"])
 direction = Vector3i(-1, 0, 0)
 
 [sub_resource type="Resource" id="Resource_iyrpm"]
 script = ExtResource("5_rqldo")
 socket_id = "corner_outside"
 socket_guid = "4b56c637-fcac-734c-edc2-4c113ac32bd8"
-compatible_sockets = Array[String](["00864b0b-1789-edee-8212-2223c7077341", "01055c00-f2c9-a6a0-70bc-67763c2b7e94", "2ea9b3e2-e36b-7d95-e960-66177362dd9a", "33a67a50-64fa-2c44-8dfc-a7c0af169d38", "3ecadf1d-179d-d941-e279-8e7dd419d89e", "4618ecf7-e466-6d5d-76b8-766f39a60c49", "675b7546-33a5-54e6-6b9a-0ba0de445fe5", "877e8257-6551-fc84-85ba-a64227915418", "8c74c46a-f376-2c5e-3d29-5b5222ef6b95", "8f3fad20-ffda-d0d1-5db3-2ebd906aed37", "9dd93dff-ded2-97da-1dd9-9013de7b5612", "a8667c28-e999-b3dc-076a-f2fe744a67d0", "a9fffeb6-ce68-9df7-db46-f6e6c342f9b0", "c580664a-3706-026a-2be5-ebe28ad6ad32", "ef556a8e-bd7a-0764-ab05-1b80172b689d", "fe7d0de4-c7c8-90f3-e57f-9244befaff23"])
+compatible_sockets = Array[String](["00864b0b-1789-edee-8212-2223c7077341", "01055c00-f2c9-a6a0-70bc-67763c2b7e94", "2ea9b3e2-e36b-7d95-e960-66177362dd9a", "33a67a50-64fa-2c44-8dfc-a7c0af169d38", "3796c417-acb9-4eec-ce4c-31f9d6526056", "3962b67b-b8da-3859-b292-8737c8ed0702", "3ecadf1d-179d-d941-e279-8e7dd419d89e", "4618ecf7-e466-6d5d-76b8-766f39a60c49", "4b56c637-fcac-734c-edc2-4c113ac32bd8", "675b7546-33a5-54e6-6b9a-0ba0de445fe5", "6efe213c-c4d1-e878-03dc-99e01f07fce3", "877e8257-6551-fc84-85ba-a64227915418", "8c74c46a-f376-2c5e-3d29-5b5222ef6b95", "8f3fad20-ffda-d0d1-5db3-2ebd906aed37", "9d3f51a0-128b-b911-da77-3b028a299556", "9dd93dff-ded2-97da-1dd9-9013de7b5612", "a8667c28-e999-b3dc-076a-f2fe744a67d0", "a9fffeb6-ce68-9df7-db46-f6e6c342f9b0", "c580664a-3706-026a-2be5-ebe28ad6ad32", "c78a1c7b-2de2-44de-e71e-47deea9408ef", "ec81dfb1-815b-e90b-780d-041147047306", "ef556a8e-bd7a-0764-ab05-1b80172b689d", "fe7d0de4-c7c8-90f3-e57f-9244befaff23"])
 direction = Vector3i(0, 0, -1)
 
 [sub_resource type="Resource" id="Resource_mysar"]
@@ -255,7 +238,7 @@ name = "wall_corner"
 scene = ExtResource("8_iupn8")
 tags = Array[String](["corner", "wall"])
 boundary_role = 2
-requirements = Array[ExtResource("3_lwb3q")]([SubResource("Resource_hyqrr"), SubResource("Resource_jbluy")])
+requirements = Array[ExtResource("3_lwb3q")]([SubResource("Resource_6r8ic")])
 rotation_symmetry = 1
 sockets = Array[ExtResource("5_rqldo")]([SubResource("Resource_hkoat"), SubResource("Resource_8x41a"), SubResource("Resource_phhm4"), SubResource("Resource_qipsd"), SubResource("Resource_iyrpm"), SubResource("Resource_mysar")])
 
@@ -287,14 +270,14 @@ direction = Vector3i(1, 0, 0)
 script = ExtResource("5_rqldo")
 socket_id = "corner_right"
 socket_guid = "1acc07f0-59d5-8198-070e-f00e2cf2e3a8"
-compatible_sockets = Array[String](["1ccfeb3d-a9af-f8fc-e6ad-18e5bd1cf615", "5b419eb9-f3ab-4dd2-0f35-762fb8f171cd", "a75921a1-90b9-63fc-2ad1-5f54623cccd8", "c8528b3a-8c13-0818-f176-7674cce937c2"])
+compatible_sockets = Array[String](["1ccfeb3d-a9af-f8fc-e6ad-18e5bd1cf615", "5b419eb9-f3ab-4dd2-0f35-762fb8f171cd", "c8528b3a-8c13-0818-f176-7674cce937c2", "df3e326f-4842-0e30-5bb9-4fedcbe11fa1"])
 direction = Vector3i(-1, 0, 0)
 
 [sub_resource type="Resource" id="Resource_3b0sh"]
 script = ExtResource("5_rqldo")
 socket_id = "corner_left"
 socket_guid = "c8528b3a-8c13-0818-f176-7674cce937c2"
-compatible_sockets = Array[String](["07a842ec-6598-30d1-70d1-0e92a99d251f", "109a88c9-aaf2-7ff6-f232-38747765ffd9", "1acc07f0-59d5-8198-070e-f00e2cf2e3a8", "5cdd5b11-3424-3f18-f21e-85047da3b50a", "a75921a1-90b9-63fc-2ad1-5f54623cccd8"])
+compatible_sockets = Array[String](["07a842ec-6598-30d1-70d1-0e92a99d251f", "109a88c9-aaf2-7ff6-f232-38747765ffd9", "1acc07f0-59d5-8198-070e-f00e2cf2e3a8", "a75921a1-90b9-63fc-2ad1-5f54623cccd8"])
 direction = Vector3i(0, 0, -1)
 
 [sub_resource type="Resource" id="Resource_dmy7n"]
@@ -313,59 +296,57 @@ boundary_role = 2
 requirements = Array[ExtResource("3_lwb3q")]([SubResource("Resource_og0v4")])
 sockets = Array[ExtResource("5_rqldo")]([SubResource("Resource_uq8r8"), SubResource("Resource_e1a5f"), SubResource("Resource_tfyii"), SubResource("Resource_xc15g"), SubResource("Resource_3b0sh"), SubResource("Resource_dmy7n")])
 
-[sub_resource type="Resource" id="Resource_5r0yi"]
+[sub_resource type="Resource" id="Resource_gn4ie"]
 script = ExtResource("5_rqldo")
-socket_id = "air"
-socket_guid = "8f3fad20-ffda-d0d1-5db3-2ebd906aed37"
-compatible_sockets = Array[String](["2ea9b3e2-e36b-7d95-e960-66177362dd9a", "4025ce58-4466-79c6-6a74-28d57e35b701", "4b56c637-fcac-734c-edc2-4c113ac32bd8", "675b7546-33a5-54e6-6b9a-0ba0de445fe5", "877e8257-6551-fc84-85ba-a64227915418", "8f3fad20-ffda-d0d1-5db3-2ebd906aed37", "9d3f51a0-128b-b911-da77-3b028a299556", "c580664a-3706-026a-2be5-ebe28ad6ad32", "ec81dfb1-815b-e90b-780d-041147047306", "fe7d0de4-c7c8-90f3-e57f-9244befaff23"])
+socket_id = "none"
+socket_guid = "219edb86-b96a-c9c5-6451-5f38632721d4"
 
-[sub_resource type="Resource" id="Resource_08p3u"]
+[sub_resource type="Resource" id="Resource_8hnev"]
 script = ExtResource("5_rqldo")
-socket_id = "air"
-socket_guid = "c580664a-3706-026a-2be5-ebe28ad6ad32"
-compatible_sockets = Array[String](["2ea9b3e2-e36b-7d95-e960-66177362dd9a", "4025ce58-4466-79c6-6a74-28d57e35b701", "4b56c637-fcac-734c-edc2-4c113ac32bd8", "675b7546-33a5-54e6-6b9a-0ba0de445fe5", "877e8257-6551-fc84-85ba-a64227915418", "8f3fad20-ffda-d0d1-5db3-2ebd906aed37", "9d3f51a0-128b-b911-da77-3b028a299556", "c580664a-3706-026a-2be5-ebe28ad6ad32", "ec81dfb1-815b-e90b-780d-041147047306", "fe7d0de4-c7c8-90f3-e57f-9244befaff23"])
+socket_id = "none"
+socket_guid = "8f888074-3523-5961-29de-9dba032a981e"
 direction = Vector3i(0, -1, 0)
 
-[sub_resource type="Resource" id="Resource_lxidc"]
+[sub_resource type="Resource" id="Resource_453ee"]
 script = ExtResource("5_rqldo")
-socket_id = "air"
-socket_guid = "fe7d0de4-c7c8-90f3-e57f-9244befaff23"
-compatible_sockets = Array[String](["2ea9b3e2-e36b-7d95-e960-66177362dd9a", "4025ce58-4466-79c6-6a74-28d57e35b701", "4b56c637-fcac-734c-edc2-4c113ac32bd8", "675b7546-33a5-54e6-6b9a-0ba0de445fe5", "877e8257-6551-fc84-85ba-a64227915418", "8f3fad20-ffda-d0d1-5db3-2ebd906aed37", "9d3f51a0-128b-b911-da77-3b028a299556", "c580664a-3706-026a-2be5-ebe28ad6ad32", "ec81dfb1-815b-e90b-780d-041147047306", "fe7d0de4-c7c8-90f3-e57f-9244befaff23"])
+socket_id = "floor_side"
+socket_guid = "c78a1c7b-2de2-44de-e71e-47deea9408ef"
+compatible_sockets = Array[String](["2ea9b3e2-e36b-7d95-e960-66177362dd9a", "3796c417-acb9-4eec-ce4c-31f9d6526056", "3962b67b-b8da-3859-b292-8737c8ed0702", "4025ce58-4466-79c6-6a74-28d57e35b701", "4b56c637-fcac-734c-edc2-4c113ac32bd8", "675b7546-33a5-54e6-6b9a-0ba0de445fe5", "6efe213c-c4d1-e878-03dc-99e01f07fce3", "877e8257-6551-fc84-85ba-a64227915418", "8f3fad20-ffda-d0d1-5db3-2ebd906aed37", "9d3f51a0-128b-b911-da77-3b028a299556", "c580664a-3706-026a-2be5-ebe28ad6ad32", "c78a1c7b-2de2-44de-e71e-47deea9408ef", "ec81dfb1-815b-e90b-780d-041147047306", "fe7d0de4-c7c8-90f3-e57f-9244befaff23"])
 direction = Vector3i(1, 0, 0)
 
-[sub_resource type="Resource" id="Resource_jswv3"]
+[sub_resource type="Resource" id="Resource_qrig7"]
 script = ExtResource("5_rqldo")
-socket_id = "air"
-socket_guid = "2ea9b3e2-e36b-7d95-e960-66177362dd9a"
-compatible_sockets = Array[String](["2ea9b3e2-e36b-7d95-e960-66177362dd9a", "4025ce58-4466-79c6-6a74-28d57e35b701", "4b56c637-fcac-734c-edc2-4c113ac32bd8", "675b7546-33a5-54e6-6b9a-0ba0de445fe5", "877e8257-6551-fc84-85ba-a64227915418", "8f3fad20-ffda-d0d1-5db3-2ebd906aed37", "9d3f51a0-128b-b911-da77-3b028a299556", "c580664a-3706-026a-2be5-ebe28ad6ad32", "ec81dfb1-815b-e90b-780d-041147047306", "fe7d0de4-c7c8-90f3-e57f-9244befaff23"])
+socket_id = "floor_side"
+socket_guid = "3962b67b-b8da-3859-b292-8737c8ed0702"
+compatible_sockets = Array[String](["2ea9b3e2-e36b-7d95-e960-66177362dd9a", "3796c417-acb9-4eec-ce4c-31f9d6526056", "3962b67b-b8da-3859-b292-8737c8ed0702", "4025ce58-4466-79c6-6a74-28d57e35b701", "4b56c637-fcac-734c-edc2-4c113ac32bd8", "675b7546-33a5-54e6-6b9a-0ba0de445fe5", "6efe213c-c4d1-e878-03dc-99e01f07fce3", "877e8257-6551-fc84-85ba-a64227915418", "8f3fad20-ffda-d0d1-5db3-2ebd906aed37", "9d3f51a0-128b-b911-da77-3b028a299556", "c580664a-3706-026a-2be5-ebe28ad6ad32", "c78a1c7b-2de2-44de-e71e-47deea9408ef", "ec81dfb1-815b-e90b-780d-041147047306", "fe7d0de4-c7c8-90f3-e57f-9244befaff23"])
 direction = Vector3i(-1, 0, 0)
 
-[sub_resource type="Resource" id="Resource_p4tqj"]
+[sub_resource type="Resource" id="Resource_q2x6b"]
 script = ExtResource("5_rqldo")
-socket_id = "air"
-socket_guid = "877e8257-6551-fc84-85ba-a64227915418"
-compatible_sockets = Array[String](["2ea9b3e2-e36b-7d95-e960-66177362dd9a", "4025ce58-4466-79c6-6a74-28d57e35b701", "4b56c637-fcac-734c-edc2-4c113ac32bd8", "675b7546-33a5-54e6-6b9a-0ba0de445fe5", "877e8257-6551-fc84-85ba-a64227915418", "8f3fad20-ffda-d0d1-5db3-2ebd906aed37", "9d3f51a0-128b-b911-da77-3b028a299556", "c580664a-3706-026a-2be5-ebe28ad6ad32", "ec81dfb1-815b-e90b-780d-041147047306", "fe7d0de4-c7c8-90f3-e57f-9244befaff23"])
+socket_id = "floor_side"
+socket_guid = "3796c417-acb9-4eec-ce4c-31f9d6526056"
+compatible_sockets = Array[String](["2ea9b3e2-e36b-7d95-e960-66177362dd9a", "3796c417-acb9-4eec-ce4c-31f9d6526056", "3962b67b-b8da-3859-b292-8737c8ed0702", "4025ce58-4466-79c6-6a74-28d57e35b701", "4b56c637-fcac-734c-edc2-4c113ac32bd8", "675b7546-33a5-54e6-6b9a-0ba0de445fe5", "6efe213c-c4d1-e878-03dc-99e01f07fce3", "877e8257-6551-fc84-85ba-a64227915418", "8f3fad20-ffda-d0d1-5db3-2ebd906aed37", "9d3f51a0-128b-b911-da77-3b028a299556", "c580664a-3706-026a-2be5-ebe28ad6ad32", "c78a1c7b-2de2-44de-e71e-47deea9408ef", "ec81dfb1-815b-e90b-780d-041147047306", "fe7d0de4-c7c8-90f3-e57f-9244befaff23"])
 direction = Vector3i(0, 0, -1)
 
-[sub_resource type="Resource" id="Resource_o4xew"]
+[sub_resource type="Resource" id="Resource_ju7ae"]
 script = ExtResource("5_rqldo")
-socket_id = "air"
-socket_guid = "675b7546-33a5-54e6-6b9a-0ba0de445fe5"
-compatible_sockets = Array[String](["2ea9b3e2-e36b-7d95-e960-66177362dd9a", "4025ce58-4466-79c6-6a74-28d57e35b701", "4b56c637-fcac-734c-edc2-4c113ac32bd8", "675b7546-33a5-54e6-6b9a-0ba0de445fe5", "877e8257-6551-fc84-85ba-a64227915418", "8f3fad20-ffda-d0d1-5db3-2ebd906aed37", "9d3f51a0-128b-b911-da77-3b028a299556", "c580664a-3706-026a-2be5-ebe28ad6ad32", "ec81dfb1-815b-e90b-780d-041147047306", "fe7d0de4-c7c8-90f3-e57f-9244befaff23"])
+socket_id = "floor_side"
+socket_guid = "6efe213c-c4d1-e878-03dc-99e01f07fce3"
+compatible_sockets = Array[String](["2ea9b3e2-e36b-7d95-e960-66177362dd9a", "3796c417-acb9-4eec-ce4c-31f9d6526056", "3962b67b-b8da-3859-b292-8737c8ed0702", "4025ce58-4466-79c6-6a74-28d57e35b701", "4b56c637-fcac-734c-edc2-4c113ac32bd8", "675b7546-33a5-54e6-6b9a-0ba0de445fe5", "6efe213c-c4d1-e878-03dc-99e01f07fce3", "877e8257-6551-fc84-85ba-a64227915418", "8f3fad20-ffda-d0d1-5db3-2ebd906aed37", "9d3f51a0-128b-b911-da77-3b028a299556", "c580664a-3706-026a-2be5-ebe28ad6ad32", "c78a1c7b-2de2-44de-e71e-47deea9408ef", "ec81dfb1-815b-e90b-780d-041147047306", "fe7d0de4-c7c8-90f3-e57f-9244befaff23"])
 direction = Vector3i(0, 0, 1)
 
-[sub_resource type="Resource" id="Resource_d4rm1"]
+[sub_resource type="Resource" id="Resource_ii4iy"]
 script = ExtResource("2_53rky")
-name = "air"
-scene = ExtResource("13_ym6o8")
+name = "outside_floor"
+scene = ExtResource("13_bbx3i")
 size = Vector3i(2, 3, 2)
-tags = Array[String](["air"])
-sockets = Array[ExtResource("5_rqldo")]([SubResource("Resource_5r0yi"), SubResource("Resource_08p3u"), SubResource("Resource_lxidc"), SubResource("Resource_jswv3"), SubResource("Resource_p4tqj"), SubResource("Resource_o4xew")])
+tags = Array[String](["floor", "stone", "exterior"])
+sockets = Array[ExtResource("5_rqldo")]([SubResource("Resource_gn4ie"), SubResource("Resource_8hnev"), SubResource("Resource_453ee"), SubResource("Resource_qrig7"), SubResource("Resource_q2x6b"), SubResource("Resource_ju7ae")])
 
 [resource]
 script = ExtResource("1_k0n0c")
 library_name = "Test2"
-tiles = Array[ExtResource("2_53rky")]([SubResource("Resource_2rp5i"), SubResource("Resource_aoeot"), SubResource("Resource_bbx3i"), SubResource("Resource_wu18d"), SubResource("Resource_ur0v5"), SubResource("Resource_d4rm1")])
+tiles = Array[ExtResource("2_53rky")]([SubResource("Resource_2rp5i"), SubResource("Resource_aoeot"), SubResource("Resource_bbx3i"), SubResource("Resource_wu18d"), SubResource("Resource_ur0v5"), SubResource("Resource_ii4iy")])
 socket_types = Array[String](["air", "any", "corner_block", "corner_left", "corner_left_outside", "corner_outside", "corner_right", "corner_side", "door_inside", "door_left", "door_outside", "door_right", "doot_inside", "floor_bottom", "floor_side", "floor_top", "interior", "none", "wall_forward", "wall_inside", "wall_left", "wall_outside", "wall_right", "wall_side", "wall_top"])
-available_tags = Array[String](["air", "corner", "door", "floor", "stone", "wall"])
+available_tags = Array[String](["air", "corner", "door", "exterior", "floor", "stone", "wall"])
 custom_socket_templates = Array[ExtResource("1_3j4ih")]([SubResource("Resource_rxijo")])

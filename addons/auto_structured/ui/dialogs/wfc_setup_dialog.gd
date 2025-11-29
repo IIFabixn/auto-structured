@@ -4,6 +4,7 @@ class_name WfcSetupDialog extends ConfirmationDialog
 signal setup_confirmed(config: Dictionary)
 
 const WfcSolverConfig = preload("res://addons/auto_structured/core/wfc/wfc_solver_config.gd")
+const WfcRegionConfig = preload("res://addons/auto_structured/core/wfc/wfc_region_config.gd")
 
 const PRESET_ORDER := ["small", "medium", "large", "very_large", "custom"]
 const PRESET_LABELS := {
@@ -244,12 +245,14 @@ func _sync_custom_solver_controls() -> void:
 	if _current_solver_config == null:
 		return
 	_syncing_custom_controls = true
+	# Region settings are always visible (not preset-specific)
+	var region_cfg = _current_solver_config.region_config
 	if region_boundary_check:
-		region_boundary_check.button_pressed = _current_solver_config.enforce_region_boundaries
+		region_boundary_check.button_pressed = region_cfg.enabled if region_cfg else false
 	if max_regions_spin:
-		max_regions_spin.value = _current_solver_config.max_boundary_regions
+		max_regions_spin.value = region_cfg.max_regions if region_cfg else 1
 	if require_closed_regions_check:
-		require_closed_regions_check.button_pressed = _current_solver_config.require_closed_regions
+		require_closed_regions_check.button_pressed = region_cfg.require_closed_regions if region_cfg else true
 	if show_custom:
 		if yield_spin:
 			yield_spin.value = _current_solver_config.yield_interval_ms
@@ -341,19 +344,22 @@ func _on_custom_backtracking_toggled(pressed: bool) -> void:
 func _on_custom_region_boundary_toggled(pressed: bool) -> void:
 	if _syncing_custom_controls or _current_solver_config == null:
 		return
-	_current_solver_config.enforce_region_boundaries = pressed
+	if _current_solver_config.region_config:
+		_current_solver_config.region_config.enabled = pressed
 	_update_solver_settings_cache()
 
 func _on_custom_max_regions_changed(value: float) -> void:
 	if _syncing_custom_controls or _current_solver_config == null:
 		return
-	_current_solver_config.max_boundary_regions = int(value)
+	if _current_solver_config.region_config:
+		_current_solver_config.region_config.max_regions = int(value)
 	_update_solver_settings_cache()
 
 func _on_custom_require_closed_regions_toggled(pressed: bool) -> void:
 	if _syncing_custom_controls or _current_solver_config == null:
 		return
-	_current_solver_config.require_closed_regions = pressed
+	if _current_solver_config.region_config:
+		_current_solver_config.region_config.require_closed_regions = pressed
 	_update_solver_settings_cache()
 
 func _update_solver_settings_cache() -> void:
@@ -429,7 +435,8 @@ func _serialize_solver_config(config: WfcSolverConfig, preset_id: String) -> Dic
 		"max_backtrack_depth": config.max_backtrack_depth,
 		"backtrack_checkpoint_frequency": config.backtrack_checkpoint_frequency,
 		"solve_strategy_id": config.solve_strategy_id,
-		"enforce_region_boundaries": config.enforce_region_boundaries
+		# Region settings (using unified config)
+		"region_config": config.region_config.to_dict() if config.region_config else {}
 	}
 
 func _sanitize_solver_settings(data: Dictionary) -> Dictionary:
@@ -454,7 +461,14 @@ func _deserialize_solver_config(data: Dictionary) -> WfcSolverConfig:
 	config.max_backtrack_depth = data.get("max_backtrack_depth", config.max_backtrack_depth)
 	config.backtrack_checkpoint_frequency = data.get("backtrack_checkpoint_frequency", config.backtrack_checkpoint_frequency)
 	config.solve_strategy_id = data.get("solve_strategy_id", config.solve_strategy_id)
-	config.enforce_region_boundaries = data.get("enforce_region_boundaries", config.enforce_region_boundaries)
+	# Restore region settings from unified config or legacy fields
+	if data.has("region_config"):
+		config.region_config = WfcRegionConfig.from_dict(data["region_config"])
+	else:
+		# Legacy field migration
+		config.region_config.enabled = data.get("enforce_region_boundaries", false)
+		config.region_config.max_regions = data.get("max_boundary_regions", 1)
+		config.region_config.require_closed_regions = data.get("require_closed_regions", true)
 	return config
 
 func _clone_solver_config(source: WfcSolverConfig) -> WfcSolverConfig:
@@ -470,9 +484,9 @@ func _clone_solver_config(source: WfcSolverConfig) -> WfcSolverConfig:
 	clone.max_backtrack_depth = source.max_backtrack_depth
 	clone.backtrack_checkpoint_frequency = source.backtrack_checkpoint_frequency
 	clone.solve_strategy_id = source.solve_strategy_id
-	clone.enforce_region_boundaries = source.enforce_region_boundaries
-	clone.max_boundary_regions = source.max_boundary_regions
-	clone.require_closed_regions = source.require_closed_regions
+	# Clone region config
+	if source.region_config:
+		clone.region_config = source.region_config.duplicate_config()
 	return clone
 
 func _sanitize_config(data: Dictionary) -> Dictionary:
