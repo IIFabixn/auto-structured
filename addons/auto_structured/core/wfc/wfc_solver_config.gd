@@ -34,6 +34,8 @@ var backtrack_checkpoint_frequency: int = 5
 @export_enum("entropy", "center_out", "frontier")
 var solve_strategy_id: String = "entropy"
 var enforce_region_boundaries: bool = false
+var max_boundary_regions: int = 1  ## Maximum number of separate boundary structures (0 = unlimited)
+var require_closed_regions: bool = true  ## Boundaries must form closed loops
 
 
 ## Preset for small grids (< 10K cells)
@@ -108,6 +110,8 @@ func apply_to_solver(solver: WfcSolver) -> void:
 	solver.enable_backtracking = enable_backtracking
 	solver.max_backtrack_depth = max_backtrack_depth
 	solver.backtrack_checkpoint_frequency = backtrack_checkpoint_frequency
+	solver.max_boundary_regions = max_boundary_regions
+	solver.require_closed_regions = require_closed_regions
 	if solver.has_method("set_solve_strategy"):
 		solver.set_solve_strategy(create_strategy_instance(), self)
 	if solver.has_method("set_region_boundary_enforcement"):

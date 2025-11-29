@@ -4,16 +4,8 @@ class_name RegionBoundaryRequirement
 
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
 
-enum BoundaryRole {
-	NONE,
-	EDGE,
-	CORNER,
-	INFILL
-}
+## Configuration class for customizing boundary connection behavior.
 
-## Encourages/forces tiles with region boundary roles to connect into closed loops.
-@export var boundary_role: BoundaryRole = BoundaryRole.NONE
-@export var require_boundary_role: bool = false
 @export var enforce_closed_loops: bool = true
 @export var allow_open_ends: bool = false
 @export var min_edge_neighbors: int = 2
@@ -25,9 +17,12 @@ func evaluate(tile: Tile, position: Vector3i, grid, context: Dictionary) -> bool
 		return true
 	if tile == null:
 		return true
-	var role := boundary_role
-	if role == BoundaryRole.NONE:
-		return not require_boundary_role
+	
+	# Get boundary role from the tile itself (not from requirement)
+	var role: Tile.BoundaryRole = tile.boundary_role
+	if role == Tile.BoundaryRole.NONE:
+		return true  # Not a boundary tile, no constraint
+	
 	var required_neighbors := _required_neighbors_for_role(role, position, grid.size)
 	if allow_open_ends:
 		required_neighbors = min(1, required_neighbors)
@@ -38,12 +33,12 @@ func evaluate(tile: Tile, position: Vector3i, grid, context: Dictionary) -> bool
 		return counts["confirmed"] > 0
 	return counts["confirmed"] + counts["potential"] >= required_neighbors
 
-func _required_neighbors_for_role(role: int, position: Vector3i, grid_size: Vector3i) -> int:
+func _required_neighbors_for_role(role: Tile.BoundaryRole, position: Vector3i, grid_size: Vector3i) -> int:
 	var required := min_edge_neighbors
 	match role:
-		BoundaryRole.CORNER:
+		Tile.BoundaryRole.CORNER:
 			required = min_corner_neighbors
-		BoundaryRole.INFILL:
+		Tile.BoundaryRole.INFILL:
 			required = max(1, min_edge_neighbors - 1)
 	if relax_on_world_boundary and _touches_world_boundary(position, grid_size):
 		required = max(1, required - 1)
@@ -85,57 +80,22 @@ func _neighbor_state(cell) -> int:
 	return 0
 
 func _tile_is_boundary(tile: Tile) -> bool:
-	return get_tile_boundary_role(tile) != BoundaryRole.NONE
+	return tile != null and tile.boundary_role != Tile.BoundaryRole.NONE
 
-static func get_tile_boundary_role(tile: Tile) -> BoundaryRole:
+static func get_tile_boundary_role(tile: Tile) -> Tile.BoundaryRole:
+	"""Get the boundary role directly from the tile (kept for backward compatibility)"""
 	if tile == null:
-		return BoundaryRole.NONE
-	for req in tile.requirements:
-		if req is RegionBoundaryRequirement:
-			return req.boundary_role
-	return BoundaryRole.NONE
+		return Tile.BoundaryRole.NONE
+	return tile.boundary_role
 
 func get_config_control(_tile: Tile = null) -> Control:
 	var root = VBoxContainer.new()
 	root.add_theme_constant_override("separation", 6)
 
 	var description_label = Label.new()
-	description_label.text = "Assign roles and tweak how strict boundary enforcement should be."
+	description_label.text = "Configure boundary connection rules."
 	description_label.autowrap_mode = TextServer.AUTOWRAP_WORD
 	root.add_child(description_label)
-
-	var role_row = HBoxContainer.new()
-	var role_label = Label.new()
-	role_label.text = "Boundary Role:"
-	role_label.custom_minimum_size.x = 140
-	role_row.add_child(role_label)
-
-	var role_option = OptionButton.new()
-	role_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	role_option.add_item("None", BoundaryRole.NONE)
-	role_option.add_item("Edge", BoundaryRole.EDGE)
-	role_option.add_item("Corner", BoundaryRole.CORNER)
-	role_option.add_item("Infill", BoundaryRole.INFILL)
-	role_option.tooltip_text = "Choose how this tile behaves in a boundary loop (edge, corner, or infill)."
-	var selected_role := boundary_role
-	var selected_index := 0
-	for i in range(role_option.item_count):
-		if role_option.get_item_id(i) == selected_role:
-			selected_index = i
-			break
-	role_option.select(selected_index)
-	role_option.item_selected.connect(func(idx: int):
-		boundary_role = role_option.get_item_id(idx)
-	)
-	role_row.add_child(role_option)
-	root.add_child(role_row)
-
-	var require_check = CheckButton.new()
-	require_check.text = "Require tiles to define a boundary role"
-	require_check.button_pressed = require_boundary_role
-	require_check.tooltip_text = "If enabled, placements fail when this tile has no boundary role assigned."
-	require_check.toggled.connect(func(pressed: bool): require_boundary_role = pressed)
-	root.add_child(require_check)
 
 	var enforce_check = CheckButton.new()
 	enforce_check.text = "Enforce closed loops"

@@ -6,7 +6,7 @@
 oversampling_override = 1.0
 title = "Configure Preview Session"
 position = Vector2i(0, 36)
-size = Vector2i(420, 693)
+size = Vector2i(600, 771)
 min_size = Vector2i(420, 0)
 ok_button_text = "Apply"
 script = ExtResource("1_0j6n1")
@@ -15,8 +15,8 @@ script = ExtResource("1_0j6n1")
 unique_name_in_owner = true
 offset_left = 8.0
 offset_top = 8.0
-offset_right = 412.0
-offset_bottom = 644.0
+offset_right = 592.0
+offset_bottom = 722.0
 theme_override_constants/separation = 8
 
 [node name="PresetLabel" type="Label" parent="VBox"]
@@ -284,6 +284,31 @@ text = "Enforce Region Boundaries"
 unique_name_in_owner = true
 layout_mode = 2
 button_pressed = true
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="RequireClosedRegionsLabel" type="Label" parent="VBox/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Require Closed Regions"
+
+[node name="RequireClosedRegionsCheck" type="CheckButton" parent="VBox/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+button_pressed = true
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="MaxRegionsLabel" type="Label" parent="VBox/HBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Max Regions"
+
+[node name="MaxRegionsSpin" type="SpinBox" parent="VBox/HBoxContainer2"]
+unique_name_in_owner = true
+layout_mode = 2
 
 [node name="HintLabel" type="Label" parent="VBox"]
 custom_minimum_size = Vector2(400, 0)

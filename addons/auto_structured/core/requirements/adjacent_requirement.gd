@@ -11,6 +11,11 @@ enum AdjacentMode {
 	EXACT_COUNT      ## Exactly N adjacent tiles must match
 }
 
+enum TagMatchMode {
+	ANY,  ## Tile must have at least one of the listed tags
+	ALL   ## Tile must have all of the listed tags
+}
+
 enum NeighborMatchState {
 	NONE,
 	POTENTIAL,
@@ -18,6 +23,7 @@ enum NeighborMatchState {
 }
 
 @export var mode: AdjacentMode = AdjacentMode.MUST_HAVE
+@export var tag_match_mode: TagMatchMode = TagMatchMode.ANY
 @export var required_tags: Array[String] = []  ## Tags that adjacent tiles must have/not have
 @export var required_count: int = 1  ## For EXACT_COUNT mode
 @export var check_horizontal: bool = true  ## Check X/Z neighbors
@@ -91,9 +97,23 @@ func _get_neighbor_match_state(neighbor_cell) -> int:
 func _tile_matches_required_tags(tile: Tile) -> bool:
 	if tile == null:
 		return false
-	for tag in required_tags:
-		if tag in tile.tags:
+	if required_tags.is_empty():
+		return false
+	
+	match tag_match_mode:
+		TagMatchMode.ANY:
+			# Tile must have at least one of the required tags
+			for tag in required_tags:
+				if tag in tile.tags:
+					return true
+			return false
+		TagMatchMode.ALL:
+			# Tile must have all of the required tags
+			for tag in required_tags:
+				if tag not in tile.tags:
+					return false
 			return true
+	
 	return false
 
 func get_failure_reason() -> String:
@@ -109,6 +129,7 @@ func get_failure_reason() -> String:
 
 func get_description() -> String:
 	var tag_str = ", ".join(required_tags)
+	var match_str = "ANY" if tag_match_mode == TagMatchMode.ANY else "ALL"
 	var dir_str = ""
 	if check_horizontal and check_vertical:
 		dir_str = "any adjacent"
@@ -119,11 +140,11 @@ func get_description() -> String:
 	
 	match mode:
 		AdjacentMode.MUST_HAVE:
-			return "Requires %s tile with: %s" % [dir_str, tag_str]
+			return "Requires %s tile with %s of: %s" % [dir_str, match_str, tag_str]
 		AdjacentMode.MUST_NOT_HAVE:
-			return "Cannot be %s to: %s" % [dir_str, tag_str]
+			return "Cannot be %s to tiles with %s of: %s" % [dir_str, match_str, tag_str]
 		AdjacentMode.EXACT_COUNT:
-			return "Needs exactly %d %s tiles with: %s" % [required_count, dir_str, tag_str]
+			return "Needs exactly %d %s tiles with %s of: %s" % [required_count, dir_str, match_str, tag_str]
 	return super.get_description()
 
 func get_config_control(_tile: Tile = null) -> Control:
@@ -132,7 +153,7 @@ func get_config_control(_tile: Tile = null) -> Control:
 	# Mode selector
 	var mode_hbox = HBoxContainer.new()
 	var mode_label = Label.new()
-	mode_label.text = "Mode:"
+	mode_label.text = "Modus:"
 	mode_label.custom_minimum_size.x = 80
 	mode_hbox.add_child(mode_label)
 	
@@ -145,6 +166,22 @@ func get_config_control(_tile: Tile = null) -> Control:
 	mode_option.item_selected.connect(func(idx: int): mode = idx)
 	mode_hbox.add_child(mode_option)
 	vbox.add_child(mode_hbox)
+	
+	# Tag match mode selector
+	var tag_mode_hbox = HBoxContainer.new()
+	var tag_mode_label = Label.new()
+	tag_mode_label.text = "Tag Match:"
+	tag_mode_label.custom_minimum_size.x = 80
+	tag_mode_hbox.add_child(tag_mode_label)
+	
+	var tag_mode_option = OptionButton.new()
+	tag_mode_option.add_item("ANY (at least one)", TagMatchMode.ANY)
+	tag_mode_option.add_item("ALL (must have all)", TagMatchMode.ALL)
+	tag_mode_option.select(int(tag_match_mode) if tag_match_mode != null else TagMatchMode.ANY)
+	tag_mode_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tag_mode_option.item_selected.connect(func(idx: int): tag_match_mode = idx)
+	tag_mode_hbox.add_child(tag_mode_option)
+	vbox.add_child(tag_mode_hbox)
 	
 	# Required count (for EXACT_COUNT mode)
 	var count_hbox = HBoxContainer.new()

@@ -3,3 +3,4 @@
 /android/
 addons/simpleassetplacer/*
 test_output.txt
+.vscode/settings.json

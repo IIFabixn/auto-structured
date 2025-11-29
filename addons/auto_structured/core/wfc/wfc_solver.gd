@@ -76,6 +76,10 @@ var _scratch_variants: Array[Dictionary] = []
 var enforce_region_boundaries: bool = false
 var _region_boundary_requirement: RegionBoundaryRequirement = null
 
+## Region control: Enforce structure formation constraints
+@export var max_boundary_regions: int = 1  ## Maximum number of separate boundary structures (0 = unlimited, 1 = single closed structure)
+@export var require_closed_regions: bool = true  ## Boundaries must form closed loops, no openings to world edge
+
 ## Interactive solve state ---------------------------------------------------
 var _initialized: bool = false
 var _pending_choice_cell: WfcCell = null
@@ -748,16 +752,23 @@ func _apply_requirements_to_cell(cell: WfcCell) -> void:
 						_log(["  Requirement '", req.display_name, "' failed for tile '", tile.name, "' at ", cell.position])
 						_log(["    Reason: ", req.get_failure_reason()])
 					break
-		var boundary_role := RegionBoundaryRequirement.get_tile_boundary_role(tile)
-		if all_satisfied and enforce_region_boundaries and boundary_role != RegionBoundaryRequirement.BoundaryRole.NONE:
+		# Check boundary role enforcement (now from tile property)
+		if all_satisfied and enforce_region_boundaries and tile.boundary_role != Tile.BoundaryRole.NONE:
 			if _region_boundary_requirement == null:
 				_region_boundary_requirement = RegionBoundaryRequirement.new()
-			_region_boundary_requirement.boundary_role = boundary_role
 			if not _region_boundary_requirement.evaluate(tile, cell.position, grid, _requirement_context):
 				all_satisfied = false
 				if logging_enabled:
 					_log(["  Region boundary requirement failed for tile '", tile.name, "' at ", cell.position])
 					_log(["    Reason: ", _region_boundary_requirement.get_failure_reason()])
+		
+		# Enforce region constraints if enabled
+		if all_satisfied and (max_boundary_regions > 0 or require_closed_regions):
+			if not _validate_region_constraints(tile, cell.position):
+				all_satisfied = false
+				if logging_enabled:
+					_log(["  Region constraint failed for tile '", tile.name, "' at ", cell.position])
+		
 		if all_satisfied:
 			valid_variants.append(variant)
 	
@@ -944,3 +955,121 @@ func _attempt_backtrack() -> bool:
 	
 	_log(["  Backtracked to checkpoint (backtracks: ", _total_backtracks, ", stack depth: ", _backtrack_stack.size(), ")"])
 	return true
+
+## Region Analysis Methods ---------------------------------------------------
+
+func _validate_region_constraints(tile: Tile, position: Vector3i) -> bool:
+	"""Check if placing this boundary tile would violate region constraints."""
+	if tile.boundary_role == Tile.BoundaryRole.NONE:
+		return true  # Non-boundary tiles don't affect regions
+	
+	# For now, just check basic connectivity - full region counting is expensive
+	# TODO: Implement proper flood-fill region counting if max_boundary_regions > 1
+	
+	if require_closed_regions:
+		# Check if this placement would create an opening to the world boundary
+		if _creates_world_boundary_opening(position):
+			return false
+	
+	return true
+
+func _creates_world_boundary_opening(position: Vector3i) -> bool:
+	"""Check if a boundary tile at this position would leave gaps to the world edge."""
+	# If we're not on the world boundary, we can't create an opening
+	if not _is_on_world_boundary(position):
+		return false
+	
+	# Check if there are nearby boundary tiles that would seal this edge
+	var neighbor_positions = [
+		position + Vector3i.RIGHT,
+		position + Vector3i.LEFT,
+		position + Vector3i.FORWARD,
+		position + Vector3i.BACK
+	]
+	
+	var has_boundary_neighbor = false
+	for neighbor_pos in neighbor_positions:
+		if not grid.is_valid_position(neighbor_pos):
+			continue
+		var neighbor_cell = grid.get_cell(neighbor_pos)
+		if neighbor_cell == null or neighbor_cell.has_contradiction():
+			continue
+		
+		if neighbor_cell.is_collapsed():
+			var neighbor_tile = neighbor_cell.get_tile()
+			if neighbor_tile and neighbor_tile.boundary_role != Tile.BoundaryRole.NONE:
+				has_boundary_neighbor = true
+				break
+	
+	# If we're on world boundary with no boundary neighbors, this might create an opening
+	# Allow it for now - strict validation would need full region analysis
+	return false
+
+func _is_on_world_boundary(position: Vector3i) -> bool:
+	"""Check if position is on the edge of the grid."""
+	return (
+		position.x == 0 or position.x == grid.size.x - 1 or
+		position.z == 0 or position.z == grid.size.z - 1
+	)
+
+func count_boundary_regions() -> int:
+	"""Count the number of separate boundary structures using flood-fill.
+	Returns: Number of disconnected boundary regions (0 if no boundaries)"""
+	var visited: Dictionary = {}  # position -> bool
+	var region_count := 0
+	
+	# Find all boundary tiles
+	for x in range(grid.size.x):
+		for y in range(grid.size.y):
+			for z in range(grid.size.z):
+				var pos = Vector3i(x, y, z)
+				if visited.has(pos):
+					continue
+				
+				var cell = grid.get_cell(pos)
+				if cell == null or not cell.is_collapsed():
+					continue
+				
+				var tile = cell.get_tile()
+				if tile == null or tile.boundary_role == Tile.BoundaryRole.NONE:
+					continue
+				
+				# Found unvisited boundary tile - start new region
+				region_count += 1
+				_flood_fill_boundary_region(pos, visited)
+	
+	return region_count
+
+func _flood_fill_boundary_region(start_pos: Vector3i, visited: Dictionary) -> void:
+	"""Flood-fill to mark all connected boundary tiles as visited."""
+	var queue: Array[Vector3i] = [start_pos]
+	visited[start_pos] = true
+	
+	while not queue.is_empty():
+		var pos = queue.pop_front()
+		
+		# Check all 4 cardinal neighbors (not Y-axis)
+		var neighbors = [
+			pos + Vector3i.RIGHT,
+			pos + Vector3i.LEFT,
+			pos + Vector3i.FORWARD,
+			pos + Vector3i.BACK
+		]
+		
+		for neighbor_pos in neighbors:
+			if visited.has(neighbor_pos):
+				continue
+			if not grid.is_valid_position(neighbor_pos):
+				continue
+			
+			var cell = grid.get_cell(neighbor_pos)
+			if cell == null or not cell.is_collapsed():
+				continue
+			
+			var tile = cell.get_tile()
+			if tile == null or tile.boundary_role == Tile.BoundaryRole.NONE:
+				continue
+			
+			# Found connected boundary tile
+			visited[neighbor_pos] = true
+			queue.append(neighbor_pos)

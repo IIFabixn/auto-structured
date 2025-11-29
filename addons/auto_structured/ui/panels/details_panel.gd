@@ -49,6 +49,7 @@ const REQUIREMENT_MENU_META_TYPES := "requirement_type_defs"
 @onready var weight_spinbox: SpinBox = %WeightSpinBox
 
 @onready var rotation_symmetry_options: OptionButton = %RotationSymmetryOptionsButton
+@onready var boundary_role_options: OptionButton = %BoundaryRoleOptionsButton
 
 @onready var add_requirement_menu_button: MenuButton = %AddRequirementMenuButton
 @onready var requirements_container: VBoxContainer = %RequirementsContainer
@@ -105,6 +106,7 @@ func _ready() -> void:
 	
 	# Setup rotation symmetry options
 	_setup_rotation_symmetry_options()
+	_setup_boundary_role_options()
 	_setup_requirement_menu()
 	
 	# Connect size spinboxes
@@ -158,6 +160,26 @@ func _setup_rotation_symmetry_options() -> void:
 	rotation_symmetry_options.add_item("Custom", Tile.RotationSymmetry.CUSTOM)
 	
 	# Connect to value change
+	if not rotation_symmetry_options.item_selected.is_connected(_on_rotation_symmetry_changed):
+		rotation_symmetry_options.item_selected.connect(_on_rotation_symmetry_changed)
+
+func _setup_boundary_role_options() -> void:
+	"""Populate the boundary role dropdown with enum values."""
+	if not boundary_role_options:
+		return
+	
+	boundary_role_options.clear()
+	boundary_role_options.add_item("None", Tile.BoundaryRole.NONE)
+	boundary_role_options.add_item("Edge", Tile.BoundaryRole.EDGE)
+	boundary_role_options.add_item("Corner", Tile.BoundaryRole.CORNER)
+	boundary_role_options.add_item("Infill", Tile.BoundaryRole.INFILL)
+	
+	# Set tooltips
+	boundary_role_options.tooltip_text = "Define this tile's role in boundary structures (walls, perimeters, etc.)"
+	
+	# Connect to value change
+	if not boundary_role_options.item_selected.is_connected(_on_boundary_role_changed):
+		boundary_role_options.item_selected.connect(_on_boundary_role_changed)
 	if not rotation_symmetry_options.item_selected.is_connected(_on_rotation_symmetry_changed):
 		rotation_symmetry_options.item_selected.connect(_on_rotation_symmetry_changed)
 
@@ -265,12 +287,15 @@ func _update_ui() -> void:
 	if not _tile:
 		_clear_preview_image()
 		hide()
-		return
+	# Update rotation symmetry
+	if rotation_symmetry_options:
+		rotation_symmetry_options.select(_tile.rotation_symmetry)
 	
-	# Update name
-	if name_label:
-		name_label.text = _tile.name if _tile.name else "Unnamed Tile"
+	# Update boundary role
+	if boundary_role_options:
+		boundary_role_options.select(_tile.boundary_role)
 	
+	# Update tags display
 	# Update size
 	if x_size_spinbox:
 		x_size_spinbox.value = _tile.size.x
@@ -426,25 +451,6 @@ func _clear_preview_image() -> void:
 	if preview_image:
 		preview_image.texture = null
 
-func _on_requirement_modified(requirement) -> void:
-	"""Handle requirement modification."""
-	if _tile:
-		tile_modified.emit(_tile)
-
-func _on_requirement_deleted(requirement) -> void:
-	"""Handle requirement deletion."""
-	if not _tile:
-		return
-	
-	if undo_redo_manager:
-		var action := RemoveRequirementAction.new(undo_redo_manager, _tile, requirement)
-		action.execute()
-	else:
-		_tile.requirements.erase(requirement)
-	_update_requirements_display()
-	_validate_tile()
-	tile_modified.emit(_tile)
-
 func _on_rotation_symmetry_changed(index: int) -> void:
 	"""Handle rotation symmetry selection change."""
 	if not _tile or not rotation_symmetry_options:
@@ -452,6 +458,16 @@ func _on_rotation_symmetry_changed(index: int) -> void:
 	
 	var selected_id = rotation_symmetry_options.get_item_id(index)
 	_tile.rotation_symmetry = selected_id
+	tile_modified.emit(_tile)
+
+func _on_boundary_role_changed(index: int) -> void:
+	"""Handle boundary role selection change."""
+	if not _tile or not boundary_role_options:
+		return
+	
+	var selected_id = boundary_role_options.get_item_id(index)
+	_tile.boundary_role = selected_id
+	_validate_tile()
 	tile_modified.emit(_tile)
 
 
@@ -484,6 +500,25 @@ func _on_weight_changed(value: float) -> void:
 	if not _tile:
 		return
 	_tile.weight = value
+	_validate_tile()
+	tile_modified.emit(_tile)
+
+func _on_requirement_modified(requirement: Requirement) -> void:
+	"""Handle requirement modification."""
+	if _tile:
+		tile_modified.emit(_tile)
+
+func _on_requirement_deleted(requirement: Requirement) -> void:
+	"""Handle requirement deletion."""
+	if not _tile:
+		return
+	
+	if undo_redo_manager:
+		var action := RemoveRequirementAction.new(undo_redo_manager, _tile, requirement)
+		action.execute()
+	else:
+		_tile.requirements.erase(requirement)
+	_update_requirements_display()
 	_validate_tile()
 	tile_modified.emit(_tile)
 

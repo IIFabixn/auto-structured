@@ -220,13 +220,16 @@ func test_adjacent_requirement_must_have() -> void:
 
 func test_region_boundary_requirement_neighbors() -> void:
 	var test_name = "RegionBoundaryRequirement neighbor enforcement"
-	var tile = _create_test_tile("EdgeTile", RegionBoundaryRequirement.BoundaryRole.EDGE)
-	var boundary_neighbor = _create_test_tile("BoundaryNeighbor", RegionBoundaryRequirement.BoundaryRole.EDGE)
+	var tile = Tile.new()
+	tile.name = "EdgeTile"
+	tile.boundary_role = Tile.BoundaryRole.EDGE
+	var boundary_neighbor = Tile.new()
+	boundary_neighbor.name = "BoundaryNeighbor"
+	boundary_neighbor.boundary_role = Tile.BoundaryRole.EDGE
 	var grid = _create_test_grid_with_tiles(Vector3i(3, 1, 3))
 	_place_tile_at(grid, boundary_neighbor, Vector3i(0, 0, 1))
 	_place_tile_at(grid, boundary_neighbor, Vector3i(2, 0, 1))
 	var req = RegionBoundaryRequirement.new()
-	req.boundary_role = RegionBoundaryRequirement.BoundaryRole.EDGE
 	assert_true(req.evaluate(tile, Vector3i(1, 0, 1), grid, {}), "Should allow when two boundary neighbors exist", test_name)
 	var fail_grid = _create_test_grid_with_tiles(Vector3i(3, 1, 3))
 	_place_tile_at(fail_grid, boundary_neighbor, Vector3i(0, 0, 1))
@@ -234,24 +237,31 @@ func test_region_boundary_requirement_neighbors() -> void:
 
 func test_region_boundary_requirement_counts_potential() -> void:
 	var test_name = "RegionBoundaryRequirement counts potential"
-	var tile = _create_test_tile("EdgeTile", RegionBoundaryRequirement.BoundaryRole.EDGE)
-	var boundary_neighbor = _create_test_tile("BoundaryNeighbor", RegionBoundaryRequirement.BoundaryRole.EDGE)
-	var filler = _create_test_tile("Filler")
+	var tile = Tile.new()
+	tile.name = "EdgeTile"
+	tile.boundary_role = Tile.BoundaryRole.EDGE
+	var boundary_neighbor = Tile.new()
+	boundary_neighbor.name = "BoundaryNeighbor"
+	boundary_neighbor.boundary_role = Tile.BoundaryRole.EDGE
+	var filler = Tile.new()
+	filler.name = "Filler"
 	var grid = _create_test_grid_with_tiles(Vector3i(3, 1, 3))
 	_place_tile_at(grid, boundary_neighbor, Vector3i(0, 0, 1))
 	_set_cell_variants(grid, Vector3i(2, 0, 1), [boundary_neighbor, filler])
 	var req = RegionBoundaryRequirement.new()
-	req.boundary_role = RegionBoundaryRequirement.BoundaryRole.EDGE
 	assert_true(req.evaluate(tile, Vector3i(1, 0, 1), grid, {}), "Should allow when potential neighbor can satisfy", test_name)
 
 func test_region_boundary_requirement_relax_on_boundary() -> void:
 	var test_name = "RegionBoundaryRequirement relaxes on world boundary"
-	var tile = _create_test_tile("EdgeTile", RegionBoundaryRequirement.BoundaryRole.EDGE)
-	var boundary_neighbor = _create_test_tile("BoundaryNeighbor", RegionBoundaryRequirement.BoundaryRole.EDGE)
+	var tile = Tile.new()
+	tile.name = "EdgeTile"
+	tile.boundary_role = Tile.BoundaryRole.EDGE
+	var boundary_neighbor = Tile.new()
+	boundary_neighbor.name = "BoundaryNeighbor"
+	boundary_neighbor.boundary_role = Tile.BoundaryRole.EDGE
 	var grid = _create_test_grid_with_tiles(Vector3i(3, 1, 3))
 	_place_tile_at(grid, boundary_neighbor, Vector3i(1, 0, 1))
 	var req = RegionBoundaryRequirement.new()
-	req.boundary_role = RegionBoundaryRequirement.BoundaryRole.EDGE
 	var boundary_position = Vector3i(0, 0, 1)
 	req.relax_on_world_boundary = true
 	assert_true(req.evaluate(tile, boundary_position, grid, {}), "Should allow at world boundary with single neighbor", test_name)
@@ -419,11 +429,11 @@ func test_boundary_requirement_interior_only() -> void:
 ## HELPER FUNCTIONS
 ## ============================================================================
 
-func _create_test_tile(tile_name: String, boundary_role: int = RegionBoundaryRequirement.BoundaryRole.NONE) -> Tile:
+func _create_test_tile(tile_name: String, boundary_role: int = Tile.BoundaryRole.NONE) -> Tile:
 	var tile = Tile.new()
 	tile.name = tile_name
 	tile.size = Vector3i.ONE
-	if boundary_role != RegionBoundaryRequirement.BoundaryRole.NONE:
+	if boundary_role != Tile.BoundaryRole.NONE:
 		var boundary_req = RegionBoundaryRequirement.new()
 		boundary_req.boundary_role = boundary_role
 		tile.requirements.append(boundary_req)

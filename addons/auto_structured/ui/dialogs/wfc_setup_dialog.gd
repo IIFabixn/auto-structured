@@ -45,6 +45,8 @@ const STRATEGY_LABELS := {
 @onready var prewarm_check: CheckButton = %PrewarmCheck
 @onready var backtracking_check: CheckButton = %BacktrackingCheck
 @onready var region_boundary_check: CheckButton = %RegionBoundaryCheck
+@onready var max_regions_spin: SpinBox = %MaxRegionsSpin
+@onready var require_closed_regions_check: CheckButton = %RequireClosedRegionsCheck
 
 var _last_config: Dictionary = {
 	"grid_size": Vector3i(5, 3, 5),
@@ -231,6 +233,10 @@ func _setup_custom_control_signals() -> void:
 		backtracking_check.toggled.connect(_on_custom_backtracking_toggled)
 	if region_boundary_check and not region_boundary_check.toggled.is_connected(_on_custom_region_boundary_toggled):
 		region_boundary_check.toggled.connect(_on_custom_region_boundary_toggled)
+	if max_regions_spin and not max_regions_spin.value_changed.is_connected(_on_custom_max_regions_changed):
+		max_regions_spin.value_changed.connect(_on_custom_max_regions_changed)
+	if require_closed_regions_check and not require_closed_regions_check.toggled.is_connected(_on_custom_require_closed_regions_toggled):
+		require_closed_regions_check.toggled.connect(_on_custom_require_closed_regions_toggled)
 
 func _sync_custom_solver_controls() -> void:
 	var show_custom := _current_preset_id == "custom"
@@ -240,6 +246,10 @@ func _sync_custom_solver_controls() -> void:
 	_syncing_custom_controls = true
 	if region_boundary_check:
 		region_boundary_check.button_pressed = _current_solver_config.enforce_region_boundaries
+	if max_regions_spin:
+		max_regions_spin.value = _current_solver_config.max_boundary_regions
+	if require_closed_regions_check:
+		require_closed_regions_check.button_pressed = _current_solver_config.require_closed_regions
 	if show_custom:
 		if yield_spin:
 			yield_spin.value = _current_solver_config.yield_interval_ms
@@ -332,6 +342,18 @@ func _on_custom_region_boundary_toggled(pressed: bool) -> void:
 	if _syncing_custom_controls or _current_solver_config == null:
 		return
 	_current_solver_config.enforce_region_boundaries = pressed
+	_update_solver_settings_cache()
+
+func _on_custom_max_regions_changed(value: float) -> void:
+	if _syncing_custom_controls or _current_solver_config == null:
+		return
+	_current_solver_config.max_boundary_regions = int(value)
+	_update_solver_settings_cache()
+
+func _on_custom_require_closed_regions_toggled(pressed: bool) -> void:
+	if _syncing_custom_controls or _current_solver_config == null:
+		return
+	_current_solver_config.require_closed_regions = pressed
 	_update_solver_settings_cache()
 
 func _update_solver_settings_cache() -> void:
@@ -449,6 +471,8 @@ func _clone_solver_config(source: WfcSolverConfig) -> WfcSolverConfig:
 	clone.backtrack_checkpoint_frequency = source.backtrack_checkpoint_frequency
 	clone.solve_strategy_id = source.solve_strategy_id
 	clone.enforce_region_boundaries = source.enforce_region_boundaries
+	clone.max_boundary_regions = source.max_boundary_regions
+	clone.require_closed_regions = source.require_closed_regions
 	return clone
 
 func _sanitize_config(data: Dictionary) -> Dictionary:

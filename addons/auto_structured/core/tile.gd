@@ -34,6 +34,16 @@ var _scene_resource: PackedScene = null
 	get:
 		return weight
 
+## Boundary role for region/structure formation (NONE, EDGE, CORNER, INFILL)
+enum BoundaryRole {
+	NONE = 0,    ## Not part of any boundary structure
+	EDGE = 1,    ## Forms straight boundary segments (walls, fences)
+	CORNER = 2,  ## Turns/corners in boundary structures
+	INFILL = 3   ## Interior connection points within boundaries
+}
+
+@export var boundary_role: BoundaryRole = BoundaryRole.NONE
+
 @export var requirements: Array[Requirement] = []  ## Placement constraints (e.g., height restrictions, max count)
 
 ## Rotation symmetry mode determines which rotations are valid for this tile
