@@ -9,6 +9,7 @@ const Socket = preload("res://addons/auto_structured/core/socket.gd")
 const WfcSolveStrategy = preload("res://addons/auto_structured/core/wfc/strategies/wfc_solve_strategy_base.gd")
 const WfcEntropyStrategy = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_entropy.gd")
 const RegionBoundaryRequirement = preload("res://addons/auto_structured/core/requirements/region_boundary_requirement.gd")
+const WfcRegionTracker = preload("res://addons/auto_structured/core/wfc/wfc_region_tracker.gd")
 
 var grid: WfcGrid
 var max_iterations: int = 10000
@@ -80,6 +81,9 @@ var _region_boundary_requirement: RegionBoundaryRequirement = null
 @export var max_boundary_regions: int = 1  ## Maximum number of separate boundary structures (0 = unlimited, 1 = single closed structure)
 @export var require_closed_regions: bool = true  ## Boundaries must form closed loops, no openings to world edge
 
+## Region tracking: Efficient tracking of boundary tile regions
+var _region_tracker: WfcRegionTracker = null
+
 ## Interactive solve state ---------------------------------------------------
 var _initialized: bool = false
 var _pending_choice_cell: WfcCell = null
@@ -100,6 +104,9 @@ func _init(wfc_grid: WfcGrid, prewarm_cache: bool = true) -> void:
 	_build_variant_ids()
 	_initialize_fast_cache()
 	_initialize_visited_flags()
+	
+	# Initialize region tracker for boundary structure management
+	_region_tracker = WfcRegionTracker.new(grid.size)
 	
 	# Initialize remaining cells counter
 	_remaining_cells = total_cells
@@ -192,6 +199,9 @@ func _initialize_interactive_session() -> void:
 	_backtrack_stack.clear()
 	_collapses_since_checkpoint = 0
 	_total_backtracks = 0
+	# Reset region tracker for fresh solve
+	if _region_tracker:
+		_region_tracker.reset()
 	_initialized = true
 
 func set_region_boundary_enforcement(enabled: bool, requirement: RegionBoundaryRequirement = null) -> void:
@@ -223,11 +233,17 @@ func solve() -> bool:
 	_log(["  Total cells: ", grid.get_cell_count()])
 	_log(["  Cells to collapse: ", _remaining_cells])
 	_log(["  Max iterations: ", max_iterations])
+	_log(["  Max boundary regions: ", max_boundary_regions])
+	_log(["  Require closed regions: ", require_closed_regions])
 	
 	# Initialize requirement context (used for tracking tile counts, etc.)
 	_requirement_context.clear()
 	_reset_tile_requirements()
 	_strategy_reset()
+	
+	# Reset region tracker for fresh solve
+	if _region_tracker:
+		_region_tracker.reset()
 	
 	# CRITICAL: Initialize entropy heap for O(log N) cell selection
 	_log(["  Initializing entropy heap..."])
@@ -334,6 +350,19 @@ func solve() -> bool:
 		_log(["  Total backtracks: ", _total_backtracks])
 	_log(["  Time elapsed: %.2f seconds" % elapsed_seconds])
 	_log(["  Avg iterations/sec: %.0f" % (iterations / max(elapsed_seconds, 0.001))])
+	
+	# Post-solve validation: verify region constraints
+	if _region_tracker:
+		var region_count = _region_tracker.get_region_count()
+		_log(["  Boundary regions: ", region_count])
+		if max_boundary_regions > 0 and region_count > max_boundary_regions:
+			push_warning("WFC: Solve completed but has ", region_count, " regions (max was ", max_boundary_regions, ")")
+		if require_closed_regions:
+			var validation = _region_tracker.validate_closed_regions(grid)
+			if not validation["valid"]:
+				push_warning("WFC: Solve completed but regions are not properly closed:")
+				for issue in validation["issues"]:
+					push_warning("  - ", issue)
 
 	return true
 
@@ -789,6 +818,10 @@ func _update_requirement_context_after_collapse(cell: WfcCell) -> void:
 	# Update tile count in context
 	var count_key = "tile_count_" + str(tile.get_instance_id())
 	_requirement_context[count_key] = _requirement_context.get(count_key, 0) + 1
+	
+	# Register boundary tiles with region tracker
+	if _region_tracker and tile.boundary_role != Tile.BoundaryRole.NONE:
+		_region_tracker.register_boundary_tile(cell.position, tile)
 
 func _log(parts: Array) -> void:
 	if not logging_enabled:
@@ -884,7 +917,8 @@ func _create_snapshot() -> Dictionary:
 		"collapses_since_checkpoint": _collapses_since_checkpoint,
 		"cell_states": [],
 		"heap_state": _copy_heap_state(),
-		"visited_flags": _visited_flags.duplicate()
+		"visited_flags": _visited_flags.duplicate(),
+		"region_tracker_state": _region_tracker.create_snapshot() if _region_tracker else null
 	}
 	
 	for cell in grid.get_all_cells():
@@ -936,6 +970,10 @@ func _restore_snapshot(snapshot: Dictionary) -> void:
 	
 	# Restore visited flags
 	_visited_flags = snapshot["visited_flags"].duplicate()
+	
+	# Restore region tracker state
+	if _region_tracker and snapshot.has("region_tracker_state") and snapshot["region_tracker_state"] != null:
+		_region_tracker.restore_snapshot(snapshot["region_tracker_state"])
 
 func _restore_heap_state(heap_state: Dictionary) -> void:
 	"""Restore the heap from saved state."""
@@ -963,18 +1001,28 @@ func _validate_region_constraints(tile: Tile, position: Vector3i) -> bool:
 	if tile.boundary_role == Tile.BoundaryRole.NONE:
 		return true  # Non-boundary tiles don't affect regions
 	
-	# For now, just check basic connectivity - full region counting is expensive
-	# TODO: Implement proper flood-fill region counting if max_boundary_regions > 1
+	if not _region_tracker:
+		return true  # No tracker means no region constraints
 	
+	# Check max regions constraint using the region tracker
+	if max_boundary_regions > 0:
+		if _region_tracker.would_exceed_max_regions(position, tile, max_boundary_regions):
+			if logging_enabled:
+				_log(["  Region constraint: would exceed max_boundary_regions (", max_boundary_regions, ") at ", position])
+			return false
+	
+	# Check closed regions constraint
 	if require_closed_regions:
-		# Check if this placement would create an opening to the world boundary
-		if _creates_world_boundary_opening(position):
+		if _region_tracker.would_create_unclosed_region(position, tile, grid):
+			if logging_enabled:
+				_log(["  Region constraint: would create unclosed region at ", position])
 			return false
 	
 	return true
 
 func _creates_world_boundary_opening(position: Vector3i) -> bool:
-	"""Check if a boundary tile at this position would leave gaps to the world edge."""
+	"""Check if a boundary tile at this position would leave gaps to the world edge.
+	DEPRECATED: Use _region_tracker.would_create_unclosed_region() instead."""
 	# If we're not on the world boundary, we can't create an opening
 	if not _is_on_world_boundary(position):
 		return false
@@ -1013,8 +1061,17 @@ func _is_on_world_boundary(position: Vector3i) -> bool:
 	)
 
 func count_boundary_regions() -> int:
-	"""Count the number of separate boundary structures using flood-fill.
+	"""Count the number of separate boundary structures.
 	Returns: Number of disconnected boundary regions (0 if no boundaries)"""
+	# Use the region tracker if available (O(1) operation)
+	if _region_tracker:
+		return _region_tracker.get_region_count()
+	
+	# Fallback to flood-fill (expensive O(n) operation)
+	return _count_boundary_regions_flood_fill()
+
+func _count_boundary_regions_flood_fill() -> int:
+	"""Count boundary regions using flood-fill (legacy fallback method)."""
 	var visited: Dictionary = {}  # position -> bool
 	var region_count := 0
 	
@@ -1073,3 +1130,42 @@ func _flood_fill_boundary_region(start_pos: Vector3i, visited: Dictionary) -> vo
 			# Found connected boundary tile
 			visited[neighbor_pos] = true
 			queue.append(neighbor_pos)
+
+
+## ============================================================================
+## Region Query API
+## ============================================================================
+
+func get_region_tracker() -> WfcRegionTracker:
+	"""Get the region tracker for external queries."""
+	return _region_tracker
+
+
+func get_region_info() -> Dictionary:
+	"""Get information about current boundary regions.
+	
+	Returns dictionary with:
+	- region_count: int - number of distinct boundary regions
+	- regions: Array[Dictionary] - details about each region
+	- validation: Dictionary - closed region validation results (if require_closed_regions)
+	"""
+	if not _region_tracker:
+		return {"region_count": 0, "regions": [], "validation": {"valid": true, "issues": []}}
+	
+	var result = {
+		"region_count": _region_tracker.get_region_count(),
+		"regions": _region_tracker.get_all_regions(),
+		"validation": {"valid": true, "issues": []}
+	}
+	
+	if require_closed_regions:
+		result["validation"] = _region_tracker.validate_closed_regions(grid)
+	
+	return result
+
+
+func get_region_debug_info() -> String:
+	"""Get a debug string describing current region state."""
+	if not _region_tracker:
+		return "Region tracker not initialized"
+	return _region_tracker.get_debug_info()
