@@ -11,6 +11,8 @@ const WfcEntropyStrategy = preload("res://addons/auto_structured/core/wfc/strate
 const RegionBoundaryRequirement = preload("res://addons/auto_structured/core/requirements/region_boundary_requirement.gd")
 const WfcRegionTracker = preload("res://addons/auto_structured/core/wfc/wfc_region_tracker.gd")
 const WfcRegionConfig = preload("res://addons/auto_structured/core/wfc/wfc_region_config.gd")
+const WfcTileCatalog = preload("res://addons/auto_structured/core/wfc/wfc_tile_catalog.gd")
+const AutoStructuredSettings = preload("res://addons/auto_structured/utils/auto_structured_settings.gd")
 
 var grid: WfcGrid
 var max_iterations: int = 10000
@@ -33,6 +35,8 @@ var propagation_batch_size: int = 50
 
 ## Performance tracking: Remaining uncollapsed cells
 var _remaining_cells: int = 0
+var use_chunk_entropy_selection: bool = true
+var use_diff_backtracking: bool = true
 
 ## Backtracking: Enable/disable backtracking on contradictions
 var enable_backtracking: bool = true
@@ -75,6 +79,9 @@ var _visited_flags: PackedByteArray
 
 ## Performance optimization: Scratch array for valid variants (reusable)
 var _scratch_variants: Array[Dictionary] = []
+var _scratch_neighbor_mask: PackedByteArray = PackedByteArray()
+var _scratch_constraint_mask: PackedByteArray = PackedByteArray()
+var _use_bitset_catalog: bool = false
 
 ## Region configuration: Unified settings for boundary structure constraints
 var _region_config: WfcRegionConfig = WfcRegionConfig.new()
@@ -103,6 +110,9 @@ var _pending_choice_id: int = 0
 func _init(wfc_grid: WfcGrid, prewarm_cache: bool = true) -> void:
 	grid = wfc_grid
 	_fallback_tile = grid.get_fallback_tile()
+	_use_bitset_catalog = grid.tile_catalog != null
+	use_chunk_entropy_selection = grid.has_multiple_chunks()
+	use_diff_backtracking = AutoStructuredSettings.get_use_diff_backtracking()
 	
 	# Auto-configure based on grid size
 	var total_cells = grid.size.x * grid.size.y * grid.size.z
@@ -123,6 +133,10 @@ func _init(wfc_grid: WfcGrid, prewarm_cache: bool = true) -> void:
 	_reset_interactive_state()
 	
 	# Optionally pre-warm the compatibility cache for better performance on large grids
+	if _use_bitset_catalog and _scratch_neighbor_mask.is_empty() and grid.tile_catalog:
+		_scratch_neighbor_mask = WfcTileCatalog.create_empty_mask(grid.tile_catalog.get_variant_count())
+		_scratch_constraint_mask = WfcTileCatalog.create_empty_mask(grid.tile_catalog.get_variant_count())
+
 	if prewarm_cache and grid.all_tile_variants.size() < 200:  # Only for reasonable variant counts
 		_prewarm_compatibility_cache()
 		_validate_tile_compatibility()
@@ -248,9 +262,31 @@ func _maybe_add_checkpoint() -> void:
 		return
 	if _backtrack_stack.size() >= max_backtrack_depth and not _backtrack_stack.is_empty():
 		_backtrack_stack.pop_front()
-	var snapshot = _create_snapshot()
-	_backtrack_stack.append(snapshot)
+	var checkpoint =  _create_diff_checkpoint() if use_diff_backtracking else _create_full_snapshot()
+	_backtrack_stack.append(checkpoint)
 	_collapses_since_checkpoint = 0
+
+func _create_diff_checkpoint() -> Dictionary:
+	var checkpoint := {
+		"type": "diff",
+		"remaining_cells": _remaining_cells,
+		"collapses_since_checkpoint": _collapses_since_checkpoint,
+		"heap_state": _copy_heap_state(),
+		"region_tracker_state": _region_tracker.create_snapshot() if _region_tracker else null,
+		"cell_diffs": [],
+		"cell_diff_map": {},
+		"requirement_diffs": [],
+		"requirement_diff_map": {}
+	}
+	return checkpoint
+
+func _get_active_checkpoint() -> Dictionary:
+	if _backtrack_stack.is_empty():
+		return {}
+	var checkpoint = _backtrack_stack[_backtrack_stack.size() - 1]
+	if checkpoint.get("type", "diff") != "diff":
+		return {}
+	return checkpoint
 
 ## Context dictionary for requirement evaluation
 var _requirement_context: Dictionary = {}
@@ -350,6 +386,9 @@ func solve() -> bool:
 			else:
 				push_error("WFC: Failed to collapse cell at ", cell.position)
 				return false
+
+		if grid:
+			grid.notify_cell_collapsed(cell)
 		
 		# Update requirement context after successful collapse
 		_update_requirement_context_after_collapse(cell)
@@ -437,12 +476,15 @@ func propagate(start_cell: WfcCell) -> bool:
 
 			# Store original count for debugging
 			var original_count = neighbor.possible_tile_variants.size()
-		
-			# Calculate which tile+rotation variants are valid for this neighbor based on current cell
-			var valid_variants = get_valid_variants_for_neighbor(current_cell, neighbor, direction)
 
-			# Constrain the neighbor
-			var changed = neighbor.constrain(valid_variants)
+			var changed := false
+			var valid_variants: Array[Dictionary] = []
+			_record_cell_state(neighbor)
+			if _use_bitset_catalog and neighbor.mask_enabled():
+				changed = _constrain_neighbor_with_catalog_masks(current_cell, neighbor, direction)
+			else:
+				valid_variants = get_valid_variants_for_neighbor(current_cell, neighbor, direction)
+				changed = neighbor.constrain(valid_variants)
 
 			if neighbor.has_contradiction():
 				push_error("  Contradiction at neighbor ", neighbor.position, " in direction ", direction)
@@ -472,6 +514,7 @@ func _collapse_cell_with_variant(cell: WfcCell, variant_override: Dictionary = {
 	if cell == null:
 		return {"status": "error", "message": "Cannot collapse a null cell"}
 	_maybe_add_checkpoint()
+	_record_cell_state(cell)
 	var collapsed := true
 	if variant_override.is_empty():
 		# Let strategy adjust weights before collapse
@@ -486,6 +529,8 @@ func _collapse_cell_with_variant(cell: WfcCell, variant_override: Dictionary = {
 			_clear_pending_choice()
 			return {"status": "backtracked"}
 		return {"status": "error", "message": "WFC: Failed to collapse cell at %s" % str(cell.position)}
+	if grid:
+		grid.notify_cell_collapsed(cell)
 	_update_requirement_context_after_collapse(cell)
 	if not propagate(cell):
 		if enable_backtracking and not _backtrack_stack.is_empty() and _attempt_backtrack():
@@ -611,33 +656,81 @@ func get_valid_variants_for_neighbor(source_cell: WfcCell, neighbor_cell: WfcCel
 	Returns:
 		Array of dictionaries with keys: "tile" (Tile), "rotation_degrees" (int), "weight" (float)
 	"""
-	# Reuse scratch array to avoid allocations
+	if _use_bitset_catalog and grid.tile_catalog:
+		return _get_valid_variants_from_catalog(source_cell, neighbor_cell, direction)
+
+	# Fallback legacy path using socket checks
 	_scratch_variants.clear()
-	
-	# Get source variants (always use possible_tile_variants now)
 	var source_variants = source_cell.possible_tile_variants
 	var source_count = source_variants.size()
 	if source_count == 0:
 		return neighbor_cell.possible_tile_variants
-	
+
 	var neighbor_variants = neighbor_cell.possible_tile_variants
 	var neighbor_count = neighbor_variants.size()
-
-	# For each possible variant in the neighbor
 	for i in range(neighbor_count):
 		var neighbor_variant = neighbor_variants[i]
 		var neighbor_tile = neighbor_variant["tile"]
 		var neighbor_rotation = neighbor_variant["rotation_degrees"]
-
-		# Check against all possible variants in the source cell
 		for j in range(source_count):
 			var source_variant = source_variants[j]
 			var source_tile = source_variant["tile"]
 			var source_rotation = source_variant["rotation_degrees"]
-
 			if are_variants_compatible(source_tile, source_rotation, neighbor_tile, neighbor_rotation, direction, source_cell.position, neighbor_cell.position):
 				_scratch_variants.append(neighbor_variant)
-				break  # Found compatible match, move to next neighbor variant
+				break
+	return _scratch_variants
+
+func _constrain_neighbor_with_catalog_masks(source_cell: WfcCell, neighbor_cell: WfcCell, direction: Vector3i) -> bool:
+	var catalog := grid.tile_catalog
+	if catalog == null or not neighbor_cell.mask_enabled():
+		return false
+	_scratch_neighbor_mask = _prepare_scratch_mask(_scratch_neighbor_mask)
+	var dir_index := WfcHelper.get_direction_index(direction)
+	if dir_index == -1:
+		return false
+	var source_variants = source_cell.possible_tile_variants
+	for variant in source_variants:
+		var src_id := _extract_variant_id_cached(variant)
+		if src_id == -1:
+			continue
+		var compat_mask := catalog.get_variant_mask(dir_index, src_id)
+		WfcTileCatalog.mask_or_in_place(_scratch_neighbor_mask, compat_mask)
+	var changed := neighbor_cell.intersect_with_mask(_scratch_neighbor_mask)
+	WfcTileCatalog.clear_mask(_scratch_neighbor_mask)
+	return changed
+
+func _get_valid_variants_from_catalog(source_cell: WfcCell, neighbor_cell: WfcCell, direction: Vector3i) -> Array[Dictionary]:
+	_scratch_variants.clear()
+	var catalog := grid.tile_catalog
+	if catalog == null:
+		return neighbor_cell.possible_tile_variants
+	var source_variants = source_cell.possible_tile_variants
+	if source_variants.is_empty():
+		return neighbor_cell.possible_tile_variants
+	if _scratch_neighbor_mask.is_empty():
+		_scratch_neighbor_mask = WfcTileCatalog.create_empty_mask(catalog.get_variant_count())
+	else:
+		WfcTileCatalog.clear_mask(_scratch_neighbor_mask)
+
+	var dir_index := WfcHelper.get_direction_index(direction)
+	if dir_index == -1:
+		return neighbor_cell.possible_tile_variants
+
+	for variant in source_variants:
+		var src_id := _get_variant_id(variant["tile"], variant["rotation_degrees"])
+		if src_id == -1:
+			continue
+		var mask := catalog.get_variant_mask(dir_index, src_id)
+		WfcTileCatalog.mask_or_in_place(_scratch_neighbor_mask, mask)
+
+	var neighbor_variants = neighbor_cell.possible_tile_variants
+	for neighbor_variant in neighbor_variants:
+		var neigh_id := _get_variant_id(neighbor_variant["tile"], neighbor_variant["rotation_degrees"])
+		if neigh_id == -1:
+			continue
+		if WfcTileCatalog.mask_has_variant(_scratch_neighbor_mask, neigh_id):
+			_scratch_variants.append(neighbor_variant)
 
 	return _scratch_variants
 
@@ -747,6 +840,14 @@ func set_logging_enabled(enabled: bool) -> void:
 	"""Enable or disable logging output."""
 	logging_enabled = enabled
 
+func set_chunk_entropy_selection_enabled(enabled: bool) -> void:
+	"""Toggle chunk-aware entropy picking for large grids."""
+	use_chunk_entropy_selection = enabled
+
+func set_diff_backtracking_enabled(enabled: bool) -> void:
+	"""Toggle diff-based checkpoints (falls back to legacy snapshots when disabled)."""
+	use_diff_backtracking = enabled
+
 func set_solve_strategy(strategy: WfcSolveStrategy, config = null) -> void:
 	"""Assign a solve strategy instance (falling back to entropy if null)."""
 	_strategy_config = config
@@ -775,6 +876,10 @@ func _pick_next_cell() -> WfcCell:
 		if cell:
 			return cell
 	if grid:
+		if use_chunk_entropy_selection and grid.has_multiple_chunks():
+			var chunk_cell = grid.get_chunked_lowest_entropy_cell()
+			if chunk_cell:
+				return chunk_cell
 		return grid.get_lowest_entropy_cell()
 	return null
 
@@ -848,50 +953,91 @@ func _apply_requirements_to_cell(cell: WfcCell) -> void:
 	"""Filter cell's possible variants based on tile requirements."""
 	if cell.is_collapsed():
 		return
+
+	_record_cell_state(cell)
 	
 	var valid_variants: Array[Dictionary] = []
 	
+	if _use_bitset_catalog and cell.mask_enabled():
+		_apply_requirements_bitset(cell)
+		return
+
 	for variant in cell.possible_tile_variants:
 		var tile: Tile = variant.get("tile")
-		if not tile:
-			valid_variants.append(variant)
-			continue
-		
-		var all_satisfied = true
-		if not tile.requirements.is_empty():
-			for req in tile.requirements:
-				if not req.enabled:
-					continue
-				if not req.evaluate(tile, cell.position, grid, _requirement_context):
-					all_satisfied = false
-					if logging_enabled:
-						_log(["  Requirement '", req.display_name, "' failed for tile '", tile.name, "' at ", cell.position])
-						_log(["    Reason: ", req.get_failure_reason()])
-					break
-		# Check boundary role enforcement (now from tile property)
-		if all_satisfied and enforce_region_boundaries and tile.boundary_role != Tile.BoundaryRole.NONE:
-			if _region_boundary_requirement == null:
-				_region_boundary_requirement = RegionBoundaryRequirement.new()
-			if not _region_boundary_requirement.evaluate(tile, cell.position, grid, _requirement_context):
-				all_satisfied = false
-				if logging_enabled:
-					_log(["  Region boundary requirement failed for tile '", tile.name, "' at ", cell.position])
-					_log(["    Reason: ", _region_boundary_requirement.get_failure_reason()])
-		
-		# Enforce region constraints if enabled
-		if all_satisfied and (max_boundary_regions > 0 or require_closed_regions):
-			if not _validate_region_constraints(tile, cell.position):
-				all_satisfied = false
-				if logging_enabled:
-					_log(["  Region constraint failed for tile '", tile.name, "' at ", cell.position])
-		
-		if all_satisfied:
+		if _variant_satisfies_requirements(tile, cell):
 			valid_variants.append(variant)
 	
 	# Update cell with only valid variants
 	if valid_variants.size() < cell.possible_tile_variants.size():
 		cell.possible_tile_variants = valid_variants
 		cell._entropy_valid = false
+
+func _apply_requirements_bitset(cell: WfcCell) -> void:
+	var catalog := grid.tile_catalog
+	if catalog == null:
+		return
+	_scratch_constraint_mask = _prepare_scratch_mask(_scratch_constraint_mask)
+
+	var variant_list := cell.possible_tile_variants
+	var valid_variants: Array[Dictionary] = []
+	for variant in variant_list:
+		var tile: Tile = variant.get("tile")
+		if _variant_satisfies_requirements(tile, cell):
+			valid_variants.append(variant)
+			var vid := _extract_variant_id_cached(variant)
+			if vid >= 0:
+				WfcTileCatalog.set_mask_variant(_scratch_constraint_mask, vid, true)
+	if valid_variants.size() == variant_list.size():
+		return
+	cell.possible_tile_variants = valid_variants
+	cell._entropy_valid = false
+	cell.set_variant_mask_from(_scratch_constraint_mask)
+	WfcTileCatalog.clear_mask(_scratch_constraint_mask)
+
+func _variant_satisfies_requirements(tile: Tile, cell: WfcCell) -> bool:
+	if tile == null:
+		return true
+	var all_satisfied = true
+	if not tile.requirements.is_empty():
+		for req in tile.requirements:
+			if not req.enabled:
+				continue
+			if not req.evaluate(tile, cell.position, grid, _requirement_context):
+				all_satisfied = false
+				if logging_enabled:
+					_log(["  Requirement '", req.display_name, "' failed for tile '", tile.name, "' at ", cell.position])
+					_log(["    Reason: ", req.get_failure_reason()])
+				break
+	if all_satisfied and enforce_region_boundaries and tile.boundary_role != Tile.BoundaryRole.NONE:
+		if _region_boundary_requirement == null:
+			_region_boundary_requirement = RegionBoundaryRequirement.new()
+		if not _region_boundary_requirement.evaluate(tile, cell.position, grid, _requirement_context):
+			all_satisfied = false
+			if logging_enabled:
+				_log(["  Region boundary requirement failed for tile '", tile.name, "' at ", cell.position])
+				_log(["    Reason: ", _region_boundary_requirement.get_failure_reason()])
+	if all_satisfied and (max_boundary_regions > 0 or require_closed_regions):
+		if not _validate_region_constraints(tile, cell.position):
+			all_satisfied = false
+			if logging_enabled:
+				_log(["  Region constraint failed for tile '", tile.name, "' at ", cell.position])
+	return all_satisfied
+
+func _extract_variant_id_cached(variant: Dictionary) -> int:
+	if variant == null:
+		return -1
+	return variant.get("variant_id", variant.get("id", -1))
+
+func _prepare_scratch_mask(mask: PackedByteArray) -> PackedByteArray:
+	var catalog := grid.tile_catalog
+	if catalog == null:
+		return mask
+	var variant_count := max(catalog.get_variant_count(), 1)
+	var byte_count := int(ceil(float(variant_count) / 8.0))
+	if mask.size() != byte_count:
+		return WfcTileCatalog.create_empty_mask(variant_count)
+	WfcTileCatalog.clear_mask(mask)
+	return mask
 
 func _update_requirement_context_after_collapse(cell: WfcCell) -> void:
 	"""Update requirement context after a tile is placed (for count tracking, etc.)."""
@@ -904,6 +1050,7 @@ func _update_requirement_context_after_collapse(cell: WfcCell) -> void:
 	
 	# Update tile count in context
 	var count_key = "tile_count_" + str(tile.get_instance_id())
+	_record_requirement_context_state(count_key)
 	_requirement_context[count_key] = _requirement_context.get(count_key, 0) + 1
 	
 	# Register boundary tiles with region tracker
@@ -997,32 +1144,55 @@ func _validate_tile_compatibility() -> void:
 		if isolated_variants.size() > 5:
 			push_warning("  ... and ", isolated_variants.size() - 5, " more")
 
-func _create_snapshot() -> Dictionary:
-	"""Create a snapshot of the current grid state for backtracking."""
+func _record_cell_state(cell: WfcCell) -> void:
+	"""Capture a lightweight snapshot of a cell before it mutates.
+
+	Currently used as groundwork for the upcoming diff-based backtracking system.
+	Multiple mutations within the same step only store the earliest state.
+	"""
+	if cell == null:
+		return
+
+	if not use_diff_backtracking or _backtrack_stack.is_empty():
+		return
+
+	var checkpoint = _get_active_checkpoint()
+	if checkpoint.is_empty():
+		return
+	var diff_map: Dictionary = checkpoint.get("cell_diff_map", {})
+	var key = cell.position
+	if diff_map.has(key):
+		return
 	var snapshot := {
-		"remaining_cells": _remaining_cells,
-		"collapses_since_checkpoint": _collapses_since_checkpoint,
-		"cell_states": [],
-		"heap_state": _copy_heap_state(),
-		"visited_flags": _visited_flags.duplicate(),
-		"region_tracker_state": _region_tracker.create_snapshot() if _region_tracker else null
+		"position": cell.position,
+		"possible_variants": cell.possible_tile_variants.duplicate(),
+		"entropy_valid": cell._entropy_valid,
+		"cached_entropy": cell._cached_entropy
 	}
-	
-	for cell in grid.get_all_cells():
-		var cell_state := {
-			"position": cell.position,
-			"possible_variants": [],
-			"entropy_valid": cell._entropy_valid,
-			"cached_entropy": cell._cached_entropy
-		}
-		
-		# Store references to variants (variants are shared, no deep copy needed)
-		for variant in cell.possible_tile_variants:
-			cell_state["possible_variants"].append(variant)
-		
-		snapshot["cell_states"].append(cell_state)
-	
-	return snapshot
+	if cell.mask_enabled():
+		snapshot["variant_mask"] = cell.get_variant_mask().duplicate()
+	diff_map[key] = snapshot
+	checkpoint["cell_diff_map"] = diff_map
+	checkpoint["cell_diffs"].append(snapshot)
+
+func _record_requirement_context_state(key: String) -> void:
+	if key.is_empty() or not use_diff_backtracking or _backtrack_stack.is_empty():
+		return
+	var checkpoint = _get_active_checkpoint()
+	if checkpoint.is_empty():
+		return
+	var diff_map: Dictionary = checkpoint.get("requirement_diff_map", {})
+	if diff_map.has(key):
+		return
+	var entry := {
+		"key": key,
+		"had_value": _requirement_context.has(key)
+	}
+	if entry["had_value"]:
+		entry["value"] = _requirement_context[key]
+	diff_map[key] = entry
+	checkpoint["requirement_diff_map"] = diff_map
+	checkpoint["requirement_diffs"].append(entry)
 
 func _copy_heap_state() -> Dictionary:
 	"""Create a copy of the current heap state."""
@@ -1032,35 +1202,88 @@ func _copy_heap_state() -> Dictionary:
 		"cells_in_heap": grid._cells_in_heap.duplicate()
 	}
 
-func _restore_snapshot(snapshot: Dictionary) -> void:
-	"""Restore grid state from a snapshot."""
-	_remaining_cells = snapshot["remaining_cells"]
-	_collapses_since_checkpoint = snapshot["collapses_since_checkpoint"]
-	var cell_states: Array = snapshot["cell_states"]
-	
-	# Restore cell states
-	for i in range(cell_states.size()):
-		var cell_state: Dictionary = cell_states[i]
-		var cell = grid.get_cell(cell_state["position"])
+func _create_full_snapshot() -> Dictionary:
+	"""Capture the full solver state for legacy snapshot backtracking."""
+	var snapshot := {
+		"type": "full",
+		"remaining_cells": _remaining_cells,
+		"collapses_since_checkpoint": _collapses_since_checkpoint,
+		"cell_states": [],
+		"heap_state": _copy_heap_state(),
+		"visited_flags": _visited_flags.duplicate(),
+		"region_tracker_state": _region_tracker.create_snapshot() if _region_tracker else null,
+		"requirement_context": _requirement_context.duplicate(true)
+	}
+	for cell in grid.get_all_cells():
+		snapshot["cell_states"].append(cell.create_snapshot())
+	return snapshot
+
+func _restore_full_snapshot(snapshot: Dictionary) -> void:
+	if snapshot.is_empty():
+		return
+	_remaining_cells = snapshot.get("remaining_cells", _remaining_cells)
+	_collapses_since_checkpoint = snapshot.get("collapses_since_checkpoint", 0)
+	_requirement_context = snapshot.get("requirement_context", {}).duplicate(true)
+	var cell_states: Array = snapshot.get("cell_states", [])
+	for cell_state in cell_states:
+		var cell = grid.get_cell(cell_state.get("position", Vector3i.ZERO))
 		if cell == null:
 			continue
-		
-		cell.possible_tile_variants.clear()
-		for variant in cell_state["possible_variants"]:
-			cell.possible_tile_variants.append(variant)
-		
-		cell._entropy_valid = cell_state["entropy_valid"]
-		cell._cached_entropy = cell_state["cached_entropy"]
-	
-	# Restore heap state
-	_restore_heap_state(snapshot["heap_state"])
-	
-	# Restore visited flags
-	_visited_flags = snapshot["visited_flags"].duplicate()
-	
-	# Restore region tracker state
+		cell.restore_snapshot(cell_state)
+	var heap_state = snapshot.get("heap_state", {})
+	if not heap_state.is_empty():
+		_restore_heap_state(heap_state)
+	if snapshot.has("visited_flags"):
+		_visited_flags = snapshot["visited_flags"].duplicate()
 	if _region_tracker and snapshot.has("region_tracker_state") and snapshot["region_tracker_state"] != null:
 		_region_tracker.restore_snapshot(snapshot["region_tracker_state"])
+	if grid:
+		grid.rebuild_chunk_state()
+	_clear_pending_choice()
+
+func _restore_diff_checkpoint(checkpoint: Dictionary) -> void:
+	"""Restore solver + grid state from a diff-based checkpoint."""
+	if checkpoint.is_empty():
+		return
+	_remaining_cells = checkpoint.get("remaining_cells", _remaining_cells)
+	_collapses_since_checkpoint = checkpoint.get("collapses_since_checkpoint", 0)
+	var req_diffs: Array = checkpoint.get("requirement_diffs", [])
+	for diff_entry in req_diffs:
+		if diff_entry == null:
+			continue
+		var key = diff_entry.get("key", "")
+		if key.is_empty():
+			continue
+		if diff_entry.get("had_value", false):
+			_requirement_context[key] = diff_entry.get("value")
+		else:
+			_requirement_context.erase(key)
+	var cell_diffs: Array = checkpoint.get("cell_diffs", [])
+	for cell_state in cell_diffs:
+		if cell_state == null:
+			continue
+		var cell = grid.get_cell(cell_state.get("position", Vector3i.ZERO))
+		if cell == null:
+			continue
+		cell.possible_tile_variants = cell_state.get("possible_variants", []).duplicate()
+		cell._entropy_valid = cell_state.get("entropy_valid", false)
+		cell._cached_entropy = cell_state.get("cached_entropy", -1.0)
+		if cell.mask_enabled():
+			if cell_state.has("variant_mask"):
+				cell.set_variant_mask_from(cell_state["variant_mask"])
+			else:
+				cell.rebuild_variant_mask()
+	var heap_state = checkpoint.get("heap_state", {})
+	if not heap_state.is_empty():
+		_restore_heap_state(heap_state)
+	elif grid:
+		grid.initialize_heap()
+	_visited_flags.fill(0)
+	if _region_tracker and checkpoint.has("region_tracker_state") and checkpoint["region_tracker_state"] != null:
+		_region_tracker.restore_snapshot(checkpoint["region_tracker_state"])
+	if grid:
+		grid.rebuild_chunk_state()
+	_clear_pending_choice()
 
 func _restore_heap_state(heap_state: Dictionary) -> void:
 	"""Restore the heap from saved state."""
@@ -1073,8 +1296,11 @@ func _attempt_backtrack() -> bool:
 	if _backtrack_stack.is_empty():
 		return false
 	
-	var snapshot = _backtrack_stack.pop_back()
-	_restore_snapshot(snapshot)
+	var checkpoint = _backtrack_stack.pop_back()
+	if checkpoint.get("type", "diff") == "diff":
+		_restore_diff_checkpoint(checkpoint)
+	else:
+		_restore_full_snapshot(checkpoint)
 	_total_backtracks += 1
 	_collapses_since_checkpoint = 0
 	

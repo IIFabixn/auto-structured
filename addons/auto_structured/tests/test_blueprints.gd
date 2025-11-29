@@ -330,7 +330,7 @@ func _create_test_tiles() -> Array[Tile]:
 	var wall = Tile.new()
 	wall.name = "test_wall"
 	wall.boundary_role = Tile.BoundaryRole.EDGE
-	wall.tags = ["wall"]
+	_set_tile_tags(wall, ["wall"])
 	_add_test_sockets(wall)
 	tiles.append(wall)
 	
@@ -338,7 +338,7 @@ func _create_test_tiles() -> Array[Tile]:
 	var corner = Tile.new()
 	corner.name = "test_corner"
 	corner.boundary_role = Tile.BoundaryRole.CORNER
-	corner.tags = ["corner"]
+	_set_tile_tags(corner, ["corner"])
 	_add_test_sockets(corner)
 	tiles.append(corner)
 	
@@ -346,7 +346,7 @@ func _create_test_tiles() -> Array[Tile]:
 	var floor_tile = Tile.new()
 	floor_tile.name = "test_floor"
 	floor_tile.boundary_role = Tile.BoundaryRole.NONE
-	floor_tile.tags = ["floor"]
+	_set_tile_tags(floor_tile, ["floor", "interior"])
 	_add_test_sockets(floor_tile)
 	tiles.append(floor_tile)
 	
@@ -354,7 +354,7 @@ func _create_test_tiles() -> Array[Tile]:
 	var exterior = Tile.new()
 	exterior.name = "test_exterior"
 	exterior.boundary_role = Tile.BoundaryRole.NONE
-	exterior.tags = ["floor", "exterior"]
+	_set_tile_tags(exterior, ["floor", "exterior"])
 	_add_test_sockets(exterior)
 	tiles.append(exterior)
 	
@@ -362,7 +362,7 @@ func _create_test_tiles() -> Array[Tile]:
 	var door = Tile.new()
 	door.name = "test_door"
 	door.boundary_role = Tile.BoundaryRole.PASSAGE
-	door.tags = ["door"]
+	_set_tile_tags(door, ["door"])
 	_add_test_sockets(door)
 	tiles.append(door)
 	
@@ -380,8 +380,14 @@ func _add_test_sockets(tile: Tile) -> void:
 		var socket = Socket.new()
 		socket.socket_id = "test"
 		socket.direction = dir
-		socket.compatible_sockets = ["test"]
+		var compat: Array[String] = []
+		compat.append("test")
+		socket.compatible_sockets = compat
 		tile.add_socket(socket)
+
+func _set_tile_tags(tile: Tile, tag_values: Array) -> void:
+	for tag in tag_values:
+		tile.add_tag(str(tag))
 
 
 # Helper assertion methods

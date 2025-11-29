@@ -23,6 +23,9 @@ func run_all_tests() -> void:
 	test_grid_heap_operations()
 	test_grid_reset()
 	test_grid_from_library()
+	test_grid_chunk_partitioning()
+	test_chunk_state_rebuild()
+	test_chunk_entropy_selection()
 	
 	print_summary()
 
@@ -281,6 +284,98 @@ func test_grid_from_library() -> void:
 	assert_equal(grid.size, Vector3i(4, 4, 4), "Grid should have correct size", test_name)
 	assert_equal(grid.all_tiles.size(), 1, "Grid should have tile from library", test_name)
 	assert_equal(grid.all_tiles[0].name, "LibraryTile", "Grid should have correct tile from library", test_name)
+
+func test_grid_chunk_partitioning() -> void:
+	var test_name = "Grid chunk partitioning"
+	var tile = Tile.new()
+	tile.name = "ChunkTile"
+	var grid = WfcGrid.new(Vector3i(18, 7, 5), [tile])
+	var chunks = grid.get_chunks()
+	assert_true(chunks.size() > 1, "Large grids should create multiple chunks", test_name)
+	var counted_cells := 0
+	for chunk in chunks:
+		counted_cells += chunk.cells.size()
+		assert_true(chunk.origin.x >= 0 and chunk.origin.y >= 0 and chunk.origin.z >= 0, "Chunk origin must be inside grid", test_name)
+		assert_true(chunk.origin.x + chunk.size.x <= grid.size.x, "Chunk X extent must stay within bounds", test_name)
+		assert_true(chunk.origin.y + chunk.size.y <= grid.size.y, "Chunk Y extent must stay within bounds", test_name)
+		assert_true(chunk.origin.z + chunk.size.z <= grid.size.z, "Chunk Z extent must stay within bounds", test_name)
+	assert_equal(counted_cells, grid.get_cell_count(), "Every cell should belong to exactly one chunk", test_name)
+
+	var sample_cell = grid.get_cell(Vector3i(0, 0, 0))
+	var chunk = grid.get_chunk_from_position(sample_cell.position)
+	assert_not_null(chunk, "Should resolve chunk for sample cell", test_name)
+	if chunk != null:
+		var before = chunk.uncollapsed_cells
+		sample_cell.collapse()
+		grid.notify_cell_collapsed(sample_cell)
+		assert_equal(chunk.uncollapsed_cells, max(before - 1, 0), "Chunk should track collapsed cells", test_name)
+
+	grid.reset()
+	var chunk_after_reset = grid.get_chunk_from_position(Vector3i(0, 0, 0))
+	assert_not_null(chunk_after_reset, "Chunk should still exist after reset", test_name)
+	if chunk_after_reset != null:
+		assert_equal(chunk_after_reset.uncollapsed_cells, chunk_after_reset.cells.size(), "Reset should restore chunk counters", test_name)
+
+func test_chunk_state_rebuild() -> void:
+	var test_name = "Chunk state rebuild"
+	var tile = Tile.new()
+	tile.name = "ChunkTile"
+	var grid = WfcGrid.new(Vector3i(12, 4, 4), [tile])
+	var target_pos = Vector3i(1, 1, 1)
+	var cell = grid.get_cell(target_pos)
+	var chunk = grid.get_chunk_from_position(target_pos)
+	assert_not_null(chunk, "Chunk lookup should succeed", test_name)
+	if chunk == null:
+		return
+	var before = chunk.uncollapsed_cells
+	cell.collapse()
+	grid.notify_cell_collapsed(cell)
+	assert_equal(chunk.uncollapsed_cells, max(before - 1, 0), "Chunk counter tracks collapse", test_name)
+	cell.reset(grid.all_tile_variants)
+	grid.rebuild_chunk_state()
+	chunk = grid.get_chunk_from_position(target_pos)
+	assert_equal(chunk.uncollapsed_cells, chunk.cells.size(), "Chunk rebuild should sync counts after bulk reset", test_name)
+
+func test_chunk_entropy_selection() -> void:
+	var test_name = "Chunk entropy selection"
+	var tile_a = Tile.new()
+	tile_a.name = "ChunkTileA"
+	var tile_b = Tile.new()
+	tile_b.name = "ChunkTileB"
+	var tiles: Array[Tile] = [tile_a, tile_b]
+	var grid = WfcGrid.new(Vector3i(8, 4, 4), tiles, null, Vector3i(4, 4, 4))
+	assert_true(grid.has_multiple_chunks(), "Grid should create multiple chunks with override", test_name)
+	var chunk_low = grid.get_chunk_from_position(Vector3i(1, 1, 1))
+	var chunk_high = grid.get_chunk_from_position(Vector3i(5, 1, 1))
+	assert_not_null(chunk_low, "Chunk lookup should succeed", test_name)
+	assert_not_null(chunk_high, "Second chunk lookup should succeed", test_name)
+	if chunk_low == null or chunk_high == null:
+		return
+	var tweaked_low := false
+	for cell in chunk_low.cells:
+		if cell == null or cell.is_collapsed():
+			continue
+		cell._cached_entropy = 0.05
+		cell._entropy_valid = true
+		tweaked_low = true
+	var tweaked_high := false
+	for cell in chunk_high.cells:
+		if cell == null or cell.is_collapsed():
+			continue
+		cell._cached_entropy = 5.0
+		cell._entropy_valid = true
+		tweaked_high = true
+	assert_true(tweaked_low, "Should tweak low chunk entropies", test_name)
+	assert_true(tweaked_high, "Should tweak high chunk entropies", test_name)
+	chunk_low.mark_entropy_dirty()
+	chunk_high.mark_entropy_dirty()
+	var selected_chunk = grid.get_lowest_entropy_chunk()
+	assert_equal(selected_chunk, chunk_low, "Chunk entropy hint should prefer trimmed chunk", test_name)
+	var chunk_cell = grid.get_chunked_lowest_entropy_cell()
+	assert_not_null(chunk_cell, "Chunked selection should return a cell", test_name)
+	if chunk_cell != null:
+		var owner_chunk = grid.get_chunk_from_position(chunk_cell.position)
+		assert_equal(owner_chunk, chunk_low, "Chunked cell should originate from lowest-entropy chunk", test_name)
 
 # Helper assertion methods
 func assert_true(condition: bool, message: String, test_name: String) -> void:

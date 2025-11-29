@@ -1,5 +1,6 @@
 @tool
 class_name BuildingBlueprint extends "res://addons/auto_structured/core/blueprints/blueprint_base.gd"
+
 ## Blueprint for generating building structures.
 ##
 ## Generates rooms with walls, corners, interior floors, and optional roofs.

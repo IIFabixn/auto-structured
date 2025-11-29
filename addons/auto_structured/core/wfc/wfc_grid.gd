@@ -3,6 +3,11 @@ class_name WfcGrid extends RefCounted
 
 const WfcCell = preload("res://addons/auto_structured/core/wfc/wfc_cell.gd")
 const Tile = preload("res://addons/auto_structured/core/tile.gd")
+const WfcTileCatalog = preload("res://addons/auto_structured/core/wfc/wfc_tile_catalog.gd")
+const WfcTileCatalogBuilder = preload("res://addons/auto_structured/core/wfc/wfc_tile_catalog_builder.gd")
+const WfcInternalFallbackFactory = preload("res://addons/auto_structured/core/wfc/wfc_internal_fallback_factory.gd")
+const AutoStructuredSettings = preload("res://addons/auto_structured/utils/auto_structured_settings.gd")
+const WfcGridChunk = preload("res://addons/auto_structured/core/wfc/wfc_grid_chunk.gd")
 
 ## 3D grid of WFC cells for procedural generation.
 ## Optimized: Flat array storage instead of Dictionary for better performance
@@ -11,6 +16,14 @@ var size: Vector3i
 var all_tiles: Array[Tile] = []
 var all_tile_variants: Array[Dictionary] = []  # All possible tile+rotation combinations
 var fallback_tile: Tile = null  ## Internal "air" tile the solver can fall back to when needed
+var tile_catalog: WfcTileCatalog = null
+
+## Chunking metadata for large grids
+const DEFAULT_CHUNK_EDGE := 16
+var chunk_size: Vector3i = Vector3i(DEFAULT_CHUNK_EDGE, DEFAULT_CHUNK_EDGE, DEFAULT_CHUNK_EDGE)
+var _chunk_counts: Vector3i = Vector3i(1, 1, 1)
+var _chunks: Dictionary = {}
+var _chunk_list: Array[WfcGridChunk] = []
 
 ## Performance optimization: Priority queue (min-heap) for entropy selection
 var _entropy_heap: Array = []  # Array of { "entropy": float, "seq": int, "cell": WfcCell }
@@ -23,35 +36,174 @@ var _cells_in_heap: Dictionary = {}  # cell -> true
 func _index(pos: Vector3i) -> int:
 	return pos.x + pos.y * size.x + pos.z * size.x * size.y
 
+func _resolve_chunk_size(grid_size: Vector3i, requested: Vector3i) -> Vector3i:
+	var resolved = Vector3i(
+		_resolve_chunk_axis(grid_size.x, requested.x),
+		_resolve_chunk_axis(grid_size.y, requested.y),
+		_resolve_chunk_axis(grid_size.z, requested.z)
+	)
+	return resolved
+
+func _resolve_chunk_axis(axis_length: int, requested: int) -> int:
+	if requested > 0:
+		return clampi(requested, 1, max(axis_length, 1))
+	if axis_length <= DEFAULT_CHUNK_EDGE:
+		return max(axis_length, 1)
+	return DEFAULT_CHUNK_EDGE
+
+func _initialize_chunks() -> void:
+	_chunks.clear()
+	_chunk_list.clear()
+	_chunk_counts = _compute_chunk_counts()
+	for cz in range(_chunk_counts.z):
+		for cy in range(_chunk_counts.y):
+			for cx in range(_chunk_counts.x):
+				var coords = Vector3i(cx, cy, cz)
+				var origin = Vector3i(cx * chunk_size.x, cy * chunk_size.y, cz * chunk_size.z)
+				var max_extent = Vector3i(
+					min(chunk_size.x, size.x - origin.x),
+					min(chunk_size.y, size.y - origin.y),
+					min(chunk_size.z, size.z - origin.z)
+				)
+				var chunk = WfcGridChunk.new(coords, origin, max_extent)
+				_chunks[coords] = chunk
+				_chunk_list.append(chunk)
+
+func _compute_chunk_counts() -> Vector3i:
+	return Vector3i(
+		int(ceil(float(size.x) / float(chunk_size.x))),
+		int(ceil(float(size.y) / float(chunk_size.y))),
+		int(ceil(float(size.z) / float(chunk_size.z)))
+	)
+
+func _chunk_coords_from_position(pos: Vector3i) -> Vector3i:
+	var coords = Vector3i(
+		int(floor(float(pos.x) / float(chunk_size.x))),
+		int(floor(float(pos.y) / float(chunk_size.y))),
+		int(floor(float(pos.z) / float(chunk_size.z)))
+	)
+	return Vector3i(
+		clampi(coords.x, 0, max(_chunk_counts.x - 1, 0)),
+		clampi(coords.y, 0, max(_chunk_counts.y - 1, 0)),
+		clampi(coords.z, 0, max(_chunk_counts.z - 1, 0))
+	)
+
+func _get_chunk_from_coords(coords: Vector3i) -> WfcGridChunk:
+	if _chunks.has(coords):
+		return _chunks[coords]
+	return null
+
+func get_chunk_from_position(pos: Vector3i) -> WfcGridChunk:
+	if not is_valid_position(pos):
+		return null
+	return _get_chunk_from_coords(_chunk_coords_from_position(pos))
+
+func get_chunks() -> Array[WfcGridChunk]:
+	return _chunk_list
+
+func get_chunk_counts() -> Vector3i:
+	return _chunk_counts
+
+func get_chunk_size() -> Vector3i:
+	return chunk_size
+
+func has_multiple_chunks() -> bool:
+	return _chunk_list.size() > 1
+
+func get_lowest_entropy_chunk() -> WfcGridChunk:
+	var best_chunk: WfcGridChunk = null
+	var best_entropy := INF
+	for chunk in _chunk_list:
+		if chunk == null:
+			continue
+		if chunk.uncollapsed_cells <= 0:
+			continue
+		var entropy_hint := chunk.get_entropy_hint()
+		if best_chunk == null or entropy_hint < best_entropy:
+			best_chunk = chunk
+			best_entropy = entropy_hint
+	return best_chunk
+
+func get_lowest_entropy_cell_in_chunk(chunk: WfcGridChunk) -> WfcCell:
+	if chunk == null:
+		return null
+	var best_cell: WfcCell = null
+	var best_entropy := INF
+	for cell in chunk.cells:
+		if cell == null or cell.is_collapsed():
+			continue
+		var entropy := cell.get_entropy()
+		if best_cell == null or entropy < best_entropy:
+			best_cell = cell
+			best_entropy = entropy
+	return best_cell
+
+func get_chunked_lowest_entropy_cell() -> WfcCell:
+	if _chunk_list.is_empty():
+		return null
+	var attempts := _chunk_list.size()
+	for i in range(attempts):
+		var chunk = get_lowest_entropy_chunk()
+		if chunk == null:
+			return null
+		var cell = get_lowest_entropy_cell_in_chunk(chunk)
+		if cell != null:
+			return cell
+		chunk.recompute_uncollapsed_count()
+		chunk.mark_entropy_dirty()
+	return null
+
+func _rebuild_chunk_tracking() -> void:
+	for chunk in _chunk_list:
+		chunk.recompute_uncollapsed_count()
+
+func rebuild_chunk_state() -> void:
+	"""Recompute derived chunk metrics after bulk cell mutations."""
+	_rebuild_chunk_tracking()
+
 ## Get total number of cells in the grid
 func get_cell_count() -> int:
 	return _cells.size()
 
 static func from_library(grid_size: Vector3i, library: ModuleLibrary) -> WfcGrid:
+	var use_catalog := AutoStructuredSettings.get_use_bitset_catalog()
+	if use_catalog:
+		var catalog := WfcTileCatalogBuilder.build(library)
+		return WfcGrid.new(grid_size, library.tiles, catalog)
 	return WfcGrid.new(grid_size, library.tiles)
 
-func _init(grid_size: Vector3i, tiles: Array[Tile]) -> void:
+func _init(grid_size: Vector3i, tiles: Array[Tile], catalog: WfcTileCatalog = null, chunk_size_override: Vector3i = Vector3i(0, 0, 0)) -> void:
 	size = grid_size
 	all_tiles = tiles.duplicate()
+	tile_catalog = catalog
+	chunk_size = _resolve_chunk_size(size, chunk_size_override)
+	_initialize_chunks()
 	var solver_tiles: Array[Tile] = all_tiles.duplicate()
-	fallback_tile = _create_internal_fallback_tile()
-	if fallback_tile:
-		solver_tiles.append(fallback_tile)
-	
-	# Generate all possible tile+rotation combinations
-	all_tile_variants = generate_all_variants(solver_tiles)
+	if tile_catalog:
+		fallback_tile = tile_catalog.internal_fallback_tile
+		all_tile_variants = tile_catalog.get_solver_variant_dicts()
+	else:
+		fallback_tile = WfcInternalFallbackFactory.create_fallback_tile()
+		if fallback_tile:
+			solver_tiles.append(fallback_tile)
+		all_tile_variants = generate_all_variants(solver_tiles)
 	
 	# Pre-allocate flat array for all cells
 	var total_cells = size.x * size.y * size.z
 	_cells.resize(total_cells)
+	var variant_count_for_cells := tile_catalog.get_variant_count() if tile_catalog else -1
+	var enable_masks := tile_catalog != null
 	
 	# Initialize cells with all possible variants
 	for x in range(size.x):
 		for y in range(size.y):
 			for z in range(size.z):
 				var pos = Vector3i(x, y, z)
-				var cell = WfcCell.new(pos, all_tile_variants)
+				var cell = WfcCell.new(pos, all_tile_variants, variant_count_for_cells, enable_masks)
 				_cells[_index(pos)] = cell
+				var chunk = _get_chunk_from_coords(_chunk_coords_from_position(pos))
+				if chunk:
+					chunk.add_cell(cell)
 	
 	# Initialize heap - will be populated when solver needs it
 	_entropy_heap.clear()
@@ -79,19 +231,6 @@ func generate_all_variants(tiles: Array[Tile]) -> Array[Dictionary]:
 func get_fallback_tile() -> Tile:
 	return fallback_tile
 
-
-func _create_internal_fallback_tile() -> Tile:
-	"""Create a minimal tile that represents empty space for contradiction recovery."""
-	var tile := Tile.new()
-	tile.name = "Internal Air Tile"
-	tile.size = Vector3i.ONE
-	tile.weight = 0.01
-	tile.tags = ["__auto_structured_internal__"]
-	tile.rotation_symmetry = Tile.RotationSymmetry.QUARTER
-	tile.requirements = []
-	tile.ensure_all_sockets()
-	tile.set_meta("auto_structured_internal_fallback", true)
-	return tile
 
 
 func get_cell(pos: Vector3i) -> WfcCell:
@@ -159,10 +298,22 @@ func get_lowest_entropy_cell() -> WfcCell:
 func mark_cell_entropy_changed(cell: WfcCell) -> void:
 	"""Call this whenever a cell's entropy changes (after constraint propagation).
 	Adds the cell to the heap so it can be selected later."""
+	if cell == null:
+		return
+	var chunk = get_chunk_from_position(cell.position)
+	if chunk:
+		chunk.mark_entropy_dirty()
 	if cell.is_collapsed():
 		return
-	
+
 	_heap_push(cell)
+
+func notify_cell_collapsed(cell: WfcCell) -> void:
+	if cell == null:
+		return
+	var chunk = get_chunk_from_position(cell.position)
+	if chunk:
+		chunk.on_cell_collapsed(cell)
 
 
 func initialize_heap() -> void:
@@ -301,6 +452,8 @@ func reset() -> void:
 	for cell in _cells:
 		cell.reset(all_tile_variants)
 	
+	rebuild_chunk_state()
+
 	# Clear heap - will be reinitialized on next solve
 	_entropy_heap.clear()
 	_heap_seq = 0

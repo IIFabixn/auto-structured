@@ -21,6 +21,8 @@ func run_all_tests() -> void:
 	test_solver_prefers_real_tiles_over_fallback()
 	test_solver_weights()
 	test_solver_backtracking()
+	test_solver_diff_checkpoint_restore()
+	test_solver_snapshot_checkpoint_restore()
 	test_solver_progress_callback()
 	test_solver_cache_stats()
 	test_solver_internal_fallback_tile()
@@ -224,6 +226,72 @@ func test_solver_backtracking() -> void:
 	solver.enable_backtracking = false
 	var result2 = solver.solve()
 	assert_true(result2, "Solver without backtracking should still solve simple grid", test_name)
+
+func test_solver_diff_checkpoint_restore() -> void:
+	var test_name = "Solver diff checkpoint restore"
+	var tile = create_universal_tile("DiffTile")
+	var tiles: Array[Tile] = [tile]
+	var grid = WfcGrid.new(Vector3i(2, 1, 1), tiles)
+	var solver = WfcSolver.new(grid, false)
+	solver.set_logging_enabled(false)
+	solver.enable_backtracking = true
+	solver.backtrack_checkpoint_frequency = 1
+	solver.set_diff_backtracking_enabled(true)
+	grid.initialize_heap()
+	solver._collapses_since_checkpoint = solver.backtrack_checkpoint_frequency
+	solver._maybe_add_checkpoint()
+	assert_true(solver._backtrack_stack.size() == 1, "Checkpoint should be created when threshold met", test_name)
+	var cell = grid.get_cell(Vector3i.ZERO)
+	assert_not_null(cell, "Grid should return origin cell", test_name)
+	var original_variants = cell.possible_tile_variants.size()
+	var original_variant_list = cell.possible_tile_variants.duplicate(true)
+	var baseline_remaining = solver._remaining_cells
+	var collapsed_variant = grid.all_tile_variants[0]
+	cell.possible_tile_variants.clear()
+	cell.possible_tile_variants.append(collapsed_variant)
+	solver._update_requirement_context_after_collapse(cell)
+	var count_key = "tile_count_%s" % tile.get_instance_id()
+	assert_true(solver._requirement_context.get(count_key, 0) == 1, "Requirement context should increment", test_name)
+	cell.possible_tile_variants = original_variant_list.duplicate(true)
+	cell._entropy_valid = false
+	solver._record_cell_state(cell)
+	cell.possible_tile_variants.clear()
+	solver._remaining_cells = 42
+	solver._requirement_context[count_key] = 99
+	var restored = solver._attempt_backtrack()
+	assert_true(restored, "Backtrack should succeed for stored checkpoint", test_name)
+	assert_equal(cell.possible_tile_variants.size(), original_variants, "Cell variants should be restored", test_name)
+	assert_equal(solver._remaining_cells, baseline_remaining, "Remaining cell counter should be restored", test_name)
+	assert_false(solver._requirement_context.has(count_key), "Requirement context should revert to checkpoint state", test_name)
+
+func test_solver_snapshot_checkpoint_restore() -> void:
+	var test_name = "Solver snapshot checkpoint restore"
+	var tile = create_universal_tile("SnapshotTile")
+	var tiles: Array[Tile] = [tile]
+	var grid = WfcGrid.new(Vector3i(2, 1, 1), tiles)
+	var solver = WfcSolver.new(grid, false)
+	solver.set_logging_enabled(false)
+	solver.enable_backtracking = true
+	solver.backtrack_checkpoint_frequency = 1
+	solver.set_diff_backtracking_enabled(false)
+	grid.initialize_heap()
+	solver._collapses_since_checkpoint = solver.backtrack_checkpoint_frequency
+	solver._maybe_add_checkpoint()
+	assert_true(solver._backtrack_stack.size() == 1, "Snapshot checkpoint should be created", test_name)
+	assert_equal(solver._backtrack_stack[0].get("type", "full"), "full", "Legacy snapshot should mark type as full", test_name)
+	var cell = grid.get_cell(Vector3i.ZERO)
+	assert_not_null(cell, "Origin cell should exist", test_name)
+	var baseline_variants = cell.possible_tile_variants.size()
+	var baseline_remaining = solver._remaining_cells
+	cell.possible_tile_variants.clear()
+	var count_key = "tile_count_%s" % tile.get_instance_id()
+	solver._requirement_context[count_key] = 15
+	solver._remaining_cells = 7
+	var restored = solver._attempt_backtrack()
+	assert_true(restored, "Backtrack should succeed for snapshot checkpoints", test_name)
+	assert_equal(cell.possible_tile_variants.size(), baseline_variants, "Snapshot should restore cell variants", test_name)
+	assert_equal(solver._remaining_cells, baseline_remaining, "Snapshot should restore remaining cells", test_name)
+	assert_false(solver._requirement_context.has(count_key), "Snapshot restore should reset requirement context", test_name)
 
 func test_solver_progress_callback() -> void:
 	var test_name = "Solver progress callback"
