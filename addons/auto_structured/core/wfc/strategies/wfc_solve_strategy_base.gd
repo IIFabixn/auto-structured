@@ -68,6 +68,18 @@ func on_cell_collapsed(_cell) -> void:
 	"""Notifies the strategy that a cell finished collapsing."""
 	pass
 
+func inject_constraints(_grid, _solver) -> void:
+	"""Opportunity to add or update constraints before each selection step."""
+	pass
+
+func before_collapse(cell, solver) -> void:
+	"""Hook before a cell collapses. Default implementation adjusts weights."""
+	adjust_weights_for_cell(cell, solver)
+
+func after_propagation(_cell, _solver, _changed_cells: Array = []) -> void:
+	"""Called after propagation completes. Override for post-processing."""
+	pass
+
 func pick_next_cell(solver) -> Variant:
 	"""Return the next cell to collapse. Default is entropy-based selection."""
 	if solver == null:

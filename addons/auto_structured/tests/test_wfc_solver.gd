@@ -23,6 +23,9 @@ func run_all_tests() -> void:
 	test_solver_backtracking()
 	test_solver_diff_checkpoint_restore()
 	test_solver_snapshot_checkpoint_restore()
+	test_solver_strategy_hooks()
+	test_solver_async_job_completion()
+	test_solver_async_job_cancellation()
 	test_solver_progress_callback()
 	test_solver_cache_stats()
 	test_solver_internal_fallback_tile()
@@ -293,6 +296,58 @@ func test_solver_snapshot_checkpoint_restore() -> void:
 	assert_equal(solver._remaining_cells, baseline_remaining, "Snapshot should restore remaining cells", test_name)
 	assert_false(solver._requirement_context.has(count_key), "Snapshot restore should reset requirement context", test_name)
 
+func test_solver_strategy_hooks() -> void:
+	var test_name = "Solver strategy hooks"
+	var tile = create_universal_tile("HookTile")
+	var tiles: Array[Tile] = [tile]
+	var grid = WfcGrid.new(Vector3i(2, 1, 1), tiles)
+	var solver = WfcSolver.new(grid, false)
+	solver.set_logging_enabled(false)
+	var strategy = HookSpyStrategy.new()
+	solver.set_solve_strategy(strategy)
+	var result = solver.solve()
+	assert_true(result, "Solver should complete with hook strategy", test_name)
+	assert_true(strategy.inject_calls > 0, "inject_constraints should be invoked", test_name)
+	assert_true(strategy.before_calls > 0, "before_collapse should be invoked", test_name)
+	assert_true(strategy.after_calls > 0, "after_propagation should be invoked", test_name)
+
+func test_solver_async_job_completion() -> void:
+	var test_name = "Solver async job completion"
+	var tile = create_universal_tile("AsyncTile")
+	var tiles: Array[Tile] = [tile]
+	var grid = WfcGrid.new(Vector3i(3, 3, 3), tiles)
+	var solver = WfcSolver.new(grid, false)
+	solver.set_logging_enabled(false)
+	solver.progress_report_frequency = 1
+	var job = solver.solve_async(false)
+	var completed := {"value": false}
+	job.completed.connect(func(success: bool):
+		completed["value"] = success)
+	var started = job.start()
+	assert_true(started, "Async job should start", test_name)
+	job.wait_to_finish()
+	assert_true(completed["value"], "Completion signal should fire", test_name)
+	assert_equal(job.get_status(), "completed", "Job status should be completed", test_name)
+
+func test_solver_async_job_cancellation() -> void:
+	var test_name = "Solver async job cancellation"
+	var tile = create_universal_tile("SlowTile")
+	var tiles: Array[Tile] = [tile]
+	var grid = WfcGrid.new(Vector3i(4, 4, 4), tiles)
+	var solver = WfcSolver.new(grid, false)
+	solver.set_logging_enabled(false)
+	solver.set_solve_strategy(SlowStrategy.new())
+	var job = solver.solve_async(false)
+	var cancelled := {"value": false}
+	job.cancelled.connect(func():
+		cancelled["value"] = true)
+	assert_true(job.start(), "Background job should start", test_name)
+	OS.delay_msec(5)
+	job.cancel()
+	job.wait_to_finish()
+	assert_true(cancelled["value"], "Cancel signal should fire", test_name)
+	assert_equal(job.get_status(), "cancelled", "Job status should be cancelled", test_name)
+
 func test_solver_progress_callback() -> void:
 	var test_name = "Solver progress callback"
 	
@@ -355,6 +410,28 @@ func test_solver_internal_fallback_tile() -> void:
 	assert_not_null(cell, "Grid should have a cell at origin", test_name)
 	assert_true(cell.is_collapsed(), "Fallback solve should collapse the cell", test_name)
 	assert_equal(cell.get_tile(), fallback, "Collapsed cell should use fallback tile", test_name)
+
+
+class HookSpyStrategy extends WfcSolveStrategy:
+	var inject_calls := 0
+	var before_calls := 0
+	var after_calls := 0
+
+	func inject_constraints(_grid, _solver) -> void:
+		inject_calls += 1
+
+	func before_collapse(cell, solver) -> void:
+		before_calls += 1
+		super.before_collapse(cell, solver)
+
+	func after_propagation(_cell, _solver, _changed_cells: Array = []) -> void:
+		after_calls += 1
+
+
+class SlowStrategy extends WfcSolveStrategy:
+	func before_collapse(cell, solver) -> void:
+		super.before_collapse(cell, solver)
+		OS.delay_msec(5)
 
 # Helper functions to create test tiles
 func create_simple_tile(tile_name: String) -> Tile:

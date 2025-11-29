@@ -12,6 +12,7 @@ const RegionBoundaryRequirement = preload("res://addons/auto_structured/core/req
 const WfcRegionTracker = preload("res://addons/auto_structured/core/wfc/wfc_region_tracker.gd")
 const WfcRegionConfig = preload("res://addons/auto_structured/core/wfc/wfc_region_config.gd")
 const WfcTileCatalog = preload("res://addons/auto_structured/core/wfc/wfc_tile_catalog.gd")
+const WfcSolveJob = preload("res://addons/auto_structured/core/wfc/wfc_solve_job.gd")
 const AutoStructuredSettings = preload("res://addons/auto_structured/utils/auto_structured_settings.gd")
 
 var grid: WfcGrid
@@ -37,6 +38,9 @@ var propagation_batch_size: int = 50
 var _remaining_cells: int = 0
 var use_chunk_entropy_selection: bool = true
 var use_diff_backtracking: bool = true
+var _last_propagation_changes: Array[WfcCell] = []
+var _cancel_requested: bool = false
+var _last_solve_cancelled: bool = false
 
 ## Backtracking: Enable/disable backtracking on contradictions
 var enable_backtracking: bool = true
@@ -294,6 +298,8 @@ var _requirement_context: Dictionary = {}
 func solve() -> bool:
 	"""Solve the WFC puzzle synchronously. Use progress_callback for updates."""
 	_reset_interactive_state()
+	_last_solve_cancelled = false
+	_cancel_requested = false
 
 	_log(["[WFC Solver] Starting solve..."])
 	_log(["  Grid size: ", grid.size])
@@ -329,6 +335,12 @@ func solve() -> bool:
 	_total_backtracks = 0
 
 	while _remaining_cells > 0:
+		_apply_strategy_dynamic_constraints()
+		if _cancel_requested:
+			_last_solve_cancelled = true
+			_cancel_requested = false
+			_log(["[WFC Solver] Solve cancelled by request"])
+			return false
 		if iterations >= max_iterations:
 			push_error("WFC: Max iterations reached (", max_iterations, ")")
 			push_error("  Completed iterations: ", iterations)
@@ -375,6 +387,9 @@ func solve() -> bool:
 		# Save checkpoint before collapsing (if backtracking enabled)
 		_maybe_add_checkpoint()
 
+		# Allow strategy to adjust variant weights prior to collapse
+		_notify_strategy_before_collapse(cell)
+
 		if not cell.collapse():
 			if enable_backtracking and not _backtrack_stack.is_empty():
 				_log(["  Cell collapse failed at ", cell.position, " - attempting backtrack"])
@@ -415,6 +430,7 @@ func solve() -> bool:
 		_remaining_cells -= 1  # We collapsed one more cell
 		_collapses_since_checkpoint += 1
 		_notify_strategy_cell_collapsed(cell)
+		_notify_strategy_after_propagation(cell, _consume_propagation_changes())
 
 	var elapsed_seconds = (Time.get_ticks_msec() - start_time) / 1000.0
 	_log(["[WFC Solver] Solve completed successfully!"])
@@ -423,6 +439,7 @@ func solve() -> bool:
 		_log(["  Total backtracks: ", _total_backtracks])
 	_log(["  Time elapsed: %.2f seconds" % elapsed_seconds])
 	_log(["  Avg iterations/sec: %.0f" % (iterations / max(elapsed_seconds, 0.001))])
+	_cancel_requested = false
 	
 	# Post-solve validation: verify region constraints
 	if _region_tracker:
@@ -442,6 +459,7 @@ func solve() -> bool:
 func propagate(start_cell: WfcCell) -> bool:
 	"""Propagate constraints from a collapsed cell to its neighbors."""
 	var propagation_queue: Array[WfcCell] = [start_cell]
+	_last_propagation_changes.clear()
 	
 	# Reset visited flags (fast memset)
 	_visited_flags.fill(0)
@@ -503,6 +521,7 @@ func propagate(start_cell: WfcCell) -> bool:
 				if _visited_flags[neighbor_idx] == 0:
 					propagation_queue.append(neighbor)
 					_visited_flags[neighbor_idx] = 1
+				_last_propagation_changes.append(neighbor)
 				
 				# CRITICAL: Update heap when cell entropy changes
 				grid.mark_cell_entropy_changed(neighbor)
@@ -513,6 +532,7 @@ func _collapse_cell_with_variant(cell: WfcCell, variant_override: Dictionary = {
 	"""Collapse a cell (optionally forcing a variant) and propagate constraints."""
 	if cell == null:
 		return {"status": "error", "message": "Cannot collapse a null cell"}
+	_apply_strategy_dynamic_constraints()
 	_maybe_add_checkpoint()
 	_record_cell_state(cell)
 	var collapsed := true
@@ -540,6 +560,7 @@ func _collapse_cell_with_variant(cell: WfcCell, variant_override: Dictionary = {
 	_remaining_cells -= 1
 	_collapses_since_checkpoint += 1
 	_notify_strategy_cell_collapsed(cell)
+	_notify_strategy_after_propagation(cell, _consume_propagation_changes())
 	return {"status": "ok"}
 
 func _handle_pre_collapse_contradiction(cell: WfcCell, context: String) -> Dictionary:
@@ -572,6 +593,11 @@ func advance_until_choice() -> Dictionary:
 		if iterations >= max_iterations:
 			return {"status": "error", "message": "WFC: Max iterations reached while stepping"}
 		iterations += 1
+		_apply_strategy_dynamic_constraints()
+		if _cancel_requested:
+			_last_solve_cancelled = true
+			_cancel_requested = false
+			return {"status": "cancelled"}
 		var cell: WfcCell = _pick_next_cell()
 		if cell == null:
 			return {"status": "complete"}
@@ -806,6 +832,7 @@ func reset() -> void:
 	_backtrack_stack.clear()
 	_total_backtracks = 0
 	_collapses_since_checkpoint = 0
+	clear_cancel_request()
 	# Note: Keep cache - it's valid across resets with same tiles
 	_reset_interactive_state()
 	_strategy_reset()
@@ -847,6 +874,23 @@ func set_chunk_entropy_selection_enabled(enabled: bool) -> void:
 func set_diff_backtracking_enabled(enabled: bool) -> void:
 	"""Toggle diff-based checkpoints (falls back to legacy snapshots when disabled)."""
 	use_diff_backtracking = enabled
+
+func solve_async(auto_start: bool = false) -> WfcSolveJob:
+	"""Create an asynchronous solve job that runs the solver on a worker thread."""
+	var job = WfcSolveJob.new(self)
+	if auto_start:
+		job.start()
+	return job
+
+func request_cancel() -> void:
+	"""Request cancellation of the currently running solve (if any)."""
+	_cancel_requested = true
+
+func clear_cancel_request() -> void:
+	_cancel_requested = false
+
+func was_solve_cancelled() -> bool:
+	return _last_solve_cancelled
 
 func set_solve_strategy(strategy: WfcSolveStrategy, config = null) -> void:
 	"""Assign a solve strategy instance (falling back to entropy if null)."""
@@ -890,7 +934,20 @@ func _notify_strategy_cell_collapsed(cell: WfcCell) -> void:
 func _notify_strategy_before_collapse(cell: WfcCell) -> void:
 	"""Let the strategy adjust variant weights before collapse."""
 	if _active_strategy and cell:
-		_active_strategy.adjust_weights_for_cell(cell, self)
+		_active_strategy.before_collapse(cell, self)
+
+func _notify_strategy_after_propagation(cell: WfcCell, changed_cells: Array) -> void:
+	if _active_strategy and cell:
+		_active_strategy.after_propagation(cell, self, changed_cells)
+
+func _apply_strategy_dynamic_constraints() -> void:
+	if _active_strategy and grid:
+		_active_strategy.inject_constraints(grid, self)
+
+func _consume_propagation_changes() -> Array:
+	var copy = _last_propagation_changes.duplicate()
+	_last_propagation_changes.clear()
+	return copy
 
 func _strategy_prepare_grid() -> void:
 	"""Let the strategy modify the grid before solving begins.

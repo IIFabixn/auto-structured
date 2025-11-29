@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="ModuleLibrary" load_steps=47 format=3 uid="uid://hhr1fq3dnn8k"]
+[gd_resource type="Resource" script_class="ModuleLibrary" load_steps=49 format=3 uid="uid://hhr1fq3dnn8k"]
 
 [ext_resource type="Script" uid="uid://06kkr0akplb" path="res://addons/auto_structured/utils/socket_template.gd" id="1_3j4ih"]
 [ext_resource type="Script" uid="uid://n5qundf42kiu" path="res://addons/auto_structured/core/module_library.gd" id="1_k0n0c"]
@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" uid="uid://dvmtflhjehotm" path="res://sample/modules/wall.tscn" id="6_k1ovt"]
 [ext_resource type="PackedScene" uid="uid://cvdf8f47a4oa1" path="res://sample/modules/door.tscn" id="7_rqldo"]
 [ext_resource type="PackedScene" uid="uid://khrtlct1n2sc" path="res://sample/modules/wall_corner.tscn" id="8_iupn8"]
+[ext_resource type="Script" uid="uid://cc6sr563b5w7g" path="res://addons/auto_structured/core/requirements/max_count_requirement.gd" id="8_ym6o8"]
 [ext_resource type="PackedScene" uid="uid://bcu6huierhjuq" path="res://sample/modules/wall_coner_inner.tscn" id="11_3lwuf"]
 
 [sub_resource type="Resource" id="Resource_rxijo"]
@@ -70,6 +71,14 @@ tags = Array[String](["wall"])
 boundary_role = 1
 sockets = Array[ExtResource("5_rqldo")]([SubResource("Resource_rqldo"), SubResource("Resource_4ec60"), SubResource("Resource_6ltd1"), SubResource("Resource_a2x8y"), SubResource("Resource_murai"), SubResource("Resource_3vl5h")])
 
+[sub_resource type="Resource" id="Resource_flxlj"]
+script = ExtResource("8_ym6o8")
+use_global_max = false
+use_region_min = true
+use_region_max = true
+region_max_count = 2
+display_name = "Max Count Requirement"
+
 [sub_resource type="Resource" id="Resource_bj0sj"]
 script = ExtResource("5_rqldo")
 socket_id = "none"
@@ -117,6 +126,7 @@ name = "door"
 scene = ExtResource("7_rqldo")
 tags = Array[String](["door"])
 boundary_role = 1
+requirements = Array[ExtResource("3_lwb3q")]([SubResource("Resource_flxlj")])
 sockets = Array[ExtResource("5_rqldo")]([SubResource("Resource_bj0sj"), SubResource("Resource_wks3l"), SubResource("Resource_s6wr4"), SubResource("Resource_3t8ws"), SubResource("Resource_sic6b"), SubResource("Resource_kew22")])
 
 [sub_resource type="Resource" id="Resource_iupn8"]
