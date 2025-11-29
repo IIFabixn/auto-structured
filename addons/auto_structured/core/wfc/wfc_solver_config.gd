@@ -4,6 +4,8 @@ const WfcEntropyStrategy = preload("res://addons/auto_structured/core/wfc/strate
 const WfcCenterOutStrategy = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_center_out.gd")
 const WfcFrontierStrategy = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_frontier.gd")
 const WfcGrowingStrategy = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_growing.gd")
+const WfcBlueprintStrategy = preload("res://addons/auto_structured/core/wfc/strategies/wfc_strategy_blueprint.gd")
+const BuildingBlueprint = preload("res://addons/auto_structured/core/blueprints/building_blueprint.gd")
 const WfcRegionConfig = preload("res://addons/auto_structured/core/wfc/wfc_region_config.gd")
 ## Configuration settings for WFC solver performance tuning.
 ##
@@ -33,8 +35,17 @@ var max_backtrack_depth: int = 10
 ## Save checkpoint every N collapses.
 var backtrack_checkpoint_frequency: int = 5
 
-@export_enum("entropy", "center_out", "frontier", "growing")
+@export_enum("entropy", "center_out", "frontier", "growing", "blueprint")
 var solve_strategy_id: String = "entropy"
+
+## Blueprint configuration (used when solve_strategy_id = "blueprint")
+var blueprint_config: Dictionary = {
+	"min_room_size": 3,
+	"max_room_size": 7,
+	"max_rooms": 4,
+	"margin": 2,
+	"doors_per_room": -1,  # -1 = one door total, 0 = none, 1+ = per room
+}
 
 ## Region configuration (consolidated from scattered settings)
 var region_config: WfcRegionConfig = WfcRegionConfig.new()
@@ -114,6 +125,12 @@ func create_strategy_instance() -> WfcSolveStrategy:
 			return WfcFrontierStrategy.new()
 		"growing":
 			return WfcGrowingStrategy.new()
+		"blueprint":
+			var strategy = WfcBlueprintStrategy.new()
+			var blueprint = BuildingBlueprint.new()
+			blueprint.configure(blueprint_config)
+			strategy.set_blueprint(blueprint)
+			return strategy
 		_:
 			return WfcEntropyStrategy.new()
 

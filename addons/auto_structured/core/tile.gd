@@ -34,12 +34,13 @@ var _scene_resource: PackedScene = null
 	get:
 		return weight
 
-## Boundary role for region/structure formation (NONE, EDGE, CORNER, INFILL)
+## Boundary role for region/structure formation (NONE, EDGE, CORNER, INFILL, PASSAGE)
 enum BoundaryRole {
 	NONE = 0,    ## Not part of any boundary structure
 	EDGE = 1,    ## Forms straight boundary segments (walls, fences)
 	CORNER = 2,  ## Turns/corners in boundary structures
-	INFILL = 3   ## Interior connection points within boundaries
+	INFILL = 3,  ## Interior connection points within boundaries
+	PASSAGE = 4  ## Openings/connections in boundaries (doors, gates, archways)
 }
 
 @export var boundary_role: BoundaryRole = BoundaryRole.NONE

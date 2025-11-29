@@ -280,6 +280,7 @@ func _is_inside_any_room(x: int, z: int) -> bool:
 func _apply_zone_constraints() -> void:
 	"""Remove invalid tile candidates from each cell based on its zone."""
 	var grid_size = _grid_ref.size
+	var zone_variant_counts = {Zone.OUTSIDE: [], Zone.INSIDE: [], Zone.WALL: [], Zone.CORNER: []}
 	
 	for y in range(grid_size.y):
 		for x in range(grid_size.x):
@@ -289,6 +290,7 @@ func _apply_zone_constraints() -> void:
 				if cell == null or cell.is_collapsed():
 					continue
 				
+				var before_count = cell.possible_tile_variants.size()
 				var key = _pos_to_key(pos)
 				var zone = _zone_map.get(key, Zone.OUTSIDE)
 				
@@ -301,6 +303,25 @@ func _apply_zone_constraints() -> void:
 						_restrict_to_wall_tiles(cell)
 					Zone.CORNER:
 						_restrict_to_corner_tiles(cell)
+				
+				var after_count = cell.possible_tile_variants.size()
+				zone_variant_counts[zone].append(after_count)
+	
+	# Print summary
+	for zone in zone_variant_counts:
+		var counts = zone_variant_counts[zone]
+		if counts.is_empty():
+			continue
+		var zone_name = ["OUTSIDE", "INSIDE", "WALL", "CORNER"][zone]
+		var avg = 0.0
+		var min_c = 999
+		var max_c = 0
+		for c in counts:
+			avg += c
+			min_c = min(min_c, c)
+			max_c = max(max_c, c)
+		avg /= counts.size()
+		print("  Zone %s: %d cells, variants min=%d avg=%.1f max=%d" % [zone_name, counts.size(), min_c, avg, max_c])
 
 
 func _restrict_to_outside_tiles(cell) -> void:
@@ -313,7 +334,10 @@ func _restrict_to_outside_tiles(cell) -> void:
 		# Outside tiles: NONE boundary role (air, outside floor, grass, etc.)
 		# NOT EDGE/CORNER (walls) and NOT INFILL (interior floors)
 		if tile.boundary_role == Tile.BoundaryRole.NONE:
-			filtered.append(variant)
+			# Prefer exterior-tagged tiles, but also allow any NONE tile
+			# Exclude interior-only tiles if they have special tags
+			if not tile.has_tag("interior"):
+				filtered.append(variant)
 	
 	if not filtered.is_empty():
 		cell.possible_tile_variants = filtered
@@ -327,11 +351,13 @@ func _restrict_to_inside_tiles(cell) -> void:
 		var tile: Tile = variant.get("tile")
 		if tile == null:
 			continue
-		# Inside tiles: INFILL (interior floor) or NONE with floor tag
+		# Exclude tiles explicitly marked as exterior
+		if tile.has_tag("exterior"):
+			continue
+		# Inside tiles: INFILL (interior floor) or NONE with floor tag (but not exterior)
 		if tile.boundary_role == Tile.BoundaryRole.INFILL:
 			filtered.append(variant)
 		elif tile.boundary_role == Tile.BoundaryRole.NONE and tile.has_tag("floor"):
-			# Also allow outside_floor inside if needed
 			filtered.append(variant)
 	
 	if not filtered.is_empty():

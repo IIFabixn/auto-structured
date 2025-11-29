@@ -15,6 +15,7 @@ const TestValidation = preload("res://addons/auto_structured/tests/test_validati
 const TestTileRotation = preload("res://addons/auto_structured/tests/test_tile_rotation.gd")
 const TestImportExport = preload("res://addons/auto_structured/tests/test_import_export.gd")
 const TestEventSystems = preload("res://addons/auto_structured/tests/test_event_systems.gd")
+const TestBlueprints = preload("res://addons/auto_structured/tests/test_blueprints.gd")
 
 var total_tests_passed: int = 0
 var total_tests_failed: int = 0
@@ -57,6 +58,8 @@ func _initialize() -> void:
 	run_test_suite("ImportExport", TestImportExport)
 	print("")
 	run_test_suite("EventSystems", TestEventSystems)
+	print("")
+	run_test_suite("Blueprints", TestBlueprints)
 	print("")
 	
 	var elapsed_time = Time.get_ticks_msec() - start_time

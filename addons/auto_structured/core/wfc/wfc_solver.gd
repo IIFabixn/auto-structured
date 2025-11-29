@@ -205,13 +205,21 @@ func _initialize_interactive_session() -> void:
 		return
 	_requirement_context.clear()
 	_reset_tile_requirements()
+	_strategy_reset()
+	
+	# Let strategy prepare/modify the grid before solving (same as solve())
+	_strategy_prepare_grid()
+	
+	# Reset region tracker for fresh solve
+	if _region_tracker:
+		_region_tracker.reset()
+	
+	# CRITICAL: Initialize entropy heap AFTER strategy preparation
+	# (strategy may have modified cell variants)
 	grid.initialize_heap()
 	_backtrack_stack.clear()
 	_collapses_since_checkpoint = 0
 	_total_backtracks = 0
-	# Reset region tracker for fresh solve
-	if _region_tracker:
-		_region_tracker.reset()
 	_initialized = true
 
 func set_region_boundary_enforcement(enabled: bool, requirement: RegionBoundaryRequirement = null) -> void:

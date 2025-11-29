@@ -20,12 +20,13 @@ const PRESET_BUILDERS := {
 	"large": Callable(WfcSolverConfig, "large_grid"),
 	"very_large": Callable(WfcSolverConfig, "very_large_grid")
 }
-const STRATEGY_ORDER := ["entropy", "center_out", "frontier", "growing"]
+const STRATEGY_ORDER := ["entropy", "center_out", "frontier", "growing", "blueprint"]
 const STRATEGY_LABELS := {
 	"entropy": "Entropy",
 	"center_out": "Center-Out",
 	"frontier": "Frontier",
-	"growing": "Growing"
+	"growing": "Growing",
+	"blueprint": "Blueprint"
 }
 
 @onready var preset_option: OptionButton = %PresetOption
