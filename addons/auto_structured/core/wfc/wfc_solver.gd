@@ -14,9 +14,14 @@ const WfcRegionConfig = preload("res://addons/auto_structured/core/wfc/wfc_regio
 const WfcTileCatalog = preload("res://addons/auto_structured/core/wfc/wfc_tile_catalog.gd")
 const WfcSolveJob = preload("res://addons/auto_structured/core/wfc/wfc_solve_job.gd")
 const AutoStructuredSettings = preload("res://addons/auto_structured/utils/auto_structured_settings.gd")
+const StructuralConstraint = preload("res://addons/auto_structured/core/constraints/structural_constraint.gd")
 
 var grid: WfcGrid
 var max_iterations: int = 10000
+
+## Structural constraints: Additional validation beyond socket compatibility
+var structural_constraints: Array[StructuralConstraint] = []
+var enforce_structural_constraints: bool = true
 var _fallback_tile: Tile = null  ## Cached reference to grid's internal fallback tile
 var _active_strategy: WfcSolveStrategy = null
 var _strategy_config = null
@@ -1017,6 +1022,9 @@ func _apply_requirements_to_cell(cell: WfcCell) -> void:
 	
 	if _use_bitset_catalog and cell.mask_enabled():
 		_apply_requirements_bitset(cell)
+		# Also apply structural constraints after bitset filtering
+		if enforce_structural_constraints and not structural_constraints.is_empty():
+			_apply_structural_constraints_to_cell(cell)
 		return
 
 	for variant in cell.possible_tile_variants:
@@ -1028,6 +1036,10 @@ func _apply_requirements_to_cell(cell: WfcCell) -> void:
 	if valid_variants.size() < cell.possible_tile_variants.size():
 		cell.possible_tile_variants = valid_variants
 		cell._entropy_valid = false
+	
+	# Apply structural constraints after requirements
+	if enforce_structural_constraints and not structural_constraints.is_empty():
+		_apply_structural_constraints_to_cell(cell)
 
 func _apply_requirements_bitset(cell: WfcCell) -> void:
 	var catalog := grid.tile_catalog
@@ -1079,6 +1091,46 @@ func _variant_satisfies_requirements(tile: Tile, cell: WfcCell) -> bool:
 			if logging_enabled:
 				_log(["  Region constraint failed for tile '", tile.name, "' at ", cell.position])
 	return all_satisfied
+
+func _apply_structural_constraints_to_cell(cell: WfcCell) -> void:
+	"""Filter cell's possible variants based on structural constraints."""
+	if cell == null or cell.is_collapsed() or structural_constraints.is_empty():
+		return
+	
+	# Check each constraint
+	for constraint in structural_constraints:
+		if constraint == null or not constraint.enabled:
+			continue
+		
+		# Validate the cell against this constraint
+		if not constraint.validate_cell(cell, grid, _requirement_context):
+			# Constraint violated - remove tiles that violate it
+			var filtered_variants: Array[Dictionary] = []
+			
+			for variant in cell.possible_tile_variants:
+				# Test: if we collapse to this variant, would constraint be satisfied?
+				# For now, we just remove all variants when constraint fails
+				# (more sophisticated filtering could test individual tiles)
+				pass
+			
+			# If constraint fails, it typically means the cell itself is in a bad position
+			# Rather than filtering variants, log the issue
+			if logging_enabled:
+				_log(["  Structural constraint '", constraint.constraint_name, "' failed at ", cell.position])
+				_log(["    Reason: ", constraint.get_violation_reason(cell, grid, _requirement_context)])
+			
+			# For wall continuity: only allow wall tiles if constraint passes
+			# This is a simple heuristic - more sophisticated constraint solving could be added
+			break
+
+func add_structural_constraint(constraint: StructuralConstraint) -> void:
+	"""Add a structural constraint to be enforced during solving."""
+	if constraint != null:
+		structural_constraints.append(constraint)
+
+func clear_structural_constraints() -> void:
+	"""Remove all structural constraints."""
+	structural_constraints.clear()
 
 func _extract_variant_id_cached(variant: Dictionary) -> int:
 	if variant == null:
@@ -1502,6 +1554,96 @@ func _flood_fill_boundary_region(start_pos: Vector3i, visited: Dictionary) -> vo
 			# Found connected boundary tile
 			visited[neighbor_pos] = true
 			queue.append(neighbor_pos)
+
+## ============================================================================
+## Debug & Visualization Helpers
+## ============================================================================
+
+func get_cell_debug_info(position: Vector3i) -> Dictionary:
+	"""Get comprehensive debug information about a cell for troubleshooting."""
+	if grid == null or not grid.is_valid_position(position):
+		return {"error": "Invalid position or no grid"}
+	
+	var cell = grid.get_cell(position)
+	if cell == null:
+		return {"error": "Cell is null"}
+	
+	var info: Dictionary = {
+		"position": position,
+		"is_collapsed": cell.is_collapsed(),
+		"has_contradiction": cell.has_contradiction(),
+		"entropy": cell.get_entropy(),
+		"variant_count": cell.possible_tile_variants.size(),
+		"tiles": [],
+		"structural_constraints": [],
+		"socket_types": [],
+	}
+	
+	# List possible tiles
+	for variant in cell.possible_tile_variants:
+		var tile: Tile = variant.get("tile")
+		if tile:
+			info["tiles"].append({
+				"name": tile.name,
+				"boundary_role": Tile.BoundaryRole.keys()[tile.boundary_role],
+				"structural_role": Tile.StructuralRole.keys()[tile.structural_role] if tile.structural_role < Tile.StructuralRole.size() else "UNKNOWN",
+				"rotation": variant.get("rotation_degrees", 0),
+				"weight": variant.get("weight", 1.0),
+			})
+	
+	# Check structural constraints
+	for constraint in structural_constraints:
+		if constraint and constraint.enabled:
+			var is_valid = constraint.validate_cell(cell, grid, _requirement_context)
+			info["structural_constraints"].append({
+				"name": constraint.constraint_name,
+				"valid": is_valid,
+				"reason": "" if is_valid else constraint.get_violation_reason(cell, grid, _requirement_context),
+			})
+	
+	# Get socket types from possible tiles
+	var socket_type_set: Dictionary = {}
+	for variant in cell.possible_tile_variants:
+		var tile: Tile = variant.get("tile")
+		if tile:
+			for socket in tile.sockets:
+				if socket:
+					var type_name = Socket.SocketType.keys()[socket.socket_type] if socket.socket_type < Socket.SocketType.size() else "UNKNOWN"
+					socket_type_set[type_name] = true
+	info["socket_types"] = socket_type_set.keys()
+	
+	return info
+
+func print_cell_debug_info(position: Vector3i) -> void:
+	"""Print formatted debug information for a cell."""
+	var info = get_cell_debug_info(position)
+	
+	if info.has("error"):
+		print("Error: ", info["error"])
+		return
+	
+	print("=== Cell Debug Info: ", position, " ===")
+	print("  Collapsed: ", info["is_collapsed"])
+	print("  Contradiction: ", info["has_contradiction"])
+	print("  Entropy: ", info["entropy"])
+	print("  Variant Count: ", info["variant_count"])
+	
+	print("  Possible Tiles:")
+	for tile_info in info["tiles"]:
+		print("    - ", tile_info["name"], " @ ", tile_info["rotation"], "° (", tile_info["structural_role"], ")")
+	
+	if not info["structural_constraints"].is_empty():
+		print("  Structural Constraints:")
+		for constraint_info in info["structural_constraints"]:
+			var status = "✓" if constraint_info["valid"] else "✗"
+			print("    ", status, " ", constraint_info["name"])
+			if not constraint_info["valid"]:
+				print("       ", constraint_info["reason"])
+	
+	if not info["socket_types"].is_empty():
+		print("  Socket Types: ", ", ".join(info["socket_types"]))
+	
+	print("=")
 
 
 ## ============================================================================

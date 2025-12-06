@@ -11,28 +11,29 @@ min_size = Vector2i(420, 0)
 ok_button_text = "Apply"
 script = ExtResource("1_0j6n1")
 
-[node name="VBox" type="VBoxContainer" parent="."]
+[node name="ScrollContainer" type="ScrollContainer" parent="."]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="VBox" type="VBoxContainer" parent="ScrollContainer"]
 unique_name_in_owner = true
-offset_left = 8.0
-offset_top = 8.0
-offset_right = 592.0
-offset_bottom = 722.0
+layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="PresetLabel" type="Label" parent="VBox"]
+[node name="PresetLabel" type="Label" parent="ScrollContainer/VBox"]
 layout_mode = 2
 text = "Solver Preset"
 
-[node name="PresetRow" type="HBoxContainer" parent="VBox"]
+[node name="PresetRow" type="HBoxContainer" parent="ScrollContainer/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="PresetOption" type="OptionButton" parent="VBox/PresetRow"]
+[node name="PresetOption" type="OptionButton" parent="ScrollContainer/VBox/PresetRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-selected = 4
+selected = 2
 item_count = 5
 popup/item_0/text = "Small"
 popup/item_0/id = 0
@@ -45,176 +46,175 @@ popup/item_3/id = 3
 popup/item_4/text = "Custom"
 popup/item_4/id = 4
 
-[node name="StrategyLabel" type="Label" parent="VBox"]
+[node name="StrategyLabel" type="Label" parent="ScrollContainer/VBox"]
 layout_mode = 2
 text = "Solve Strategy"
 
-[node name="StrategyRow" type="HBoxContainer" parent="VBox"]
+[node name="StrategyRow" type="HBoxContainer" parent="ScrollContainer/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="StrategyOption" type="OptionButton" parent="VBox/StrategyRow"]
+[node name="StrategyOption" type="OptionButton" parent="ScrollContainer/VBox/StrategyRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-selected = 1
-item_count = 3
+selected = 6
+item_count = 7
 popup/item_0/text = "Entropy"
 popup/item_0/id = 0
 popup/item_1/text = "Center-Out"
 popup/item_1/id = 1
 popup/item_2/text = "Frontier"
 popup/item_2/id = 2
+popup/item_3/text = "Growing"
+popup/item_3/id = 3
+popup/item_4/text = "Layout-First (Zones)"
+popup/item_4/id = 4
+popup/item_5/text = "Guided Entropy"
+popup/item_5/id = 5
+popup/item_6/text = "Blueprint"
+popup/item_6/id = 6
 
-[node name="StrategyDetails" type="VBoxContainer" parent="VBox"]
+[node name="StrategyDetails" type="VBoxContainer" parent="ScrollContainer/VBox"]
 unique_name_in_owner = true
-visible = false
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="BlueprintSection" type="VBoxContainer" parent="VBox/StrategyDetails"]
+[node name="BlueprintSection" type="VBoxContainer" parent="ScrollContainer/VBox/StrategyDetails"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="BlueprintLabel" type="Label" parent="VBox/StrategyDetails/BlueprintSection"]
+[node name="BlueprintLabel" type="Label" parent="ScrollContainer/VBox/StrategyDetails/BlueprintSection"]
 layout_mode = 2
 text = "Blueprint Settings"
 
-[node name="BlueprintGrid" type="GridContainer" parent="VBox/StrategyDetails/BlueprintSection"]
+[node name="BlueprintGrid" type="GridContainer" parent="ScrollContainer/VBox/StrategyDetails/BlueprintSection"]
 unique_name_in_owner = true
 layout_mode = 2
-columns = 2
 theme_override_constants/h_separation = 12
 theme_override_constants/v_separation = 6
+columns = 2
 
-[node name="BlueprintMinRoomLabel" type="Label" parent="VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
+[node name="BlueprintMinRoomLabel" type="Label" parent="ScrollContainer/VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
 layout_mode = 2
 text = "Min Room Size"
 
-[node name="BlueprintMinRoomSpin" type="SpinBox" parent="VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
+[node name="BlueprintMinRoomSpin" type="SpinBox" parent="ScrollContainer/VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 min_value = 1.0
 max_value = 64.0
-step = 1.0
 value = 4.0
-custom_minimum_size = Vector2(120, 0)
 
-[node name="BlueprintMaxRoomLabel" type="Label" parent="VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
+[node name="BlueprintMaxRoomLabel" type="Label" parent="ScrollContainer/VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
 layout_mode = 2
 text = "Max Room Size"
 
-[node name="BlueprintMaxRoomSpin" type="SpinBox" parent="VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
+[node name="BlueprintMaxRoomSpin" type="SpinBox" parent="ScrollContainer/VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 min_value = 1.0
 max_value = 64.0
-step = 1.0
 value = 8.0
-custom_minimum_size = Vector2(120, 0)
 
-[node name="BlueprintMaxRoomsLabel" type="Label" parent="VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
+[node name="BlueprintMaxRoomsLabel" type="Label" parent="ScrollContainer/VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
 layout_mode = 2
 text = "Max Rooms"
 
-[node name="BlueprintMaxRoomsSpin" type="SpinBox" parent="VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
+[node name="BlueprintMaxRoomsSpin" type="SpinBox" parent="ScrollContainer/VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 min_value = 1.0
 max_value = 32.0
-step = 1.0
 value = 6.0
-custom_minimum_size = Vector2(120, 0)
 
-[node name="BlueprintMarginLabel" type="Label" parent="VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
+[node name="BlueprintMarginLabel" type="Label" parent="ScrollContainer/VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
 layout_mode = 2
 text = "Margin"
 
-[node name="BlueprintMarginSpin" type="SpinBox" parent="VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
+[node name="BlueprintMarginSpin" type="SpinBox" parent="ScrollContainer/VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
 unique_name_in_owner = true
-layout_mode = 2
-min_value = 0.0
-max_value = 16.0
-step = 1.0
-value = 1.0
 custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+max_value = 16.0
+value = 1.0
 
-[node name="BlueprintFloorHeightLabel" type="Label" parent="VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
+[node name="BlueprintFloorHeightLabel" type="Label" parent="ScrollContainer/VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
 layout_mode = 2
 text = "Floor Height"
 
-[node name="BlueprintFloorHeightSpin" type="SpinBox" parent="VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
+[node name="BlueprintFloorHeightSpin" type="SpinBox" parent="ScrollContainer/VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 min_value = 1.0
 max_value = 8.0
-step = 1.0
 value = 1.0
-custom_minimum_size = Vector2(120, 0)
 
-[node name="BlueprintFloorsLabel" type="Label" parent="VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
+[node name="BlueprintFloorsLabel" type="Label" parent="ScrollContainer/VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
 layout_mode = 2
 text = "Floors"
 
-[node name="BlueprintFloorsSpin" type="SpinBox" parent="VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
+[node name="BlueprintFloorsSpin" type="SpinBox" parent="ScrollContainer/VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 min_value = 1.0
 max_value = 8.0
-step = 1.0
 value = 1.0
-custom_minimum_size = Vector2(120, 0)
 
-[node name="BlueprintDoorsLabel" type="Label" parent="VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
+[node name="BlueprintDoorsLabel" type="Label" parent="ScrollContainer/VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
 layout_mode = 2
 text = "Doors / Room"
 
-[node name="BlueprintDoorsSpin" type="SpinBox" parent="VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
+[node name="BlueprintDoorsSpin" type="SpinBox" parent="ScrollContainer/VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 min_value = -1.0
 max_value = 8.0
-step = 1.0
 value = 1.0
-custom_minimum_size = Vector2(120, 0)
 
-[node name="BlueprintRoofLabel" type="Label" parent="VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
+[node name="BlueprintRoofLabel" type="Label" parent="ScrollContainer/VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
 layout_mode = 2
 text = "Add Roof"
 
-[node name="BlueprintRoofCheck" type="CheckButton" parent="VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
+[node name="BlueprintRoofCheck" type="CheckButton" parent="ScrollContainer/VBox/StrategyDetails/BlueprintSection/BlueprintGrid"]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="GridSizeLabel" type="Label" parent="VBox"]
+[node name="GridSizeLabel" type="Label" parent="ScrollContainer/VBox"]
 layout_mode = 2
 text = "Grid Size (cells)"
 
-[node name="GridSizeRow" type="HBoxContainer" parent="VBox"]
+[node name="GridSizeRow" type="HBoxContainer" parent="ScrollContainer/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="GridXLabel" type="Label" parent="VBox/GridSizeRow"]
+[node name="GridXLabel" type="Label" parent="ScrollContainer/VBox/GridSizeRow"]
 layout_mode = 2
 text = "X"
 
-[node name="GridXSpin" type="SpinBox" parent="VBox/GridSizeRow"]
+[node name="GridXSpin" type="SpinBox" parent="ScrollContainer/VBox/GridSizeRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
 min_value = 1.0
 max_value = 256.0
-value = 24.0
+value = 16.0
 select_all_on_focus = true
 
-[node name="GridYLabel" type="Label" parent="VBox/GridSizeRow"]
+[node name="GridYLabel" type="Label" parent="ScrollContainer/VBox/GridSizeRow"]
 layout_mode = 2
 text = "Y"
 
-[node name="GridYSpin" type="SpinBox" parent="VBox/GridSizeRow"]
+[node name="GridYSpin" type="SpinBox" parent="ScrollContainer/VBox/GridSizeRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
@@ -223,33 +223,33 @@ max_value = 64.0
 value = 1.0
 select_all_on_focus = true
 
-[node name="GridZLabel" type="Label" parent="VBox/GridSizeRow"]
+[node name="GridZLabel" type="Label" parent="ScrollContainer/VBox/GridSizeRow"]
 layout_mode = 2
 text = "Z"
 
-[node name="GridZSpin" type="SpinBox" parent="VBox/GridSizeRow"]
+[node name="GridZSpin" type="SpinBox" parent="ScrollContainer/VBox/GridSizeRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
 min_value = 1.0
 max_value = 256.0
-value = 24.0
+value = 16.0
 select_all_on_focus = true
 
-[node name="CellSizeLabel" type="Label" parent="VBox"]
+[node name="CellSizeLabel" type="Label" parent="ScrollContainer/VBox"]
 layout_mode = 2
 text = "Cell Size (world units)"
 
-[node name="CellSizeRow" type="HBoxContainer" parent="VBox"]
+[node name="CellSizeRow" type="HBoxContainer" parent="ScrollContainer/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="CellXLabel" type="Label" parent="VBox/CellSizeRow"]
+[node name="CellXLabel" type="Label" parent="ScrollContainer/VBox/CellSizeRow"]
 layout_mode = 2
 text = "X"
 
-[node name="CellXSpin" type="SpinBox" parent="VBox/CellSizeRow"]
+[node name="CellXSpin" type="SpinBox" parent="ScrollContainer/VBox/CellSizeRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
@@ -259,11 +259,11 @@ step = 0.1
 value = 2.0
 select_all_on_focus = true
 
-[node name="CellYLabel" type="Label" parent="VBox/CellSizeRow"]
+[node name="CellYLabel" type="Label" parent="ScrollContainer/VBox/CellSizeRow"]
 layout_mode = 2
 text = "Y"
 
-[node name="CellYSpin" type="SpinBox" parent="VBox/CellSizeRow"]
+[node name="CellYSpin" type="SpinBox" parent="ScrollContainer/VBox/CellSizeRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
@@ -273,11 +273,11 @@ step = 0.1
 value = 3.0
 select_all_on_focus = true
 
-[node name="CellZLabel" type="Label" parent="VBox/CellSizeRow"]
+[node name="CellZLabel" type="Label" parent="ScrollContainer/VBox/CellSizeRow"]
 layout_mode = 2
 text = "Z"
 
-[node name="CellZSpin" type="SpinBox" parent="VBox/CellSizeRow"]
+[node name="CellZSpin" type="SpinBox" parent="ScrollContainer/VBox/CellSizeRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
@@ -287,22 +287,24 @@ step = 0.1
 value = 2.0
 select_all_on_focus = true
 
-[node name="AdvancedLabel" type="Label" parent="VBox"]
+[node name="AdvancedLabel" type="Label" parent="ScrollContainer/VBox"]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
 text = "Advanced Solver Settings"
 
-[node name="AdvancedGrid" type="GridContainer" parent="VBox"]
+[node name="AdvancedGrid" type="GridContainer" parent="ScrollContainer/VBox"]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
 theme_override_constants/h_separation = 12
 columns = 2
 
-[node name="YieldLabel" type="Label" parent="VBox/AdvancedGrid"]
+[node name="YieldLabel" type="Label" parent="ScrollContainer/VBox/AdvancedGrid"]
 layout_mode = 2
 text = "Yield Interval (ms)"
 
-[node name="YieldSpin" type="SpinBox" parent="VBox/AdvancedGrid"]
+[node name="YieldSpin" type="SpinBox" parent="ScrollContainer/VBox/AdvancedGrid"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
@@ -310,11 +312,11 @@ max_value = 1000.0
 value = 8.0
 select_all_on_focus = true
 
-[node name="PropagationLabel" type="Label" parent="VBox/AdvancedGrid"]
+[node name="PropagationLabel" type="Label" parent="ScrollContainer/VBox/AdvancedGrid"]
 layout_mode = 2
 text = "Propagation Batch"
 
-[node name="PropagationSpin" type="SpinBox" parent="VBox/AdvancedGrid"]
+[node name="PropagationSpin" type="SpinBox" parent="ScrollContainer/VBox/AdvancedGrid"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
@@ -323,11 +325,11 @@ max_value = 500.0
 value = 25.0
 select_all_on_focus = true
 
-[node name="MaxIterationsLabel" type="Label" parent="VBox/AdvancedGrid"]
+[node name="MaxIterationsLabel" type="Label" parent="ScrollContainer/VBox/AdvancedGrid"]
 layout_mode = 2
 text = "Max Iterations"
 
-[node name="MaxIterationsSpin" type="SpinBox" parent="VBox/AdvancedGrid"]
+[node name="MaxIterationsSpin" type="SpinBox" parent="ScrollContainer/VBox/AdvancedGrid"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
@@ -337,11 +339,11 @@ step = 100.0
 value = 500001.0
 select_all_on_focus = true
 
-[node name="ProgressLabel" type="Label" parent="VBox/AdvancedGrid"]
+[node name="ProgressLabel" type="Label" parent="ScrollContainer/VBox/AdvancedGrid"]
 layout_mode = 2
 text = "Progress Interval (ms)"
 
-[node name="ProgressSpin" type="SpinBox" parent="VBox/AdvancedGrid"]
+[node name="ProgressSpin" type="SpinBox" parent="ScrollContainer/VBox/AdvancedGrid"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
@@ -350,11 +352,11 @@ step = 100.0
 value = 1000.0
 select_all_on_focus = true
 
-[node name="BacktrackDepthLabel" type="Label" parent="VBox/AdvancedGrid"]
+[node name="BacktrackDepthLabel" type="Label" parent="ScrollContainer/VBox/AdvancedGrid"]
 layout_mode = 2
 text = "Max Backtrack Depth"
 
-[node name="BacktrackDepthSpin" type="SpinBox" parent="VBox/AdvancedGrid"]
+[node name="BacktrackDepthSpin" type="SpinBox" parent="ScrollContainer/VBox/AdvancedGrid"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
@@ -362,11 +364,11 @@ max_value = 500.0
 value = 10.0
 select_all_on_focus = true
 
-[node name="CheckpointLabel" type="Label" parent="VBox/AdvancedGrid"]
+[node name="CheckpointLabel" type="Label" parent="ScrollContainer/VBox/AdvancedGrid"]
 layout_mode = 2
 text = "Checkpoint Frequency"
 
-[node name="CheckpointSpin" type="SpinBox" parent="VBox/AdvancedGrid"]
+[node name="CheckpointSpin" type="SpinBox" parent="ScrollContainer/VBox/AdvancedGrid"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
@@ -374,64 +376,171 @@ min_value = 1.0
 value = 5.0
 select_all_on_focus = true
 
-[node name="PrewarmLabel" type="Label" parent="VBox/AdvancedGrid"]
+[node name="PrewarmLabel" type="Label" parent="ScrollContainer/VBox/AdvancedGrid"]
 layout_mode = 2
 text = "Prewarm Cache"
 
-[node name="PrewarmCheck" type="CheckButton" parent="VBox/AdvancedGrid"]
+[node name="PrewarmCheck" type="CheckButton" parent="ScrollContainer/VBox/AdvancedGrid"]
 unique_name_in_owner = true
 layout_mode = 2
 button_pressed = true
 
-[node name="BacktrackingLabel" type="Label" parent="VBox/AdvancedGrid"]
+[node name="BacktrackingLabel" type="Label" parent="ScrollContainer/VBox/AdvancedGrid"]
 layout_mode = 2
 text = "Enable Backtracking"
 
-[node name="BacktrackingCheck" type="CheckButton" parent="VBox/AdvancedGrid"]
+[node name="BacktrackingCheck" type="CheckButton" parent="ScrollContainer/VBox/AdvancedGrid"]
 unique_name_in_owner = true
 layout_mode = 2
 button_pressed = true
 
-[node name="RegionBoundaryRow" type="HBoxContainer" parent="VBox"]
+[node name="StructuralLabel" type="Label" parent="ScrollContainer/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Structural Constraints"
+
+[node name="StructuralSection" type="VBoxContainer" parent="ScrollContainer/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="EnableStructuralRow" type="HBoxContainer" parent="ScrollContainer/VBox/StructuralSection"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="RegionBoundaryLabel" type="Label" parent="VBox/RegionBoundaryRow"]
+[node name="EnableStructuralLabel" type="Label" parent="ScrollContainer/VBox/StructuralSection/EnableStructuralRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "Enforce architectural rules (wall continuity, door placement, floor support)"
+text = "Enable Structural Constraints"
+
+[node name="EnableStructuralCheck" type="CheckButton" parent="ScrollContainer/VBox/StructuralSection/EnableStructuralRow"]
+unique_name_in_owner = true
+layout_mode = 2
+button_pressed = true
+
+[node name="ConstraintsGrid" type="GridContainer" parent="ScrollContainer/VBox/StructuralSection"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 6
+columns = 2
+
+[node name="WallContinuityLabel" type="Label" parent="ScrollContainer/VBox/StructuralSection/ConstraintsGrid"]
+layout_mode = 2
+tooltip_text = "Ensure walls form connected segments"
+text = "Wall Continuity"
+
+[node name="WallContinuityCheck" type="CheckButton" parent="ScrollContainer/VBox/StructuralSection/ConstraintsGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+button_pressed = true
+
+[node name="WallMinConnectionsLabel" type="Label" parent="ScrollContainer/VBox/StructuralSection/ConstraintsGrid"]
+layout_mode = 2
+tooltip_text = "Minimum wall-to-wall connections required"
+text = "  Min Connections"
+
+[node name="WallMinConnectionsSpin" type="SpinBox" parent="ScrollContainer/VBox/StructuralSection/ConstraintsGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.0
+max_value = 4.0
+value = 2.0
+
+[node name="DoorPlacementLabel" type="Label" parent="ScrollContainer/VBox/StructuralSection/ConstraintsGrid"]
+layout_mode = 2
+tooltip_text = "Ensure doors have proper wall support"
+text = "Door Placement"
+
+[node name="DoorPlacementCheck" type="CheckButton" parent="ScrollContainer/VBox/StructuralSection/ConstraintsGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+button_pressed = true
+
+[node name="DoorMinWallsLabel" type="Label" parent="ScrollContainer/VBox/StructuralSection/ConstraintsGrid"]
+layout_mode = 2
+tooltip_text = "Minimum walls required next to doors"
+text = "  Min Adjacent Walls"
+
+[node name="DoorMinWallsSpin" type="SpinBox" parent="ScrollContainer/VBox/StructuralSection/ConstraintsGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.0
+max_value = 4.0
+value = 2.0
+
+[node name="DoorFloorSupportLabel" type="Label" parent="ScrollContainer/VBox/StructuralSection/ConstraintsGrid"]
+layout_mode = 2
+tooltip_text = "Doors must have floor support underneath"
+text = "  Require Floor Below"
+
+[node name="DoorFloorSupportCheck" type="CheckButton" parent="ScrollContainer/VBox/StructuralSection/ConstraintsGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+button_pressed = true
+
+[node name="FloorSupportLabel" type="Label" parent="ScrollContainer/VBox/StructuralSection/ConstraintsGrid"]
+layout_mode = 2
+tooltip_text = "Ensure floors have structural support below"
+text = "Floor Support"
+
+[node name="FloorSupportCheck" type="CheckButton" parent="ScrollContainer/VBox/StructuralSection/ConstraintsGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+button_pressed = true
+
+[node name="FloorVerticalSupportLabel" type="Label" parent="ScrollContainer/VBox/StructuralSection/ConstraintsGrid"]
+layout_mode = 2
+tooltip_text = "Upper floors need load-bearing support"
+text = "  Require Support Below"
+
+[node name="FloorVerticalSupportCheck" type="CheckButton" parent="ScrollContainer/VBox/StructuralSection/ConstraintsGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+button_pressed = true
+
+[node name="RegionBoundaryRow" type="HBoxContainer" parent="ScrollContainer/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="RegionBoundaryLabel" type="Label" parent="ScrollContainer/VBox/RegionBoundaryRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Enforce Region Boundaries"
 
-[node name="RegionBoundaryCheck" type="CheckButton" parent="VBox/RegionBoundaryRow"]
+[node name="RegionBoundaryCheck" type="CheckButton" parent="ScrollContainer/VBox/RegionBoundaryRow"]
 unique_name_in_owner = true
 layout_mode = 2
 button_pressed = true
 
-[node name="HBoxContainer" type="HBoxContainer" parent="VBox"]
+[node name="HBoxContainer" type="HBoxContainer" parent="ScrollContainer/VBox"]
 layout_mode = 2
 
-[node name="RequireClosedRegionsLabel" type="Label" parent="VBox/HBoxContainer"]
+[node name="RequireClosedRegionsLabel" type="Label" parent="ScrollContainer/VBox/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Require Closed Regions"
 
-[node name="RequireClosedRegionsCheck" type="CheckButton" parent="VBox/HBoxContainer"]
+[node name="RequireClosedRegionsCheck" type="CheckButton" parent="ScrollContainer/VBox/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 button_pressed = true
 
-[node name="HBoxContainer2" type="HBoxContainer" parent="VBox"]
+[node name="HBoxContainer2" type="HBoxContainer" parent="ScrollContainer/VBox"]
 layout_mode = 2
 
-[node name="MaxRegionsLabel" type="Label" parent="VBox/HBoxContainer2"]
+[node name="MaxRegionsLabel" type="Label" parent="ScrollContainer/VBox/HBoxContainer2"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Max Regions"
 
-[node name="MaxRegionsSpin" type="SpinBox" parent="VBox/HBoxContainer2"]
+[node name="MaxRegionsSpin" type="SpinBox" parent="ScrollContainer/VBox/HBoxContainer2"]
 unique_name_in_owner = true
 layout_mode = 2
+value = 1.0
 
-[node name="HintLabel" type="Label" parent="VBox"]
+[node name="HintLabel" type="Label" parent="ScrollContainer/VBox"]
 custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
 text = "Tip: use library cell size as a starting point."

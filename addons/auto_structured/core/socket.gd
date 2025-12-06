@@ -3,6 +3,29 @@ class_name Socket extends Resource
 
 const Requirement = preload("res://addons/auto_structured/core/requirements/requirement.gd")
 
+## Socket types define semantic connection types for structural generation
+enum SocketType {
+	GENERIC = 0,              ## Generic connection (old behavior)
+	WALL_EXTERIOR_EDGE = 1,   ## Exterior wall edge (connects to other exterior walls)
+	WALL_INTERIOR_EDGE = 2,   ## Interior wall edge (connects to other interior walls)
+	FLOOR_TOP_SURFACE = 3,    ## Top surface of floor (connects to objects above)
+	FLOOR_BOTTOM_SUPPORT = 4, ## Bottom of floor (needs support below)
+	DOOR_OPENING = 5,         ## Opening for door frame
+	WINDOW_OPENING = 6,       ## Opening for window frame
+	ROOF_EDGE = 7,            ## Roof connection edge
+	FOUNDATION_BASE = 8,      ## Foundation/ground connection
+	CORNER_EXTERIOR = 9,      ## Exterior corner connection
+	CORNER_INTERIOR = 10,     ## Interior corner connection
+	PASSAGE_FRAME = 11,       ## Frame for passages (doors/archways)
+	GROUND_SURFACE = 12,      ## Outside ground surface
+}
+
+## Socket type classification for structural constraints
+@export var socket_type: SocketType = SocketType.GENERIC
+
+## Compatible socket types (what can connect to this socket)
+@export var compatible_types: Array[SocketType] = []
+
 ## Unique identifier for this socket type (e.g., "wall", "floor", "door")
 @export var socket_id: String = "":
 	set(value):
@@ -54,11 +77,70 @@ func is_compatible_with(other: Socket) -> bool:
 	if other == null:
 		return false
 
+	# First check typed socket compatibility (new system)
+	if socket_type != SocketType.GENERIC or other.socket_type != SocketType.GENERIC:
+		return is_type_compatible_with(other)
+	
+	# Fall back to GUID-based compatibility (legacy system)
 	ensure_guid()
 	var other_guid := String(other.socket_guid).strip_edges()
 	if other_guid == "":
 		return false
 	return other_guid in compatible_sockets
+
+func is_type_compatible_with(other: Socket) -> bool:
+	"""
+	Check type-based socket compatibility using SocketType enum.
+	This provides semantic matching for structural generation.
+	"""
+	if other == null:
+		return false
+	
+	# If either socket uses GENERIC, fall back to GUID compatibility
+	if socket_type == SocketType.GENERIC or other.socket_type == SocketType.GENERIC:
+		ensure_guid()
+		var other_guid := String(other.socket_guid).strip_edges()
+		if other_guid == "":
+			return false
+		return other_guid in compatible_sockets
+	
+	# Check if other's type is in our compatible list
+	if not compatible_types.is_empty():
+		return other.socket_type in compatible_types
+	
+	# Default compatibility rules for common cases
+	return _has_default_type_compatibility(socket_type, other.socket_type)
+
+func _has_default_type_compatibility(type_a: SocketType, type_b: SocketType) -> bool:
+	"""Default compatibility rules when compatible_types is not specified."""
+	# Matching types are always compatible
+	if type_a == type_b:
+		return true
+	
+	# Specific compatibility rules
+	match type_a:
+		SocketType.WALL_EXTERIOR_EDGE:
+			return type_b in [SocketType.WALL_EXTERIOR_EDGE, SocketType.CORNER_EXTERIOR, SocketType.DOOR_OPENING]
+		SocketType.WALL_INTERIOR_EDGE:
+			return type_b in [SocketType.WALL_INTERIOR_EDGE, SocketType.CORNER_INTERIOR, SocketType.DOOR_OPENING]
+		SocketType.FLOOR_TOP_SURFACE:
+			return type_b == SocketType.FLOOR_BOTTOM_SUPPORT
+		SocketType.FLOOR_BOTTOM_SUPPORT:
+			return type_b in [SocketType.FLOOR_TOP_SURFACE, SocketType.FOUNDATION_BASE, SocketType.GROUND_SURFACE]
+		SocketType.DOOR_OPENING:
+			return type_b in [SocketType.WALL_EXTERIOR_EDGE, SocketType.WALL_INTERIOR_EDGE, SocketType.PASSAGE_FRAME]
+		SocketType.WINDOW_OPENING:
+			return type_b in [SocketType.WALL_EXTERIOR_EDGE, SocketType.WALL_INTERIOR_EDGE]
+		SocketType.CORNER_EXTERIOR:
+			return type_b in [SocketType.WALL_EXTERIOR_EDGE, SocketType.CORNER_EXTERIOR]
+		SocketType.CORNER_INTERIOR:
+			return type_b in [SocketType.WALL_INTERIOR_EDGE, SocketType.CORNER_INTERIOR]
+		SocketType.ROOF_EDGE:
+			return type_b == SocketType.ROOF_EDGE
+		SocketType.GROUND_SURFACE:
+			return type_b in [SocketType.GROUND_SURFACE, SocketType.FLOOR_BOTTOM_SUPPORT]
+	
+	return false
 
 func add_compatible_socket(id: String) -> void:
 	"""

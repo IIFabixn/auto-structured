@@ -144,7 +144,7 @@ func create_strategy_instance() -> WfcSolveStrategy:
 			return WfcEntropyStrategy.new()
 
 
-func apply_to_solver(solver: WfcSolver) -> void:
+func apply_to_solver(solver: WfcSolver, structural_config: Dictionary = {}) -> void:
 	"""Apply this configuration to a solver instance."""
 	solver.max_iterations = max_iterations
 	solver.yield_interval_ms = yield_interval_ms
@@ -164,5 +164,47 @@ func apply_to_solver(solver: WfcSolver) -> void:
 		if solver.has_method("set_region_boundary_enforcement"):
 			solver.set_region_boundary_enforcement(region_config.enabled)
 	
+	# Apply structural constraints
+	if not structural_config.is_empty():
+		_apply_structural_constraints(solver, structural_config)
+	
 	if solver.has_method("set_solve_strategy"):
 		solver.set_solve_strategy(create_strategy_instance(), self)
+
+func _apply_structural_constraints(solver: WfcSolver, config: Dictionary) -> void:
+	"""Configure structural constraints on the solver."""
+	const WallContinuityConstraint = preload("res://addons/auto_structured/core/constraints/wall_continuity_constraint.gd")
+	const DoorPlacementConstraint = preload("res://addons/auto_structured/core/constraints/door_placement_constraint.gd")
+	const FloorSupportConstraint = preload("res://addons/auto_structured/core/constraints/floor_support_constraint.gd")
+	
+	solver.enforce_structural_constraints = config.get("enabled", true)
+	solver.clear_structural_constraints()
+	
+	if not solver.enforce_structural_constraints:
+		return
+	
+	# Wall Continuity Constraint
+	var wall_cfg = config.get("wall_continuity", {})
+	if wall_cfg.get("enabled", true):
+		var wall_constraint = WallContinuityConstraint.new()
+		wall_constraint.min_connections = wall_cfg.get("min_connections", 2)
+		wall_constraint.corners_count_as_walls = true
+		wall_constraint.doors_break_continuity = false
+		solver.add_structural_constraint(wall_constraint)
+	
+	# Door Placement Constraint
+	var door_cfg = config.get("door_placement", {})
+	if door_cfg.get("enabled", true):
+		var door_constraint = DoorPlacementConstraint.new()
+		door_constraint.min_adjacent_walls = door_cfg.get("min_adjacent_walls", 2)
+		door_constraint.require_floor_below = door_cfg.get("require_floor_below", true)
+		door_constraint.allow_corner_doors = false
+		solver.add_structural_constraint(door_constraint)
+	
+	# Floor Support Constraint
+	var floor_cfg = config.get("floor_support", {})
+	if floor_cfg.get("enabled", true):
+		var floor_constraint = FloorSupportConstraint.new()
+		floor_constraint.require_vertical_support = floor_cfg.get("require_vertical_support", true)
+		floor_constraint.require_ground_support = false
+		solver.add_structural_constraint(floor_constraint)

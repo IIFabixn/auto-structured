@@ -106,33 +106,99 @@ func _get_valid_boundary_roles_for_zone(zone: Zone) -> Array[Tile.BoundaryRole]:
 			return [Tile.BoundaryRole.NONE]
 
 
-func _is_tile_valid_for_zone(tile: Tile, zone: Zone, _position: Vector3i) -> bool:
+func _is_tile_valid_for_zone(tile: Tile, zone: Zone, position: Vector3i) -> bool:
+	## Enhanced validation using both boundary roles AND structural roles
+	## This ensures tiles are semantically correct for their architectural purpose
+	
+	# Calculate floor level for this position
+	var floor_index = position.y / max(1, floor_height)
+	var is_ground = (floor_index == 0)
+	
 	match zone:
 		Zone.EXTERIOR:
 			# Only exterior/outside tiles
 			if tile.has_tag("interior"):
 				return false
-			# Prefer tiles tagged as exterior, but allow generic floor tiles
+			# Check structural role
+			if tile.structural_role == Tile.StructuralRole.INTERIOR_WALL:
+				return false
+			# Prefer exterior ground or generic tiles
+			if tile.structural_role in [Tile.StructuralRole.EXTERIOR_GROUND, Tile.StructuralRole.NONE]:
+				return true
 			return true
+		
 		Zone.INTERIOR:
 			# Only interior tiles
-			if tile.has_tag("exterior"):
+			if tile.has_tag("exterior") and not tile.has_tag("floor"):
 				return false
-			return true
+			# Check structural role - upper floors need UPPER_FLOOR tiles
+			if not is_ground:
+				if tile.structural_role == Tile.StructuralRole.GROUND_FLOOR:
+					return false  # Ground floor tiles can't go on upper floors
+				if tile.structural_role == Tile.StructuralRole.UPPER_FLOOR:
+					return true
+			else:
+				if tile.structural_role == Tile.StructuralRole.GROUND_FLOOR:
+					return true
+			# Allow generic floor tiles
+			return tile.structural_role == Tile.StructuralRole.NONE
+		
+		Zone.FLOOR:
+			# Ground floor specifically
+			if not is_ground:
+				return false  # FLOOR zone is only for ground level
+			if tile.structural_role == Tile.StructuralRole.GROUND_FLOOR:
+				return true
+			if tile.has_tag("floor") and tile.structural_role == Tile.StructuralRole.NONE:
+				return true
+			return false
+		
 		Zone.DOOR:
-			# Must be a PASSAGE tile (door, gate, archway, etc.)
-			return tile.boundary_role == Tile.BoundaryRole.PASSAGE
+			# Must be a PASSAGE tile or DOOR_FRAME structural role
+			if tile.structural_role == Tile.StructuralRole.DOOR_FRAME:
+				return true
+			if tile.boundary_role == Tile.BoundaryRole.PASSAGE:
+				return true
+			return false
+		
 		Zone.WALL:
 			# Wall tiles but not passages
 			if tile.boundary_role == Tile.BoundaryRole.PASSAGE:
 				return false
-			return true
+			if tile.structural_role == Tile.StructuralRole.DOOR_FRAME:
+				return false
+			# Check structural role for walls
+			if tile.structural_role in [
+				Tile.StructuralRole.EXTERIOR_WALL,
+				Tile.StructuralRole.INTERIOR_WALL,
+				Tile.StructuralRole.LOAD_BEARING_WALL,
+				Tile.StructuralRole.PARTITION_WALL,
+			]:
+				return true
+			# Allow generic EDGE boundary role
+			if tile.boundary_role == Tile.BoundaryRole.EDGE:
+				return true
+			return false
+		
 		Zone.CORNER:
-			# Corner tiles
-			return tile.has_tag("corner") or tile.boundary_role == Tile.BoundaryRole.CORNER
+			# Corner tiles with structural validation
+			if tile.structural_role in [
+				Tile.StructuralRole.CORNER_EXTERIOR,
+				Tile.StructuralRole.CORNER_INTERIOR,
+			]:
+				return true
+			if tile.has_tag("corner") or tile.boundary_role == Tile.BoundaryRole.CORNER:
+				return true
+			return false
+		
 		Zone.ROOF:
 			# Roof tiles
-			return tile.has_tag("roof")
+			if tile.structural_role == Tile.StructuralRole.ROOF_SEGMENT:
+				return true
+			if tile.has_tag("roof"):
+				return true
+			return false
+		
 		_:
 			return true
 

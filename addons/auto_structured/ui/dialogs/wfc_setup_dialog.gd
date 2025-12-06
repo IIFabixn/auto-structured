@@ -81,6 +81,16 @@ const DEFAULT_BLUEPRINT_CONFIG := {
 @onready var max_regions_spin: SpinBox = %MaxRegionsSpin
 @onready var require_closed_regions_check: CheckButton = %RequireClosedRegionsCheck
 
+## Structural constraints controls
+@onready var enable_structural_check: CheckButton = %EnableStructuralCheck
+@onready var wall_continuity_check: CheckButton = %WallContinuityCheck
+@onready var wall_min_connections_spin: SpinBox = %WallMinConnectionsSpin
+@onready var door_placement_check: CheckButton = %DoorPlacementCheck
+@onready var door_min_walls_spin: SpinBox = %DoorMinWallsSpin
+@onready var door_floor_support_check: CheckButton = %DoorFloorSupportCheck
+@onready var floor_support_check: CheckButton = %FloorSupportCheck
+@onready var floor_vertical_support_check: CheckButton = %FloorVerticalSupportCheck
+
 var _last_config: Dictionary = {
 	"grid_size": Vector3i(5, 3, 5),
 	"cell_size": Vector3(2, 2, 2)
@@ -275,6 +285,24 @@ func _setup_custom_control_signals() -> void:
 		max_regions_spin.value_changed.connect(_on_custom_max_regions_changed)
 	if require_closed_regions_check and not require_closed_regions_check.toggled.is_connected(_on_custom_require_closed_regions_toggled):
 		require_closed_regions_check.toggled.connect(_on_custom_require_closed_regions_toggled)
+	
+	# Structural constraints signals
+	if enable_structural_check and not enable_structural_check.toggled.is_connected(_on_enable_structural_toggled):
+		enable_structural_check.toggled.connect(_on_enable_structural_toggled)
+	if wall_continuity_check and not wall_continuity_check.toggled.is_connected(_on_wall_continuity_toggled):
+		wall_continuity_check.toggled.connect(_on_wall_continuity_toggled)
+	if wall_min_connections_spin and not wall_min_connections_spin.value_changed.is_connected(_on_wall_min_connections_changed):
+		wall_min_connections_spin.value_changed.connect(_on_wall_min_connections_changed)
+	if door_placement_check and not door_placement_check.toggled.is_connected(_on_door_placement_toggled):
+		door_placement_check.toggled.connect(_on_door_placement_toggled)
+	if door_min_walls_spin and not door_min_walls_spin.value_changed.is_connected(_on_door_min_walls_changed):
+		door_min_walls_spin.value_changed.connect(_on_door_min_walls_changed)
+	if door_floor_support_check and not door_floor_support_check.toggled.is_connected(_on_door_floor_support_toggled):
+		door_floor_support_check.toggled.connect(_on_door_floor_support_toggled)
+	if floor_support_check and not floor_support_check.toggled.is_connected(_on_floor_support_toggled):
+		floor_support_check.toggled.connect(_on_floor_support_toggled)
+	if floor_vertical_support_check and not floor_vertical_support_check.toggled.is_connected(_on_floor_vertical_support_toggled):
+		floor_vertical_support_check.toggled.connect(_on_floor_vertical_support_toggled)
 
 func _setup_blueprint_control_signals() -> void:
 	if blueprint_min_spin and not blueprint_min_spin.value_changed.is_connected(_on_blueprint_min_size_changed):
@@ -328,6 +356,41 @@ func _sync_custom_solver_controls() -> void:
 	_syncing_custom_controls = false
 	if _current_solver_config.solve_strategy_id == "blueprint":
 		_sync_blueprint_controls()
+	
+	# Sync structural constraints
+	_sync_structural_controls()
+
+func _sync_structural_controls() -> void:
+	"""Sync UI controls with structural constraints config."""
+	_ensure_structural_config()
+	var sc = _last_config.get("structural_constraints", _default_structural_config())
+	
+	_syncing_custom_controls = true
+	
+	if enable_structural_check:
+		enable_structural_check.button_pressed = sc.get("enabled", true)
+	
+	var wall_cfg = sc.get("wall_continuity", {})
+	if wall_continuity_check:
+		wall_continuity_check.button_pressed = wall_cfg.get("enabled", true)
+	if wall_min_connections_spin:
+		wall_min_connections_spin.value = wall_cfg.get("min_connections", 2)
+	
+	var door_cfg = sc.get("door_placement", {})
+	if door_placement_check:
+		door_placement_check.button_pressed = door_cfg.get("enabled", true)
+	if door_min_walls_spin:
+		door_min_walls_spin.value = door_cfg.get("min_adjacent_walls", 2)
+	if door_floor_support_check:
+		door_floor_support_check.button_pressed = door_cfg.get("require_floor_below", true)
+	
+	var floor_cfg = sc.get("floor_support", {})
+	if floor_support_check:
+		floor_support_check.button_pressed = floor_cfg.get("enabled", true)
+	if floor_vertical_support_check:
+		floor_vertical_support_check.button_pressed = floor_cfg.get("require_vertical_support", true)
+	
+	_syncing_custom_controls = false
 
 func _set_custom_section_visible(visible: bool) -> void:
 	if advanced_label:
@@ -486,6 +549,98 @@ func _on_custom_require_closed_regions_toggled(pressed: bool) -> void:
 		_current_solver_config.region_config.require_closed_regions = pressed
 	_update_solver_settings_cache()
 
+## ============================================================================
+## Structural Constraints Callbacks
+## ============================================================================
+
+func _on_enable_structural_toggled(pressed: bool) -> void:
+	if _syncing_custom_controls:
+		return
+	_ensure_structural_config()
+	_last_config["structural_constraints"]["enabled"] = pressed
+	_update_solver_settings_cache()
+
+func _on_wall_continuity_toggled(pressed: bool) -> void:
+	if _syncing_custom_controls:
+		return
+	_ensure_structural_config()
+	_last_config["structural_constraints"]["wall_continuity"]["enabled"] = pressed
+	_update_solver_settings_cache()
+
+func _on_wall_min_connections_changed(value: float) -> void:
+	if _syncing_custom_controls:
+		return
+	_ensure_structural_config()
+	_last_config["structural_constraints"]["wall_continuity"]["min_connections"] = int(value)
+	_update_solver_settings_cache()
+
+func _on_door_placement_toggled(pressed: bool) -> void:
+	if _syncing_custom_controls:
+		return
+	_ensure_structural_config()
+	_last_config["structural_constraints"]["door_placement"]["enabled"] = pressed
+	_update_solver_settings_cache()
+
+func _on_door_min_walls_changed(value: float) -> void:
+	if _syncing_custom_controls:
+		return
+	_ensure_structural_config()
+	_last_config["structural_constraints"]["door_placement"]["min_adjacent_walls"] = int(value)
+	_update_solver_settings_cache()
+
+func _on_door_floor_support_toggled(pressed: bool) -> void:
+	if _syncing_custom_controls:
+		return
+	_ensure_structural_config()
+	_last_config["structural_constraints"]["door_placement"]["require_floor_below"] = pressed
+	_update_solver_settings_cache()
+
+func _on_floor_support_toggled(pressed: bool) -> void:
+	if _syncing_custom_controls:
+		return
+	_ensure_structural_config()
+	_last_config["structural_constraints"]["floor_support"]["enabled"] = pressed
+	_update_solver_settings_cache()
+
+func _on_floor_vertical_support_toggled(pressed: bool) -> void:
+	if _syncing_custom_controls:
+		return
+	_ensure_structural_config()
+	_last_config["structural_constraints"]["floor_support"]["require_vertical_support"] = pressed
+	_update_solver_settings_cache()
+
+func _ensure_structural_config() -> void:
+	"""Ensure structural constraints config structure exists."""
+	if not _last_config.has("structural_constraints"):
+		_last_config["structural_constraints"] = _default_structural_config()
+	
+	var sc = _last_config["structural_constraints"]
+	
+	if not sc.has("wall_continuity"):
+		sc["wall_continuity"] = {"enabled": true, "min_connections": 2}
+	if not sc.has("door_placement"):
+		sc["door_placement"] = {"enabled": true, "min_adjacent_walls": 2, "require_floor_below": true}
+	if not sc.has("floor_support"):
+		sc["floor_support"] = {"enabled": true, "require_vertical_support": true}
+
+func _default_structural_config() -> Dictionary:
+	return {
+		"enabled": true,
+		"wall_continuity": {
+			"enabled": true,
+			"min_connections": 2,
+		},
+		"door_placement": {
+			"enabled": true,
+			"min_adjacent_walls": 2,
+			"require_floor_below": true,
+		},
+		"floor_support": {
+			"enabled": true,
+			"require_vertical_support": true,
+		},
+	}
+
 func _update_solver_settings_cache() -> void:
 	_last_config["solver_settings"] = _serialize_solver_config(_current_solver_config, _current_preset_id)
 	_last_config["solver_config"] = _clone_solver_config(_current_solver_config)
@@ -511,10 +666,16 @@ func _load_last_config_from_editor() -> void:
 		var legacy = editor_settings.get_setting(_EDITOR_SETTINGS_KEY)
 		if typeof(legacy) == TYPE_DICTIONARY:
 			solver_settings = _sanitize_solver_settings(legacy.get("solver_settings", {}))
+	# Load structural constraints if saved
+	var structural_config = _default_structural_config()
+	if solver_settings.has("structural_constraints"):
+		structural_config = solver_settings.get("structural_constraints")
+	
 	_last_config = {
 		"grid_size": grid_value,
 		"cell_size": cell_value,
-		"solver_settings": solver_settings
+		"solver_settings": solver_settings,
+		"structural_constraints": structural_config
 	}
 
 func _save_last_config_to_editor() -> void:
@@ -527,15 +688,22 @@ func _save_last_config_to_editor() -> void:
 	editor_settings.set_setting(_EDITOR_SETTINGS_KEY_SOLVER, storage.get("solver_settings", _default_solver_settings()))
 
 func _config_for_storage(config: Dictionary) -> Dictionary:
+	var solver_settings = config.get("solver_settings", _default_solver_settings())
+	# Include structural constraints in solver settings for persistence
+	var structural_config = config.get("structural_constraints", _default_structural_config())
+	solver_settings["structural_constraints"] = structural_config
+	
 	return {
 		"grid_size": config.get("grid_size", Vector3i(5, 3, 5)),
 		"cell_size": config.get("cell_size", Vector3(2, 2, 2)),
-		"solver_settings": config.get("solver_settings", _default_solver_settings())
+		"solver_settings": solver_settings
 	}
 
 func _ensure_solver_defaults() -> void:
 	if not _last_config.has("solver_settings"):
 		_last_config["solver_settings"] = _default_solver_settings()
+	if not _last_config.has("structural_constraints"):
+		_last_config["structural_constraints"] = _default_structural_config()
 	_current_solver_config = _deserialize_solver_config(_last_config["solver_settings"])
 	_current_preset_id = _last_config["solver_settings"].get("preset_id", "medium")
 	_last_config["solver_config"] = _clone_solver_config(_current_solver_config)

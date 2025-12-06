@@ -431,7 +431,8 @@ func _start_wfc_session(config: Dictionary) -> void:
     wfc_solver = WfcSolver.new(wfc_grid)
     var solver_config: WfcSolverConfig = _extract_solver_config(config)
     if solver_config:
-        solver_config.apply_to_solver(wfc_solver)
+        var structural_config = config.get("structural_constraints", {})
+        solver_config.apply_to_solver(wfc_solver, structural_config)
     wfc_solver.start_interactive(true)
     wfc_session_active = true
     preview_mode = PreviewMode.WFC

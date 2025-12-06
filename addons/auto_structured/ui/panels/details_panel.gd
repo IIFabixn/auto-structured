@@ -51,6 +51,13 @@ const REQUIREMENT_MENU_META_TYPES := "requirement_type_defs"
 @onready var rotation_symmetry_options: OptionButton = %RotationSymmetryOptionsButton
 @onready var boundary_role_options: OptionButton = %BoundaryRoleOptionsButton
 
+## Structural properties controls
+@onready var structural_role_options: OptionButton = %StructuralRoleOptionsButton
+@onready var facing_direction_options: OptionButton = %FacingDirectionOptionsButton
+@onready var floor_level_spinbox: SpinBox = %FloorLevelSpinBox
+@onready var can_support_above_check: CheckButton = %CanSupportAboveCheck
+@onready var requires_support_below_check: CheckButton = %RequiresSupportBelowCheck
+
 @onready var add_requirement_menu_button: MenuButton = %AddRequirementMenuButton
 @onready var requirements_container: VBoxContainer = %RequirementsContainer
 
@@ -107,6 +114,8 @@ func _ready() -> void:
 	# Setup rotation symmetry options
 	_setup_rotation_symmetry_options()
 	_setup_boundary_role_options()
+	_setup_structural_role_options()
+	_setup_facing_direction_options()
 	_setup_requirement_menu()
 	
 	# Connect size spinboxes
@@ -182,6 +191,58 @@ func _setup_boundary_role_options() -> void:
 		boundary_role_options.item_selected.connect(_on_boundary_role_changed)
 	if not rotation_symmetry_options.item_selected.is_connected(_on_rotation_symmetry_changed):
 		rotation_symmetry_options.item_selected.connect(_on_rotation_symmetry_changed)
+
+func _setup_structural_role_options() -> void:
+	"""Initialize the structural role dropdown with all available roles."""
+	if not structural_role_options:
+		return
+	
+	structural_role_options.clear()
+	structural_role_options.add_item("None", Tile.StructuralRole.NONE)
+	structural_role_options.add_item("Exterior Wall", Tile.StructuralRole.EXTERIOR_WALL)
+	structural_role_options.add_item("Interior Wall", Tile.StructuralRole.INTERIOR_WALL)
+	structural_role_options.add_item("Load-Bearing Wall", Tile.StructuralRole.LOAD_BEARING_WALL)
+	structural_role_options.add_item("Partition Wall", Tile.StructuralRole.PARTITION_WALL)
+	structural_role_options.add_item("Ground Floor", Tile.StructuralRole.GROUND_FLOOR)
+	structural_role_options.add_item("Upper Floor", Tile.StructuralRole.UPPER_FLOOR)
+	structural_role_options.add_item("Foundation", Tile.StructuralRole.FOUNDATION)
+	structural_role_options.add_item("Roof Segment", Tile.StructuralRole.ROOF_SEGMENT)
+	structural_role_options.add_item("Door Frame", Tile.StructuralRole.DOOR_FRAME)
+	structural_role_options.add_item("Window Frame", Tile.StructuralRole.WINDOW_FRAME)
+	structural_role_options.add_item("Corner Exterior", Tile.StructuralRole.CORNER_EXTERIOR)
+	structural_role_options.add_item("Corner Interior", Tile.StructuralRole.CORNER_INTERIOR)
+	structural_role_options.add_item("Stairs", Tile.StructuralRole.STAIRS)
+	structural_role_options.add_item("Exterior Ground", Tile.StructuralRole.EXTERIOR_GROUND)
+	
+	structural_role_options.tooltip_text = "Define the architectural purpose of this tile"
+	
+	if not structural_role_options.item_selected.is_connected(_on_structural_role_changed):
+		structural_role_options.item_selected.connect(_on_structural_role_changed)
+
+func _setup_facing_direction_options() -> void:
+	"""Initialize the facing direction dropdown."""
+	if not facing_direction_options:
+		return
+	
+	facing_direction_options.clear()
+	facing_direction_options.add_item("None", Tile.FacingDirection.NONE)
+	facing_direction_options.add_item("North", Tile.FacingDirection.NORTH)
+	facing_direction_options.add_item("East", Tile.FacingDirection.EAST)
+	facing_direction_options.add_item("South", Tile.FacingDirection.SOUTH)
+	facing_direction_options.add_item("West", Tile.FacingDirection.WEST)
+	
+	facing_direction_options.tooltip_text = "Direction this tile faces (for walls, doors, windows)"
+	
+	if not facing_direction_options.item_selected.is_connected(_on_facing_direction_changed):
+		facing_direction_options.item_selected.connect(_on_facing_direction_changed)
+	
+	# Connect support checkboxes
+	if floor_level_spinbox and not floor_level_spinbox.value_changed.is_connected(_on_floor_level_changed):
+		floor_level_spinbox.value_changed.connect(_on_floor_level_changed)
+	if can_support_above_check and not can_support_above_check.toggled.is_connected(_on_can_support_above_toggled):
+		can_support_above_check.toggled.connect(_on_can_support_above_toggled)
+	if requires_support_below_check and not requires_support_below_check.toggled.is_connected(_on_requires_support_below_toggled):
+		requires_support_below_check.toggled.connect(_on_requires_support_below_toggled)
 
 
 func setup_undo_redo(undo_redo: AutoStructuredUndoRedo) -> void:
@@ -294,6 +355,26 @@ func _update_ui() -> void:
 	# Update boundary role
 	if boundary_role_options:
 		boundary_role_options.select(_tile.boundary_role)
+	
+	# Update structural properties
+	if structural_role_options:
+		var role = _tile.structural_role if _tile.structural_role != null else Tile.StructuralRole.NONE
+		for i in structural_role_options.item_count:
+			if structural_role_options.get_item_id(i) == role:
+				structural_role_options.select(i)
+				break
+	if facing_direction_options:
+		var direction = _tile.facing_direction if _tile.facing_direction != null else Tile.FacingDirection.NONE
+		for i in facing_direction_options.item_count:
+			if facing_direction_options.get_item_id(i) == direction:
+				facing_direction_options.select(i)
+				break
+	if floor_level_spinbox:
+		floor_level_spinbox.value = _tile.floor_level if _tile.floor_level != null else 0
+	if can_support_above_check:
+		can_support_above_check.button_pressed = _tile.can_support_above if _tile.can_support_above != null else false
+	if requires_support_below_check:
+		requires_support_below_check.button_pressed = _tile.requires_support_below if _tile.requires_support_below != null else false
 	
 	# Update tags display
 	# Update size
@@ -467,6 +548,50 @@ func _on_boundary_role_changed(index: int) -> void:
 	
 	var selected_id = boundary_role_options.get_item_id(index)
 	_tile.boundary_role = selected_id
+	_validate_tile()
+	tile_modified.emit(_tile)
+
+func _on_structural_role_changed(index: int) -> void:
+	"""Handle structural role selection change."""
+	if not _tile or not structural_role_options:
+		return
+	
+	var selected_id = structural_role_options.get_item_id(index)
+	_tile.structural_role = selected_id
+	_validate_tile()
+	tile_modified.emit(_tile)
+
+func _on_facing_direction_changed(index: int) -> void:
+	"""Handle facing direction selection change."""
+	if not _tile or not facing_direction_options:
+		return
+	
+	var selected_id = facing_direction_options.get_item_id(index)
+	_tile.facing_direction = selected_id
+	_validate_tile()
+	tile_modified.emit(_tile)
+
+func _on_floor_level_changed(value: float) -> void:
+	"""Handle floor level spinbox change."""
+	if not _tile:
+		return
+	_tile.floor_level = int(value)
+	_validate_tile()
+	tile_modified.emit(_tile)
+
+func _on_can_support_above_toggled(pressed: bool) -> void:
+	"""Handle can support above checkbox toggle."""
+	if not _tile:
+		return
+	_tile.can_support_above = pressed
+	_validate_tile()
+	tile_modified.emit(_tile)
+
+func _on_requires_support_below_toggled(pressed: bool) -> void:
+	"""Handle requires support below checkbox toggle."""
+	if not _tile:
+		return
+	_tile.requires_support_below = pressed
 	_validate_tile()
 	tile_modified.emit(_tile)
 

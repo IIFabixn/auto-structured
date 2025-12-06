@@ -45,6 +45,47 @@ enum BoundaryRole {
 
 @export var boundary_role: BoundaryRole = BoundaryRole.NONE
 
+## Structural role defines the architectural purpose of this tile
+enum StructuralRole {
+	NONE = 0,              ## Generic tile with no specific structural purpose
+	EXTERIOR_WALL = 1,     ## Wall facing outside the building
+	INTERIOR_WALL = 2,     ## Wall between rooms inside building
+	LOAD_BEARING_WALL = 3, ## Structural wall supporting upper floors
+	PARTITION_WALL = 4,    ## Non-structural divider wall
+	GROUND_FLOOR = 5,      ## First floor / ground level tiles
+	UPPER_FLOOR = 6,       ## Multi-story floor tiles above ground
+	FOUNDATION = 7,        ## Below-ground foundation elements
+	ROOF_SEGMENT = 8,      ## Roof tiles (top layer)
+	DOOR_FRAME = 9,        ## Door opening in wall
+	WINDOW_FRAME = 10,     ## Window opening in wall
+	CORNER_EXTERIOR = 11,  ## Outside corner piece
+	CORNER_INTERIOR = 12,  ## Inside corner piece
+	STAIRS = 13,           ## Vertical connection between floors
+	EXTERIOR_GROUND = 14,  ## Ground outside building (grass, pavement)
+}
+
+@export var structural_role: StructuralRole = StructuralRole.NONE
+
+## Facing direction for directional tiles (walls, doors, windows)
+enum FacingDirection {
+	NONE = -1,  ## No specific facing direction
+	NORTH = 0,  ## Faces north (negative Z)
+	EAST = 1,   ## Faces east (positive X)
+	SOUTH = 2,  ## Faces south (positive Z)
+	WEST = 3,   ## Faces west (negative X)
+}
+
+@export var facing_direction: FacingDirection = FacingDirection.NONE
+
+## Floor level for multi-story buildings (0 = ground, 1 = first floor, etc.)
+@export var floor_level: int = 0
+
+## Whether this tile can support weight above it (for multi-story validation)
+@export var can_support_above: bool = false
+
+## Whether this tile requires support below it
+@export var requires_support_below: bool = false
+
 @export var requirements: Array[Requirement] = []  ## Placement constraints (e.g., height restrictions, max count)
 
 ## Rotation symmetry mode determines which rotations are valid for this tile

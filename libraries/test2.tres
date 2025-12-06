@@ -24,6 +24,8 @@ entries = [{
 
 [sub_resource type="Resource" id="Resource_rqldo"]
 script = ExtResource("5_rqldo")
+socket_type = null
+compatible_types = null
 socket_id = "wall_right"
 socket_guid = "1ccfeb3d-a9af-f8fc-e6ad-18e5bd1cf615"
 compatible_sockets = Array[String](["07a842ec-6598-30d1-70d1-0e92a99d251f", "109a88c9-aaf2-7ff6-f232-38747765ffd9", "1acc07f0-59d5-8198-070e-f00e2cf2e3a8", "a75921a1-90b9-63fc-2ad1-5f54623cccd8", "floor_side"])
@@ -31,6 +33,8 @@ direction = Vector3i(1, 0, 0)
 
 [sub_resource type="Resource" id="Resource_4ec60"]
 script = ExtResource("5_rqldo")
+socket_type = null
+compatible_types = null
 socket_id = "wall_left"
 socket_guid = "109a88c9-aaf2-7ff6-f232-38747765ffd9"
 compatible_sockets = Array[String](["1ccfeb3d-a9af-f8fc-e6ad-18e5bd1cf615", "5b419eb9-f3ab-4dd2-0f35-762fb8f171cd", "c8528b3a-8c13-0818-f176-7674cce937c2", "df3e326f-4842-0e30-5bb9-4fedcbe11fa1", "floor_side"])
@@ -38,6 +42,8 @@ direction = Vector3i(-1, 0, 0)
 
 [sub_resource type="Resource" id="Resource_6ltd1"]
 script = ExtResource("5_rqldo")
+socket_type = null
+compatible_types = null
 socket_id = "wall_outside"
 socket_guid = "9d3f51a0-128b-b911-da77-3b028a299556"
 compatible_sockets = Array[String](["00864b0b-1789-edee-8212-2223c7077341", "01055c00-f2c9-a6a0-70bc-67763c2b7e94", "2ea9b3e2-e36b-7d95-e960-66177362dd9a", "33a67a50-64fa-2c44-8dfc-a7c0af169d38", "3796c417-acb9-4eec-ce4c-31f9d6526056", "3962b67b-b8da-3859-b292-8737c8ed0702", "3ecadf1d-179d-d941-e279-8e7dd419d89e", "4618ecf7-e466-6d5d-76b8-766f39a60c49", "4b56c637-fcac-734c-edc2-4c113ac32bd8", "675b7546-33a5-54e6-6b9a-0ba0de445fe5", "6efe213c-c4d1-e878-03dc-99e01f07fce3", "877e8257-6551-fc84-85ba-a64227915418", "8c74c46a-f376-2c5e-3d29-5b5222ef6b95", "8f3fad20-ffda-d0d1-5db3-2ebd906aed37", "9d3f51a0-128b-b911-da77-3b028a299556", "9dd93dff-ded2-97da-1dd9-9013de7b5612", "a8667c28-e999-b3dc-076a-f2fe744a67d0", "a9fffeb6-ce68-9df7-db46-f6e6c342f9b0", "c580664a-3706-026a-2be5-ebe28ad6ad32", "c78a1c7b-2de2-44de-e71e-47deea9408ef", "ec81dfb1-815b-e90b-780d-041147047306", "ef556a8e-bd7a-0764-ab05-1b80172b689d", "fe7d0de4-c7c8-90f3-e57f-9244befaff23", "floor_side"])
@@ -45,6 +51,8 @@ direction = Vector3i(0, 0, -1)
 
 [sub_resource type="Resource" id="Resource_a2x8y"]
 script = ExtResource("5_rqldo")
+socket_type = null
+compatible_types = null
 socket_id = "wall_inside"
 socket_guid = "9490a087-9d2d-0573-a8d0-910c198155f7"
 compatible_sockets = Array[String](["28ab1965-56bc-d8b0-441b-14451b1b9891", "4be860e6-b8a9-db9b-fc04-dc2236c1e81d", "5cdd5b11-3424-3f18-f21e-85047da3b50a", "61f39d73-a771-fc5e-a9cb-03dcf4369554", "9490a087-9d2d-0573-a8d0-910c198155f7", "a28a9c28-dc06-6984-0db9-23ea7674100d", "b3ad9509-b98b-7bd1-0407-5a46f6c8d907", "be644825-d5a5-39ec-adef-a41225911fb3", "floor_side", "none"])
@@ -52,12 +60,16 @@ direction = Vector3i(0, 0, 1)
 
 [sub_resource type="Resource" id="Resource_murai"]
 script = ExtResource("5_rqldo")
+socket_type = null
+compatible_types = null
 socket_id = "none"
 socket_guid = "15602ea1-da6b-d905-7c04-1c4a34040397"
 compatible_sockets = Array[String](["01055c00-f2c9-a6a0-70bc-67763c2b7e94", "33a67a50-64fa-2c44-8dfc-a7c0af169d38", "3ecadf1d-179d-d941-e279-8e7dd419d89e", "4618ecf7-e466-6d5d-76b8-766f39a60c49", "8c74c46a-f376-2c5e-3d29-5b5222ef6b95", "9dd93dff-ded2-97da-1dd9-9013de7b5612", "floor_top", "none"])
 
 [sub_resource type="Resource" id="Resource_3vl5h"]
 script = ExtResource("5_rqldo")
+socket_type = null
+compatible_types = null
 socket_id = "none"
 socket_guid = "9d7cfdc4-7b05-35de-ede3-3a6b00002622"
 compatible_sockets = Array[String](["01055c00-f2c9-a6a0-70bc-67763c2b7e94", "33a67a50-64fa-2c44-8dfc-a7c0af169d38", "3ecadf1d-179d-d941-e279-8e7dd419d89e", "4618ecf7-e466-6d5d-76b8-766f39a60c49", "8c74c46a-f376-2c5e-3d29-5b5222ef6b95", "9dd93dff-ded2-97da-1dd9-9013de7b5612", "floor_bottom"])
@@ -69,6 +81,11 @@ name = "wall"
 scene = ExtResource("6_k1ovt")
 tags = Array[String](["wall"])
 boundary_role = 1
+structural_role = null
+facing_direction = 2
+floor_level = null
+can_support_above = null
+requires_support_below = null
 sockets = Array[ExtResource("5_rqldo")]([SubResource("Resource_rqldo"), SubResource("Resource_4ec60"), SubResource("Resource_6ltd1"), SubResource("Resource_a2x8y"), SubResource("Resource_murai"), SubResource("Resource_3vl5h")])
 
 [sub_resource type="Resource" id="Resource_flxlj"]
@@ -81,12 +98,16 @@ display_name = "Max Count Requirement"
 
 [sub_resource type="Resource" id="Resource_bj0sj"]
 script = ExtResource("5_rqldo")
+socket_type = null
+compatible_types = null
 socket_id = "none"
 socket_guid = "c25d2814-1283-2f94-8c67-1190478b6166"
 compatible_sockets = Array[String](["01055c00-f2c9-a6a0-70bc-67763c2b7e94", "33a67a50-64fa-2c44-8dfc-a7c0af169d38", "3ecadf1d-179d-d941-e279-8e7dd419d89e", "4618ecf7-e466-6d5d-76b8-766f39a60c49", "8c74c46a-f376-2c5e-3d29-5b5222ef6b95", "9dd93dff-ded2-97da-1dd9-9013de7b5612"])
 
 [sub_resource type="Resource" id="Resource_wks3l"]
 script = ExtResource("5_rqldo")
+socket_type = null
+compatible_types = null
 socket_id = "none"
 socket_guid = "868f1760-33c6-9655-7695-f7984e5783be"
 compatible_sockets = Array[String](["01055c00-f2c9-a6a0-70bc-67763c2b7e94", "33a67a50-64fa-2c44-8dfc-a7c0af169d38", "3ecadf1d-179d-d941-e279-8e7dd419d89e", "4618ecf7-e466-6d5d-76b8-766f39a60c49", "8c74c46a-f376-2c5e-3d29-5b5222ef6b95", "9dd93dff-ded2-97da-1dd9-9013de7b5612"])
@@ -94,6 +115,8 @@ direction = Vector3i(0, -1, 0)
 
 [sub_resource type="Resource" id="Resource_s6wr4"]
 script = ExtResource("5_rqldo")
+socket_type = null
+compatible_types = null
 socket_id = "door_right"
 socket_guid = "df3e326f-4842-0e30-5bb9-4fedcbe11fa1"
 compatible_sockets = Array[String](["07a842ec-6598-30d1-70d1-0e92a99d251f", "109a88c9-aaf2-7ff6-f232-38747765ffd9", "1acc07f0-59d5-8198-070e-f00e2cf2e3a8", "a75921a1-90b9-63fc-2ad1-5f54623cccd8"])
@@ -101,6 +124,8 @@ direction = Vector3i(1, 0, 0)
 
 [sub_resource type="Resource" id="Resource_3t8ws"]
 script = ExtResource("5_rqldo")
+socket_type = null
+compatible_types = null
 socket_id = "door_left"
 socket_guid = "a75921a1-90b9-63fc-2ad1-5f54623cccd8"
 compatible_sockets = Array[String](["1ccfeb3d-a9af-f8fc-e6ad-18e5bd1cf615", "5b419eb9-f3ab-4dd2-0f35-762fb8f171cd", "c8528b3a-8c13-0818-f176-7674cce937c2", "df3e326f-4842-0e30-5bb9-4fedcbe11fa1"])
@@ -108,6 +133,8 @@ direction = Vector3i(-1, 0, 0)
 
 [sub_resource type="Resource" id="Resource_sic6b"]
 script = ExtResource("5_rqldo")
+socket_type = null
+compatible_types = null
 socket_id = "door_outside"
 socket_guid = "4025ce58-4466-79c6-6a74-28d57e35b701"
 compatible_sockets = Array[String](["01055c00-f2c9-a6a0-70bc-67763c2b7e94", "2ea9b3e2-e36b-7d95-e960-66177362dd9a", "33a67a50-64fa-2c44-8dfc-a7c0af169d38", "3796c417-acb9-4eec-ce4c-31f9d6526056", "3962b67b-b8da-3859-b292-8737c8ed0702", "3ecadf1d-179d-d941-e279-8e7dd419d89e", "4618ecf7-e466-6d5d-76b8-766f39a60c49", "675b7546-33a5-54e6-6b9a-0ba0de445fe5", "6efe213c-c4d1-e878-03dc-99e01f07fce3", "877e8257-6551-fc84-85ba-a64227915418", "8c74c46a-f376-2c5e-3d29-5b5222ef6b95", "8f3fad20-ffda-d0d1-5db3-2ebd906aed37", "9dd93dff-ded2-97da-1dd9-9013de7b5612", "c580664a-3706-026a-2be5-ebe28ad6ad32", "c78a1c7b-2de2-44de-e71e-47deea9408ef", "fe7d0de4-c7c8-90f3-e57f-9244befaff23"])
@@ -115,6 +142,8 @@ direction = Vector3i(0, 0, -1)
 
 [sub_resource type="Resource" id="Resource_kew22"]
 script = ExtResource("5_rqldo")
+socket_type = null
+compatible_types = null
 socket_id = "door_inside"
 socket_guid = "5cdd5b11-3424-3f18-f21e-85047da3b50a"
 compatible_sockets = Array[String](["00864b0b-1789-edee-8212-2223c7077341", "28ab1965-56bc-d8b0-441b-14451b1b9891", "4be860e6-b8a9-db9b-fc04-dc2236c1e81d", "61f39d73-a771-fc5e-a9cb-03dcf4369554", "9490a087-9d2d-0573-a8d0-910c198155f7", "a28a9c28-dc06-6984-0db9-23ea7674100d", "a8667c28-e999-b3dc-076a-f2fe744a67d0", "a9fffeb6-ce68-9df7-db46-f6e6c342f9b0", "b3ad9509-b98b-7bd1-0407-5a46f6c8d907", "be644825-d5a5-39ec-adef-a41225911fb3"])
@@ -126,22 +155,33 @@ name = "door"
 scene = ExtResource("7_rqldo")
 tags = Array[String](["door"])
 boundary_role = 1
+structural_role = 1
+facing_direction = 2
+floor_level = null
+can_support_above = null
+requires_support_below = null
 requirements = Array[ExtResource("3_lwb3q")]([SubResource("Resource_flxlj")])
 sockets = Array[ExtResource("5_rqldo")]([SubResource("Resource_bj0sj"), SubResource("Resource_wks3l"), SubResource("Resource_s6wr4"), SubResource("Resource_3t8ws"), SubResource("Resource_sic6b"), SubResource("Resource_kew22")])
 
 [sub_resource type="Resource" id="Resource_iupn8"]
 script = ExtResource("5_rqldo")
+socket_type = null
+compatible_types = null
 socket_id = "none"
 socket_guid = "52c0f376-78b9-4fdc-f8e0-2c30471fbf34"
 
 [sub_resource type="Resource" id="Resource_pi2wf"]
 script = ExtResource("5_rqldo")
+socket_type = null
+compatible_types = null
 socket_id = "none"
 socket_guid = "f0f1d44a-a15b-0e3a-5446-2b156de04fcc"
 direction = Vector3i(0, -1, 0)
 
 [sub_resource type="Resource" id="Resource_3j4ih"]
 script = ExtResource("5_rqldo")
+socket_type = null
+compatible_types = null
 socket_id = "floor_side"
 socket_guid = "28ab1965-56bc-d8b0-441b-14451b1b9891"
 compatible_sockets = Array[String](["28ab1965-56bc-d8b0-441b-14451b1b9891", "4be860e6-b8a9-db9b-fc04-dc2236c1e81d", "5cdd5b11-3424-3f18-f21e-85047da3b50a", "61f39d73-a771-fc5e-a9cb-03dcf4369554", "9490a087-9d2d-0573-a8d0-910c198155f7", "a28a9c28-dc06-6984-0db9-23ea7674100d", "b3ad9509-b98b-7bd1-0407-5a46f6c8d907", "be644825-d5a5-39ec-adef-a41225911fb3"])
@@ -149,6 +189,8 @@ direction = Vector3i(1, 0, 0)
 
 [sub_resource type="Resource" id="Resource_3lwuf"]
 script = ExtResource("5_rqldo")
+socket_type = null
+compatible_types = null
 socket_id = "floor_side"
 socket_guid = "61f39d73-a771-fc5e-a9cb-03dcf4369554"
 compatible_sockets = Array[String](["28ab1965-56bc-d8b0-441b-14451b1b9891", "4be860e6-b8a9-db9b-fc04-dc2236c1e81d", "5cdd5b11-3424-3f18-f21e-85047da3b50a", "61f39d73-a771-fc5e-a9cb-03dcf4369554", "9490a087-9d2d-0573-a8d0-910c198155f7", "a28a9c28-dc06-6984-0db9-23ea7674100d", "b3ad9509-b98b-7bd1-0407-5a46f6c8d907", "be644825-d5a5-39ec-adef-a41225911fb3"])
@@ -156,6 +198,8 @@ direction = Vector3i(-1, 0, 0)
 
 [sub_resource type="Resource" id="Resource_3r4si"]
 script = ExtResource("5_rqldo")
+socket_type = null
+compatible_types = null
 socket_id = "floor_side"
 socket_guid = "be644825-d5a5-39ec-adef-a41225911fb3"
 compatible_sockets = Array[String](["28ab1965-56bc-d8b0-441b-14451b1b9891", "4be860e6-b8a9-db9b-fc04-dc2236c1e81d", "5cdd5b11-3424-3f18-f21e-85047da3b50a", "61f39d73-a771-fc5e-a9cb-03dcf4369554", "9490a087-9d2d-0573-a8d0-910c198155f7", "a28a9c28-dc06-6984-0db9-23ea7674100d", "b3ad9509-b98b-7bd1-0407-5a46f6c8d907", "be644825-d5a5-39ec-adef-a41225911fb3"])
@@ -163,6 +207,8 @@ direction = Vector3i(0, 0, -1)
 
 [sub_resource type="Resource" id="Resource_ym6o8"]
 script = ExtResource("5_rqldo")
+socket_type = null
+compatible_types = null
 socket_id = "floor_side"
 socket_guid = "4be860e6-b8a9-db9b-fc04-dc2236c1e81d"
 compatible_sockets = Array[String](["28ab1965-56bc-d8b0-441b-14451b1b9891", "4be860e6-b8a9-db9b-fc04-dc2236c1e81d", "5cdd5b11-3424-3f18-f21e-85047da3b50a", "61f39d73-a771-fc5e-a9cb-03dcf4369554", "9490a087-9d2d-0573-a8d0-910c198155f7", "a28a9c28-dc06-6984-0db9-23ea7674100d", "b3ad9509-b98b-7bd1-0407-5a46f6c8d907", "be644825-d5a5-39ec-adef-a41225911fb3"])
@@ -174,16 +220,25 @@ name = "floor"
 scene = ExtResource("4_k1ovt")
 tags = Array[String](["floor", "interior"])
 boundary_role = 3
+structural_role = 5
+facing_direction = null
+floor_level = null
+can_support_above = null
+requires_support_below = null
 sockets = Array[ExtResource("5_rqldo")]([SubResource("Resource_iupn8"), SubResource("Resource_pi2wf"), SubResource("Resource_3j4ih"), SubResource("Resource_3lwuf"), SubResource("Resource_3r4si"), SubResource("Resource_ym6o8")])
 
 [sub_resource type="Resource" id="Resource_hkoat"]
 script = ExtResource("5_rqldo")
+socket_type = null
+compatible_types = null
 socket_id = "none"
 socket_guid = "6b6b15df-50d5-fee3-c74c-41276f739af0"
 compatible_sockets = Array[String](["01055c00-f2c9-a6a0-70bc-67763c2b7e94", "33a67a50-64fa-2c44-8dfc-a7c0af169d38", "3ecadf1d-179d-d941-e279-8e7dd419d89e", "4618ecf7-e466-6d5d-76b8-766f39a60c49", "8c74c46a-f376-2c5e-3d29-5b5222ef6b95", "9dd93dff-ded2-97da-1dd9-9013de7b5612"])
 
 [sub_resource type="Resource" id="Resource_8x41a"]
 script = ExtResource("5_rqldo")
+socket_type = null
+compatible_types = null
 socket_id = "none"
 socket_guid = "a6c5e4ac-641d-fb8a-d39d-86ede38c9369"
 compatible_sockets = Array[String](["01055c00-f2c9-a6a0-70bc-67763c2b7e94", "33a67a50-64fa-2c44-8dfc-a7c0af169d38", "3ecadf1d-179d-d941-e279-8e7dd419d89e", "4618ecf7-e466-6d5d-76b8-766f39a60c49", "8c74c46a-f376-2c5e-3d29-5b5222ef6b95", "9dd93dff-ded2-97da-1dd9-9013de7b5612"])
@@ -191,6 +246,8 @@ direction = Vector3i(0, -1, 0)
 
 [sub_resource type="Resource" id="Resource_phhm4"]
 script = ExtResource("5_rqldo")
+socket_type = null
+compatible_types = null
 socket_id = "corner_right"
 socket_guid = "5b419eb9-f3ab-4dd2-0f35-762fb8f171cd"
 compatible_sockets = Array[String](["07a842ec-6598-30d1-70d1-0e92a99d251f", "109a88c9-aaf2-7ff6-f232-38747765ffd9", "1acc07f0-59d5-8198-070e-f00e2cf2e3a8", "a75921a1-90b9-63fc-2ad1-5f54623cccd8"])
@@ -198,6 +255,8 @@ direction = Vector3i(1, 0, 0)
 
 [sub_resource type="Resource" id="Resource_qipsd"]
 script = ExtResource("5_rqldo")
+socket_type = null
+compatible_types = null
 socket_id = "corner_outside"
 socket_guid = "ec81dfb1-815b-e90b-780d-041147047306"
 compatible_sockets = Array[String](["00864b0b-1789-edee-8212-2223c7077341", "01055c00-f2c9-a6a0-70bc-67763c2b7e94", "2ea9b3e2-e36b-7d95-e960-66177362dd9a", "33a67a50-64fa-2c44-8dfc-a7c0af169d38", "3796c417-acb9-4eec-ce4c-31f9d6526056", "3962b67b-b8da-3859-b292-8737c8ed0702", "3ecadf1d-179d-d941-e279-8e7dd419d89e", "4618ecf7-e466-6d5d-76b8-766f39a60c49", "4b56c637-fcac-734c-edc2-4c113ac32bd8", "675b7546-33a5-54e6-6b9a-0ba0de445fe5", "6efe213c-c4d1-e878-03dc-99e01f07fce3", "877e8257-6551-fc84-85ba-a64227915418", "8c74c46a-f376-2c5e-3d29-5b5222ef6b95", "8f3fad20-ffda-d0d1-5db3-2ebd906aed37", "9d3f51a0-128b-b911-da77-3b028a299556", "9dd93dff-ded2-97da-1dd9-9013de7b5612", "a8667c28-e999-b3dc-076a-f2fe744a67d0", "a9fffeb6-ce68-9df7-db46-f6e6c342f9b0", "c580664a-3706-026a-2be5-ebe28ad6ad32", "c78a1c7b-2de2-44de-e71e-47deea9408ef", "ec81dfb1-815b-e90b-780d-041147047306", "ef556a8e-bd7a-0764-ab05-1b80172b689d", "fe7d0de4-c7c8-90f3-e57f-9244befaff23"])
@@ -205,6 +264,8 @@ direction = Vector3i(-1, 0, 0)
 
 [sub_resource type="Resource" id="Resource_iyrpm"]
 script = ExtResource("5_rqldo")
+socket_type = null
+compatible_types = null
 socket_id = "corner_outside"
 socket_guid = "4b56c637-fcac-734c-edc2-4c113ac32bd8"
 compatible_sockets = Array[String](["00864b0b-1789-edee-8212-2223c7077341", "01055c00-f2c9-a6a0-70bc-67763c2b7e94", "2ea9b3e2-e36b-7d95-e960-66177362dd9a", "33a67a50-64fa-2c44-8dfc-a7c0af169d38", "3796c417-acb9-4eec-ce4c-31f9d6526056", "3962b67b-b8da-3859-b292-8737c8ed0702", "3ecadf1d-179d-d941-e279-8e7dd419d89e", "4618ecf7-e466-6d5d-76b8-766f39a60c49", "4b56c637-fcac-734c-edc2-4c113ac32bd8", "675b7546-33a5-54e6-6b9a-0ba0de445fe5", "6efe213c-c4d1-e878-03dc-99e01f07fce3", "877e8257-6551-fc84-85ba-a64227915418", "8c74c46a-f376-2c5e-3d29-5b5222ef6b95", "8f3fad20-ffda-d0d1-5db3-2ebd906aed37", "9d3f51a0-128b-b911-da77-3b028a299556", "9dd93dff-ded2-97da-1dd9-9013de7b5612", "a8667c28-e999-b3dc-076a-f2fe744a67d0", "a9fffeb6-ce68-9df7-db46-f6e6c342f9b0", "c580664a-3706-026a-2be5-ebe28ad6ad32", "c78a1c7b-2de2-44de-e71e-47deea9408ef", "ec81dfb1-815b-e90b-780d-041147047306", "ef556a8e-bd7a-0764-ab05-1b80172b689d", "fe7d0de4-c7c8-90f3-e57f-9244befaff23"])
@@ -212,6 +273,8 @@ direction = Vector3i(0, 0, -1)
 
 [sub_resource type="Resource" id="Resource_mysar"]
 script = ExtResource("5_rqldo")
+socket_type = null
+compatible_types = null
 socket_id = "corner_left"
 socket_guid = "07a842ec-6598-30d1-70d1-0e92a99d251f"
 compatible_sockets = Array[String](["1ccfeb3d-a9af-f8fc-e6ad-18e5bd1cf615", "5b419eb9-f3ab-4dd2-0f35-762fb8f171cd", "c8528b3a-8c13-0818-f176-7674cce937c2", "df3e326f-4842-0e30-5bb9-4fedcbe11fa1"])
@@ -223,21 +286,32 @@ name = "wall_corner"
 scene = ExtResource("8_iupn8")
 tags = Array[String](["corner", "wall"])
 boundary_role = 2
+structural_role = 11
+facing_direction = 1
+floor_level = null
+can_support_above = null
+requires_support_below = null
 sockets = Array[ExtResource("5_rqldo")]([SubResource("Resource_hkoat"), SubResource("Resource_8x41a"), SubResource("Resource_phhm4"), SubResource("Resource_qipsd"), SubResource("Resource_iyrpm"), SubResource("Resource_mysar")])
 
 [sub_resource type="Resource" id="Resource_uq8r8"]
 script = ExtResource("5_rqldo")
+socket_type = null
+compatible_types = null
 socket_id = "none"
 socket_guid = "339180d5-598b-fcaa-18d5-0089d9604828"
 
 [sub_resource type="Resource" id="Resource_e1a5f"]
 script = ExtResource("5_rqldo")
+socket_type = null
+compatible_types = null
 socket_id = "none"
 socket_guid = "3dc4303c-eaac-1760-c5c9-3cdf1487bffc"
 direction = Vector3i(0, -1, 0)
 
 [sub_resource type="Resource" id="Resource_tfyii"]
 script = ExtResource("5_rqldo")
+socket_type = null
+compatible_types = null
 socket_id = "interior"
 socket_guid = "a28a9c28-dc06-6984-0db9-23ea7674100d"
 compatible_sockets = Array[String](["28ab1965-56bc-d8b0-441b-14451b1b9891", "4be860e6-b8a9-db9b-fc04-dc2236c1e81d", "5cdd5b11-3424-3f18-f21e-85047da3b50a", "61f39d73-a771-fc5e-a9cb-03dcf4369554", "9490a087-9d2d-0573-a8d0-910c198155f7", "a28a9c28-dc06-6984-0db9-23ea7674100d", "b3ad9509-b98b-7bd1-0407-5a46f6c8d907", "be644825-d5a5-39ec-adef-a41225911fb3"])
@@ -245,6 +319,8 @@ direction = Vector3i(1, 0, 0)
 
 [sub_resource type="Resource" id="Resource_xc15g"]
 script = ExtResource("5_rqldo")
+socket_type = null
+compatible_types = null
 socket_id = "corner_right"
 socket_guid = "1acc07f0-59d5-8198-070e-f00e2cf2e3a8"
 compatible_sockets = Array[String](["1ccfeb3d-a9af-f8fc-e6ad-18e5bd1cf615", "5b419eb9-f3ab-4dd2-0f35-762fb8f171cd", "c8528b3a-8c13-0818-f176-7674cce937c2", "df3e326f-4842-0e30-5bb9-4fedcbe11fa1"])
@@ -252,6 +328,8 @@ direction = Vector3i(-1, 0, 0)
 
 [sub_resource type="Resource" id="Resource_3b0sh"]
 script = ExtResource("5_rqldo")
+socket_type = null
+compatible_types = null
 socket_id = "corner_left"
 socket_guid = "c8528b3a-8c13-0818-f176-7674cce937c2"
 compatible_sockets = Array[String](["07a842ec-6598-30d1-70d1-0e92a99d251f", "109a88c9-aaf2-7ff6-f232-38747765ffd9", "1acc07f0-59d5-8198-070e-f00e2cf2e3a8", "a75921a1-90b9-63fc-2ad1-5f54623cccd8"])
@@ -259,6 +337,8 @@ direction = Vector3i(0, 0, -1)
 
 [sub_resource type="Resource" id="Resource_dmy7n"]
 script = ExtResource("5_rqldo")
+socket_type = null
+compatible_types = null
 socket_id = "interior"
 socket_guid = "b3ad9509-b98b-7bd1-0407-5a46f6c8d907"
 compatible_sockets = Array[String](["28ab1965-56bc-d8b0-441b-14451b1b9891", "4be860e6-b8a9-db9b-fc04-dc2236c1e81d", "5cdd5b11-3424-3f18-f21e-85047da3b50a", "61f39d73-a771-fc5e-a9cb-03dcf4369554", "9490a087-9d2d-0573-a8d0-910c198155f7", "a28a9c28-dc06-6984-0db9-23ea7674100d", "be644825-d5a5-39ec-adef-a41225911fb3"])
@@ -270,6 +350,11 @@ name = "wall_coner_inner"
 scene = ExtResource("11_3lwuf")
 tags = Array[String](["corner"])
 boundary_role = 2
+structural_role = 12
+facing_direction = null
+floor_level = null
+can_support_above = null
+requires_support_below = null
 sockets = Array[ExtResource("5_rqldo")]([SubResource("Resource_uq8r8"), SubResource("Resource_e1a5f"), SubResource("Resource_tfyii"), SubResource("Resource_xc15g"), SubResource("Resource_3b0sh"), SubResource("Resource_dmy7n")])
 
 [resource]

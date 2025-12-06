@@ -175,13 +175,84 @@ func filter_cell_by_zone(cell, zone: Zone) -> void:
 		if not _is_tile_valid_for_zone(tile, zone, cell.position):
 			continue
 		
+		# Apply socket type filtering (new structural validation)
+		if not _is_socket_valid_for_zone(tile, zone):
+			continue
+		
 		filtered.append(variant)
 	
 	if not filtered.is_empty():
 		cell.possible_tile_variants = filtered
 		cell._entropy_valid = false
+		# Rebuild variant mask if using bitsets
+		if cell.mask_enabled():
+			cell.rebuild_variant_mask()
 	elif debug_enabled:
 		push_warning("Blueprint: Cell %s in zone %s has no valid variants after filtering!" % [cell.position, get_zone_name(zone)])
+
+func _is_socket_valid_for_zone(tile: Tile, zone: Zone) -> bool:
+	## Validate that tile's socket types match the zone's structural requirements.
+	## This ensures walls have wall sockets, floors have floor sockets, etc.
+	if tile.sockets.is_empty():
+		return true  # No sockets = generic tile, allow it
+	
+	# Get expected socket types for this zone
+	var expected_types: Array = []
+	
+	match zone:
+		Zone.WALL:
+			expected_types = [
+				Socket.SocketType.WALL_EXTERIOR_EDGE,
+				Socket.SocketType.WALL_INTERIOR_EDGE,
+				Socket.SocketType.GENERIC,
+			]
+		Zone.CORNER:
+			expected_types = [
+				Socket.SocketType.CORNER_EXTERIOR,
+				Socket.SocketType.CORNER_INTERIOR,
+				Socket.SocketType.WALL_EXTERIOR_EDGE,
+				Socket.SocketType.WALL_INTERIOR_EDGE,
+				Socket.SocketType.GENERIC,
+			]
+		Zone.DOOR:
+			expected_types = [
+				Socket.SocketType.DOOR_OPENING,
+				Socket.SocketType.PASSAGE_FRAME,
+				Socket.SocketType.GENERIC,
+			]
+		Zone.FLOOR, Zone.INTERIOR:
+			expected_types = [
+				Socket.SocketType.FLOOR_TOP_SURFACE,
+				Socket.SocketType.FLOOR_BOTTOM_SUPPORT,
+				Socket.SocketType.GENERIC,
+			]
+		Zone.EXTERIOR:
+			expected_types = [
+				Socket.SocketType.GROUND_SURFACE,
+				Socket.SocketType.FLOOR_TOP_SURFACE,
+				Socket.SocketType.GENERIC,
+			]
+		Zone.ROOF:
+			expected_types = [
+				Socket.SocketType.ROOF_EDGE,
+				Socket.SocketType.GENERIC,
+			]
+		_:
+			return true  # Unknown zone, allow all
+	
+	# Check if tile has at least one compatible socket type
+	for socket in tile.sockets:
+		if socket.socket_type in expected_types:
+			return true
+	
+	# If all sockets are GENERIC, allow the tile
+	var all_generic = true
+	for socket in tile.sockets:
+		if socket.socket_type != Socket.SocketType.GENERIC:
+			all_generic = false
+			break
+	
+	return all_generic
 
 
 func get_anchor_cells() -> Array[Dictionary]:
